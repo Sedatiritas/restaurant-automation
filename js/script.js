@@ -1,3 +1,65 @@
+function applySavedAppearance() {
+    try {
+        const appearance = JSON.parse(localStorage.getItem("roastAdmin_appearance") || "null");
+        if (!appearance) return;
+
+        const logo = document.querySelector(".brand-logo img");
+        if (logo && appearance.logo) logo.src = appearance.logo;
+
+        const brandName = document.querySelector(".brand-name");
+        if (brandName && appearance.brandName) brandName.textContent = appearance.brandName;
+
+        const subtitle = document.querySelector(".brand-subtitle");
+        if (subtitle && appearance.tagline) subtitle.textContent = appearance.tagline;
+
+        const status = document.querySelector(".open-status");
+        if (status && appearance.openStatus) {
+            status.textContent = "";
+            const dot = document.createElement("span");
+            dot.className = "status-dot";
+            status.append(dot, document.createTextNode(appearance.openStatus));
+        }
+
+        const heroImage = document.querySelector(".hero-image");
+        if (heroImage && appearance.cover) heroImage.src = appearance.cover;
+
+        const heroLabel = document.querySelector(".hero-label");
+        if (heroLabel && appearance.eyebrow) {
+            heroLabel.textContent = "";
+            const icon = document.createElement("i");
+            icon.className = "bi bi-stars me-1";
+            heroLabel.append(icon, document.createTextNode(appearance.eyebrow));
+        }
+
+        const heroHeading = document.querySelector(".hero-content h1");
+        if (heroHeading && appearance.headline) {
+            heroHeading.textContent = "";
+            appearance.headline.split("\n").forEach((line, index) => {
+                if (index) heroHeading.append(document.createElement("br"));
+                heroHeading.append(document.createTextNode(line));
+            });
+        }
+
+        const infoLabels = document.querySelectorAll(".info-strip .info-label");
+        const infoValues = document.querySelectorAll(".info-strip .info-value");
+        if (infoLabels[0] && appearance.locationLabel) infoLabels[0].textContent = appearance.locationLabel;
+        if (infoValues[0] && appearance.locationText) infoValues[0].textContent = appearance.locationText;
+        if (infoLabels[1] && appearance.hoursLabel) infoLabels[1].textContent = appearance.hoursLabel;
+        if (infoValues[1] && appearance.hoursText) infoValues[1].textContent = appearance.hoursText;
+
+        if (appearance.accent) document.documentElement.style.setProperty("--menu-accent", appearance.accent);
+        const footerBrand = document.querySelector(".footer-brand");
+        if (footerBrand && appearance.brandName) {
+            footerBrand.textContent = "";
+            const icon = document.createElement("i");
+            icon.className = "bi bi-cup-hot-fill me-1";
+            footerBrand.append(icon, document.createTextNode(appearance.brandName));
+        }
+    } catch (error) {
+        console.warn("Menü görünüm ayarları okunamadı.", error);
+    }
+}
+
 const products = [
     {
         id: 1,
@@ -241,5 +303,6 @@ function updateCategoryScrollHint() {
 categoryList.addEventListener("scroll", updateCategoryScrollHint, { passive: true });
 window.addEventListener("resize", updateCategoryScrollHint);
 
+applySavedAppearance();
 renderProducts();
 updateCategoryScrollHint();
