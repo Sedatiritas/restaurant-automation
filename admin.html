@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f6f1">
+    <meta name="description" content="Roast & Co. QR menü yönetim paneli">
+    <title>Yönetim Paneli | Roast &amp; Co.</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-shell">
+        <aside class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="adminSidebar" aria-labelledby="sidebarTitle">
+            <div class="sidebar-inner">
+                <a href="index.html" class="admin-brand text-decoration-none">
+                    <span class="admin-brand-mark"><i class="bi bi-cup-hot-fill"></i></span>
+                    <span class="admin-brand-copy">
+                        <strong id="sidebarTitle">roast &amp; co.</strong>
+                        <small>MENÜ YÖNETİMİ</small>
+                    </span>
+                </a>
+
+                <div class="sidebar-label">ÇALIŞMA ALANI</div>
+                <nav class="admin-nav" aria-label="Yönetim menüsü">
+                    <a class="admin-nav-link active" href="#overview" data-view="overview">
+                        <i class="bi bi-grid-1x2"></i><span>Genel Bakış</span>
+                    </a>
+                    <a class="admin-nav-link" href="#products" data-view="products">
+                        <i class="bi bi-cup-straw"></i><span>Ürünler</span><span class="nav-count">24</span>
+                    </a>
+                    <a class="admin-nav-link" href="#categories" data-view="categories">
+                        <i class="bi bi-collection"></i><span>Kategoriler</span>
+                    </a>
+
+                    <div class="sidebar-label sidebar-label-spaced">İŞLETME</div>
+                    <a class="admin-nav-link" href="#appearance" data-view="appearance">
+                        <i class="bi bi-palette2"></i><span>Menü Görünümü</span>
+                    </a>
+                    <a class="admin-nav-link" href="#qr" data-view="qr">
+                        <i class="bi bi-qr-code"></i><span>QR Menü</span>
+                    </a>
+                    <a class="admin-nav-link" href="#staff" data-view="staff">
+                        <i class="bi bi-people"></i><span>Personel ve Yetkiler</span>
+                    </a>
+                    <a class="admin-nav-link" href="#settings" data-view="settings">
+                        <i class="bi bi-gear"></i><span>İşletme Ayarları</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar-bottom">
+                    <div class="help-card">
+                        <span class="help-icon"><i class="bi bi-lightbulb"></i></span>
+                        <strong>Menünüzü güncel tutun</strong>
+                        <p>Fiyat ve ürün değişikliklerini müşterileriniz anında görsün.</p>
+                        <a href="index.html">Müşteri menüsünü gör <i class="bi bi-arrow-up-right"></i></a>
+                    </div>
+                    <button type="button" class="profile-button">
+                        <span class="profile-avatar">RC</span>
+                        <span class="profile-copy"><strong>İşletme Yöneticisi</strong><small>Yönetici hesabı</small></span>
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="offcanvas-backdrop-area"></div>
+
+        <main class="main-area">
+            <header class="topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn icon-button d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar" aria-label="Menüyü aç">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div>
+                        <div class="breadcrumb-label">YÖNETİM / <span id="breadcrumbCurrent">GENEL BAKIŞ</span></div>
+                        <h1 class="page-title mb-0" id="pageTitle">Günaydın, hoş geldiniz</h1>
+                    </div>
+                </div>
+                <div class="topbar-actions">
+                    <a class="btn btn-light preview-button" href="index.html" target="_blank" rel="noopener noreferrer">
+                        <i class="bi bi-eye me-2"></i><span>Menüyü önizle</span>
+                    </a>
+                    <button type="button" class="btn icon-button notification-button" aria-label="Bildirimler">
+                        <i class="bi bi-bell"></i><span class="notification-dot"></span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <section class="welcome-banner mb-4" id="welcomeBanner">
+                    <div class="welcome-copy">
+                        <span class="welcome-eyebrow"><i class="bi bi-stars me-1"></i> İŞLETMENİZİN DİJİTAL MENÜSÜ</span>
+                        <h2>Her şey yolunda,<br class="d-sm-none"> menünüz hazır.</h2>
+                        <p>Ürünlerinizi yönetin, menünüzü güncel tutun ve müşterilerinize en iyi deneyimi sunun.</p>
+                        <a href="#products" class="btn btn-welcome" data-view="products">Ürünleri yönet <i class="bi bi-arrow-right ms-2"></i></a>
+                    </div>
+                    <div class="welcome-art" aria-hidden="true">
+                        <div class="art-circle art-circle-one"></div>
+                        <div class="art-circle art-circle-two"></div>
+                        <div class="art-cup"><i class="bi bi-cup-hot-fill"></i></div>
+                        <span class="art-spark art-spark-one">✳</span>
+                        <span class="art-spark art-spark-two">✦</span>
+                    </div>
+                </section>
+
+                <section class="stats-grid mb-4" aria-label="Menü özeti">
+                    <article class="stat-card">
+                        <div class="stat-top"><span>Toplam ürün</span><span class="stat-icon stat-icon-brown"><i class="bi bi-box-seam"></i></span></div>
+                        <div class="stat-number">24</div>
+                        <div class="stat-foot"><span class="stat-neutral">Menünüzdeki ürünler</span></div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-top"><span>Yayında</span><span class="stat-icon stat-icon-green"><i class="bi bi-eye"></i></span></div>
+                        <div class="stat-number">21</div>
+                        <div class="stat-foot"><span class="stat-dot green-dot"></span><span> Müşteriler görebiliyor</span></div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-top"><span>Kategoriler</span><span class="stat-icon stat-icon-purple"><i class="bi bi-collection"></i></span></div>
+                        <div class="stat-number">8</div>
+                        <div class="stat-foot"><span class="stat-neutral">Menü grupları</span></div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-top"><span>Stokta yok</span><span class="stat-icon stat-icon-orange"><i class="bi bi-exclamation-circle"></i></span></div>
+                        <div class="stat-number">3</div>
+                        <div class="stat-foot"><a href="#products" data-view="products">Ürünleri kontrol et <i class="bi bi-arrow-up-right"></i></a></div>
+                    </article>
+                </section>
+
+                <section class="dashboard-grid">
+                    <div class="dashboard-main">
+                        <article class="panel-card quick-actions-card mb-4">
+                            <div class="panel-heading">
+                                <div><h2>Hızlı işlemler</h2><p>En sık kullandığınız işlemlere kolayca ulaşın.</p></div>
+                            </div>
+                            <div class="quick-actions-grid">
+                                <a href="#products" class="quick-action" data-view="products">
+                                    <span class="quick-action-icon"><i class="bi bi-plus-lg"></i></span>
+                                    <span><strong>Yeni ürün ekle</strong><small>Menüye yeni lezzet ekleyin</small></span>
+                                    <i class="bi bi-chevron-right quick-chevron"></i>
+                                </a>
+                                <a href="#categories" class="quick-action" data-view="categories">
+                                    <span class="quick-action-icon quick-action-icon-sand"><i class="bi bi-collection"></i></span>
+                                    <span><strong>Kategori oluştur</strong><small>Menünüzü düzenleyin</small></span>
+                                    <i class="bi bi-chevron-right quick-chevron"></i>
+                                </a>
+                                <a href="#appearance" class="quick-action" data-view="appearance">
+                                    <span class="quick-action-icon quick-action-icon-lilac"><i class="bi bi-image"></i></span>
+                                    <span><strong>Menü görünümü</strong><small>Logo ve kapak görseli</small></span>
+                                    <i class="bi bi-chevron-right quick-chevron"></i>
+                                </a>
+                                <a href="#qr" class="quick-action" data-view="qr">
+                                    <span class="quick-action-icon quick-action-icon-mint"><i class="bi bi-qr-code"></i></span>
+                                    <span><strong>QR kodunu aç</strong><small>Menü bağlantınızı paylaşın</small></span>
+                                    <i class="bi bi-chevron-right quick-chevron"></i>
+                                </a>
+                            </div>
+                        </article>
+
+                        <article class="panel-card">
+                            <div class="panel-heading panel-heading-responsive">
+                                <div><h2>Son düzenlenen ürünler</h2><p>Menünüzdeki ürünlere hızlıca göz atın.</p></div>
+                                <a href="#products" class="text-link" data-view="products">Tüm ürünler <i class="bi bi-arrow-right ms-1"></i></a>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table product-table align-middle mb-0">
+                                    <thead><tr><th>ÜRÜN</th><th>KATEGORİ</th><th>FİYAT</th><th>DURUM</th><th></th></tr></thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><div class="table-product"><img src="https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=100&q=75" alt=""><span><strong>Cappuccino</strong><small>Son düzenleme bugün</small></span></div></td>
+                                            <td>Kahveler</td><td class="price-cell">125 TL</td><td><span class="status-pill status-live">Yayında</span></td><td><button class="table-more" type="button" aria-label="Cappuccino işlemleri"><i class="bi bi-three-dots"></i></button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="table-product"><img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=100&q=75" alt=""><span><strong>Çilekli Cheesecake</strong><small>Son düzenleme dün</small></span></div></td>
+                                            <td>Tatlılar</td><td class="price-cell">165 TL</td><td><span class="status-pill status-live">Yayında</span></td><td><button class="table-more" type="button" aria-label="Cheesecake işlemleri"><i class="bi bi-three-dots"></i></button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><div class="table-product"><img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=100&q=75" alt=""><span><strong>Iced Latte</strong><small>Son düzenleme 2 gün önce</small></span></div></td>
+                                            <td>Soğuk içecekler</td><td class="price-cell">140 TL</td><td><span class="status-pill status-out">Tükendi</span></td><td><button class="table-more" type="button" aria-label="Iced Latte işlemleri"><i class="bi bi-three-dots"></i></button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+                    </div>
+
+                    <aside class="dashboard-aside">
+                        <article class="panel-card menu-status-card mb-4">
+                            <div class="panel-heading"><div><h2>QR menü durumu</h2><p>Müşterilerinizin gördüğü menü.</p></div><span class="live-indicator"><span></span> Yayında</span></div>
+                            <div class="mini-menu-preview">
+                                <div class="mini-menu-top"><span class="mini-logo"><i class="bi bi-cup-hot-fill"></i></span><span><strong>roast &amp; co.</strong><small>COFFEE · DESSERT · MOMENTS</small></span></div>
+                                <div class="mini-menu-cover"><span>HER FİNCANDA MUTLULUK</span><strong>Kendine güzel<br>bir mola ver.</strong></div>
+                                <div class="mini-menu-lines"><span></span><span></span><span></span></div>
+                            </div>
+                            <a href="index.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline-menu w-100">Menüyü görüntüle <i class="bi bi-arrow-up-right ms-2"></i></a>
+                        </article>
+
+                        <article class="panel-card activity-card">
+                            <div class="panel-heading"><div><h2>Yapılacaklar</h2><p>Menünüzü tamamlamak için.</p></div></div>
+                            <div class="checklist-item">
+                                <span class="checklist-icon checklist-done"><i class="bi bi-check-lg"></i></span>
+                                <span><strong>Menü oluşturuldu</strong><small>İlk adım tamamlandı</small></span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="checklist-icon checklist-pending"><i class="bi bi-image"></i></span>
+                                <span><strong>Gerçek logonuzu ekleyin</strong><small>Marka görünümünü tamamlayın</small></span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="checklist-icon checklist-pending"><i class="bi bi-qr-code"></i></span>
+                                <span><strong>QR kodunuzu hazırlayın</strong><small>Masanızda paylaşmaya başlayın</small></span>
+                            </div>
+                            <a href="#appearance" class="text-link checklist-link" data-view="appearance">Ayarları tamamla <i class="bi bi-arrow-right ms-1"></i></a>
+                        </article>
+                    </aside>
+                </section>
+
+                <footer class="admin-footer">
+                    <span>© 2026 Roast &amp; Co. Yönetim Paneli</span>
+                    <span>Menünüzü özenle yönetin.</span>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="adminToast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true">
+            <div class="d-flex"><div class="toast-body" id="adminToastMessage">Bu bölüm sonraki geliştirme aşamasında etkinleştirilecek.</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
