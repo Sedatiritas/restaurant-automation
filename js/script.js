@@ -70,6 +70,51 @@ const products = [
         description: "Dışı karamelize, içi yumuşacık cheesecake.",
         price: 175,
         image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+        id: 9,
+        name: "Demleme Çay",
+        category: "tea",
+        categoryName: "Çaylar",
+        description: "Taze demlenmiş, klasik siyah çay.",
+        price: 45,
+        image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+        id: 10,
+        name: "Fıstıklı Kruvasan",
+        category: "food",
+        categoryName: "Atıştırmalıklar",
+        description: "Kat kat çıtır hamur ve fıstık kreması.",
+        price: 115,
+        image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+        id: 11,
+        name: "Çilekli Smoothie",
+        category: "smoothie",
+        categoryName: "Smoothie",
+        description: "Çilek ve muzla hazırlanan meyveli karışım.",
+        price: 145,
+        image: "https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+        id: 12,
+        name: "Taze Portakal Suyu",
+        category: "fresh",
+        categoryName: "Fresh içecekler",
+        description: "Taze sıkılmış, katkısız portakal suyu.",
+        price: 120,
+        image: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+        id: 13,
+        name: "Kahvaltı Tabağı",
+        category: "breakfast",
+        categoryName: "Kahvaltı",
+        description: "Peynir, zeytin, yumurta ve günlük taze ürünler.",
+        price: 245,
+        image: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80"
     }
 ];
 
