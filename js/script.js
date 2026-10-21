@@ -120,6 +120,8 @@ const products = [
 
 const productList = document.querySelector("#productList");
 const categoryList = document.querySelector("#categoryList");
+const categoryScrollHint = document.querySelector("#categoryScrollHint");
+const categoryScrollProgress = document.querySelector("#categoryScrollProgress");
 const searchInput = document.querySelector("#searchInput");
 const clearSearch = document.querySelector("#clearSearch");
 const menuCount = document.querySelector("#menuCount");
@@ -223,5 +225,23 @@ resetFilters.addEventListener("click", () => {
 
     renderProducts();
 });
+
+function updateCategoryScrollHint() {
+    const maxScroll = categoryList.scrollWidth - categoryList.clientWidth;
+    const hasOverflow = maxScroll > 4;
+
+    categoryScrollHint.classList.toggle("d-none", !hasOverflow);
+
+    if (!hasOverflow) return;
+
+    const progress = categoryList.scrollLeft / maxScroll;
+    const thumbWidth = Math.max(25, (categoryList.clientWidth / categoryList.scrollWidth) * 100);
+    const availableTravel = 100 - thumbWidth;
+
+    categoryScrollProgress.style.width = `${thumbWidth + progress * availableTravel}%`;
+}
+
+categoryList.addEventListener("scroll", updateCategoryScrollHint, { passive: true });
+window.addEventListener("resize", updateCategoryScrollHint);
 
 renderProducts();
