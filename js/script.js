@@ -235,10 +235,7 @@ function updateCategoryScrollHint() {
     if (!hasOverflow) return;
 
     const progress = categoryList.scrollLeft / maxScroll;
-    const thumbWidth = Math.max(25, (categoryList.clientWidth / categoryList.scrollWidth) * 100);
-    const availableTravel = 100 - thumbWidth;
-
-    categoryScrollProgress.style.width = `${thumbWidth + progress * availableTravel}%`;
+    categoryScrollProgress.style.width = `${progress * 100}%`;
 }
 
 categoryList.addEventListener("scroll", updateCategoryScrollHint, { passive: true });
