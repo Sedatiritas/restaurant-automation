@@ -185,12 +185,22 @@ body {
 .category-btn { scroll-snap-align: start; }
 
 .category-scroll-hint {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 100%;
     margin: -14px 0 24px;
 }
 
+.category-scroll-arrow {
+    flex: 0 0 auto;
+    color: var(--menu-accent);
+    font-size: 11px;
+}
+
 .category-scroll-track {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     height: 3px;
     overflow: hidden;
     border-radius: 10px;
@@ -279,6 +289,38 @@ body {
     font-family: Georgia, serif;
     font-size: 20px;
     font-weight: 700;
+}
+
+.footer-socials {
+    flex-wrap: wrap;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--menu-border);
+    border-radius: 30px;
+    background: var(--menu-card);
+    color: var(--menu-text);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.social-link i {
+    color: var(--menu-accent);
+    font-size: 15px;
+}
+
+.social-link:hover {
+    border-color: var(--menu-accent);
+    background: #fffaf4;
+    color: var(--menu-text);
 }
 
 .footer-divider {
