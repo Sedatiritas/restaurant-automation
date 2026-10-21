@@ -26,13 +26,19 @@
           <a class="admin-nav-link" href="#categories" data-view="categories"><i class="bi bi-collection"></i><span>Kategoriler</span></a>
           <div class="sidebar-label sidebar-label-spaced">İŞLETME</div>
           <a class="admin-nav-link" href="#appearance" data-view="appearance"><i class="bi bi-palette2"></i><span>Menü Görünümü</span></a>
-          <a class="admin-nav-link" href="#qr" data-view="qr"><i class="bi bi-qr-code"></i><span>QR Menü</span></a>
           <a class="admin-nav-link" href="#staff" data-view="staff"><i class="bi bi-people"></i><span>Personel ve Yetkiler</span></a>
           <a class="admin-nav-link" href="#settings" data-view="settings"><i class="bi bi-gear"></i><span>İşletme Ayarları</span></a>
         </nav>
         <div class="sidebar-bottom">
           <a class="sidebar-preview" href="index.html" target="_blank" rel="noopener noreferrer"><span class="preview-icon"><i class="bi bi-phone"></i></span><span><strong>Müşteri menüsü</strong><small>Yeni sekmede önizle</small></span><i class="bi bi-arrow-up-right ms-auto"></i></a>
-          <div class="sidebar-user"><span class="user-avatar">RC</span><span><strong>İşletme Yöneticisi</strong><small>Demo yönetici hesabı</small></span><i class="bi bi-three-dots ms-auto"></i></div>
+          <div class="sidebar-user-wrap">
+            <button class="sidebar-user" id="profileMenuButton" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="user-avatar">RC</span><span><strong>İşletme Yöneticisi</strong><small>Yönetici hesabı</small></span><i class="bi bi-three-dots ms-auto"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end profile-dropdown" aria-labelledby="profileMenuButton">
+              <li><button class="dropdown-item text-danger" type="button" data-action="logout"><i class="bi bi-box-arrow-right me-2"></i>Çıkış yap</button></li>
+            </ul>
+          </div>
         </div>
       </div>
     </aside>
