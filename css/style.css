@@ -184,6 +184,42 @@ body {
 .category-list::-webkit-scrollbar { display: none; }
 .category-btn { scroll-snap-align: start; }
 
+.category-scroll-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: -14px 2px 24px;
+    color: var(--menu-muted);
+    font-size: 10px;
+}
+
+.category-scroll-hint > span:first-child,
+.category-scroll-hint > span:nth-child(3) {
+    color: var(--menu-accent);
+    font-size: 12px;
+}
+
+.category-scroll-track {
+    width: 52px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e4ddd3;
+}
+
+.category-scroll-progress {
+    display: block;
+    width: 35%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--menu-accent);
+    transition: width .15s ease;
+}
+
+.category-scroll-label {
+    margin-left: 2px;
+}
+
 .category-btn {
     flex-shrink: 0;
     padding: 10px 15px;
