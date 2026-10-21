@@ -245,3 +245,4 @@ categoryList.addEventListener("scroll", updateCategoryScrollHint, { passive: tru
 window.addEventListener("resize", updateCategoryScrollHint);
 
 renderProducts();
+updateCategoryScrollHint();
