@@ -40,6 +40,19 @@ document.addEventListener("DOMContentLoaded", function () {
     settings: {businessName:"Roast & Co.",phone:"",email:"",address:"",instagram:"",whatsapp:"",currency:"TL",description:"Kahve, tatlı ve güzel anlar."},
     appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",openStatus:"Açığız",locationLabel:"Bizi ziyaret et",locationText:"Şehrin kalbinde",hoursLabel:"Çalışma saatleri",hoursText:"09.00 – 23.00"}
   };
+  function imageFileToDataUrl(file,maxSize) {
+    return new Promise(function(resolve,reject){
+      if(!file.type.startsWith("image/")){reject(new Error("not-image"));return;}
+      const reader=new FileReader();reader.onerror=reject;reader.onload=function(){
+        const image=new Image();image.onerror=reject;image.onload=function(){
+          const scale=Math.min(1,maxSize/Math.max(image.width,image.height));
+          const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));
+          canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);
+          resolve(canvas.toDataURL("image/webp",0.82));
+        };image.src=reader.result;
+      };reader.readAsDataURL(file);
+    });
+  }
   function load(key) {
     try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
@@ -163,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const s=state.settings;
     return pageHeading("İŞLETME","İşletme Ayarları","İşletme bilgilerini, iletişim bağlantılarını ve para birimini düzenleyin.") +
       '<div class="settings-grid"><section class="panel-card"><div class="panel-heading"><div><h3>Temel bilgiler</h3><p>İşletme ve iletişim detayları.</p></div></div><form id="settingsForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="businessName">İşletme adı</label><input class="form-control" id="businessName" name="businessName" required maxlength="100" value="'+escapeHtml(s.businessName)+'"></div><div class="mb-3"><label class="form-label" for="businessPhone">Telefon</label><input class="form-control" id="businessPhone" name="phone" type="tel" value="'+escapeHtml(s.phone)+'" placeholder="05xx xxx xx xx"></div><div class="mb-3"><label class="form-label" for="businessEmail">E-posta</label><input class="form-control" id="businessEmail" name="email" type="email" value="'+escapeHtml(s.email)+'" placeholder="info@isletme.com"></div><div class="mb-3"><label class="form-label" for="businessAddress">Adres</label><textarea class="form-control" id="businessAddress" name="address" rows="2">'+escapeHtml(s.address)+'</textarea></div><div class="mb-3"><label class="form-label" for="businessDescription">Kısa açıklama</label><textarea class="form-control" id="businessDescription" name="description" rows="2">'+escapeHtml(s.description)+'</textarea></div><div class="mb-3"><label class="form-label" for="currency">Para birimi</label><select class="form-select" id="currency" name="currency"><option value="TL" '+(s.currency==="TL"?"selected":"")+'>Türk lirası (TL)</option><option value="EUR" '+(s.currency==="EUR"?"selected":"")+'>Euro (EUR)</option><option value="USD" '+(s.currency==="USD"?"selected":"")+'>ABD doları (USD)</option></select></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Bilgileri kaydet</button></form></section>' +
-      '<section class="panel-card"><div class="panel-heading"><div><h3>Sosyal medya ve iletişim</h3><p>Müşterilerinizin size ulaşabileceği bağlantılar.</p></div></div><form id="contactForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="instagramUrl">Instagram bağlantısı</label><input class="form-control" id="instagramUrl" name="instagram" type="url" value="'+escapeHtml(s.instagram)+'" placeholder="https://instagram.com/..."></div><div class="mb-3"><label class="form-label" for="whatsappUrl">WhatsApp bağlantısı</label><input class="form-control" id="whatsappUrl" name="whatsapp" type="url" value="'+escapeHtml(s.whatsapp)+'" placeholder="https://wa.me/90..."></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Bağlantıları kaydet</button></form><div class="border-top mx-3 my-3"></div><div class="px-3 pb-3"><div class="setting-row"><span><strong>Veri saklama</strong><small>Bu prototipte ayarlar yalnızca bu tarayıcıda tutulur.</small></span><i class="bi bi-database fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Hesap güvenliği</strong><small>Gerçek kullanıcı ve rol doğrulaması backend gerektirir.</small></span><i class="bi bi-shield-check fs-5 text-secondary"></i></div></div></section></div>';
+      '<section class="panel-card"><div class="panel-heading"><div><h3>Sosyal medya ve iletişim</h3><p>Müşterilerinizin size ulaşabileceği bağlantılar.</p></div></div><form id="contactForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="instagramUrl">Instagram bağlantısı</label><input class="form-control" id="instagramUrl" name="instagram" type="url" value="'+escapeHtml(s.instagram)+'" placeholder="https://instagram.com/..."></div><div class="mb-3"><label class="form-label" for="whatsappUrl">WhatsApp bağlantısı</label><input class="form-control" id="whatsappUrl" name="whatsapp" type="url" value="'+escapeHtml(s.whatsapp)+'" placeholder="https://wa.me/90..."></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Bağlantıları kaydet</button></form></section></div>';
   }
   const viewRenderers = {overview:overviewView,products:productsView,categories:categoriesView,appearance:appearanceView,staff:staffView,settings:settingsView};
   const viewTitles = {overview:"Genel Bakış",products:"Ürünler",categories:"Kategoriler",appearance:"Menü Görünümü",staff:"Personel ve Yetkiler",settings:"İşletme Ayarları"};
@@ -203,6 +216,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if(!actionButton)return;
     const action=actionButton.dataset.action, id=Number(actionButton.dataset.id);
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
+    if(action==="remove-product-image"){const input=document.querySelector('#productForm [name="currentImage"]');if(input)input.value="";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
+    if(action==="remove-logo"||action==="remove-cover"){const key=action==="remove-logo"?"currentLogo":"currentCover";const input=document.querySelector('#appearanceForm [name="'+key+'"]');if(input)input.value="";const preview=document.getElementById(action==="remove-logo"?"logoPreview":"coverPreview");if(preview)preview.innerHTML="<span>Görsel seçilmedi</span>";const file=document.getElementById(action==="remove-logo"?"logoFile":"coverFile");if(file)file.value="";return;}
     if(action==="add-product"){if(!state.categories.length){notify("Önce en az bir kategori oluşturun.");setView("categories");return;}productForm();return;}
     if(action==="edit-product"){productForm(state.products.find(function(p){return p.id===id;}));return;}
     if(action==="toggle-product"){const p=state.products.find(function(x){return x.id===id;});if(p){p.status=p.status==="active"?"hidden":"active";save("products");render("products",false);notify("Ürün durumu güncellendi.");}return;}
@@ -216,11 +231,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if(action==="delete-staff"){const s=state.staff.find(function(x){return x.id===id;});if(s&&window.confirm(s.name+" personel kaydını silmek istiyor musunuz?")){state.staff=state.staff.filter(function(x){return x.id!==id;});save("staff");render("staff",false);notify("Personel kaydı silindi.");}return;}
     if(action==="logout"){if(window.confirm("Demo yönetici oturumundan çıkmak istiyor musunuz?")){render("overview",false);notify("Demo oturumu kapatıldı.");}return;}
   });
-  document.addEventListener("submit",function(event){
+  document.addEventListener("submit",async function(event){
     const form=event.target;
     if(form.id==="productForm"){
-      event.preventDefault();const data=formObject(form);const id=Number(data.id);
-      const product={id:id||Date.now(),name:data.name.trim(),category:data.category,price:Number(data.price),description:data.description.trim(),status:data.status,image:data.image.trim()};
+      event.preventDefault();const data=formObject(form);const id=Number(data.id);let image=data.currentImage||"";const file=form.querySelector('[name="imageFile"]')?.files?.[0];if(file){try{image=await imageFileToDataUrl(file,900);}catch(error){notify("Görsel okunamadı. Başka bir dosya deneyin.");return;}}
+      const product={id:id||Date.now(),name:data.name.trim(),category:data.category,price:Number(data.price),description:data.description.trim(),status:data.status,image:image};
       if(!product.name||!Number.isFinite(product.price)||product.price<0){notify("Ürün adı ve geçerli bir fiyat girin.");return;}
       if(id){state.products=state.products.map(function(p){return p.id===id?product:p;});}else{state.products.unshift(product);}
       save("products");if(modal)modal.hide();render("products",false);notify(id?"Ürün güncellendi.":"Yeni ürün eklendi.");return;
@@ -240,11 +255,19 @@ document.addEventListener("DOMContentLoaded", function () {
       save("staff");if(modal)modal.hide();render("staff",false);notify(id?"Personel güncellendi.":"Personel kaydı eklendi.");return;
     }
     if(form.id==="appearanceForm"){
-      event.preventDefault();const data=formObject(form);state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:data.cover.trim(),logo:data.logo.trim(),accent:data.accent};save("appearance");render("appearance",false);notify("Menü görünümü kaydedildi.");return;
+      event.preventDefault();const data=formObject(form);let logo=data.currentLogo||"",cover=data.currentCover||"";
+      try{const logoFile=form.querySelector('[name="logoFile"]')?.files?.[0];const coverFile=form.querySelector('[name="coverFile"]')?.files?.[0];if(logoFile)logo=await imageFileToDataUrl(logoFile,500);if(coverFile)cover=await imageFileToDataUrl(coverFile,1400);}catch(error){notify("Görsel işlenemedi. Daha küçük veya farklı bir görsel seçin.");return;}
+      state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:cover,logo:logo,accent:data.accent,openStatus:data.openStatus.trim(),locationLabel:data.locationLabel.trim(),locationText:data.locationText.trim(),hoursLabel:data.hoursLabel.trim(),hoursText:data.hoursText.trim()};
+      try{save("appearance");}catch(error){notify("Görsel tarayıcı depolama sınırını aştı. Daha küçük bir görsel seçin.");return;}render("appearance",false);notify("Header ve slider ayarları kaydedildi.");return;
     }
     if(form.id==="settingsForm"||form.id==="contactForm"){
       event.preventDefault();const data=formObject(form);Object.keys(data).forEach(function(key){state.settings[key]=data[key].trim();});save("settings");notify("İşletme bilgileri kaydedildi.");return;
     }
+  });
+  document.addEventListener("change",function(event){
+    const fileInput=event.target.closest('input[type="file"]');if(!fileInput||!fileInput.files||!fileInput.files[0])return;
+    const previewId=fileInput.id==="productImageFile"?"productImagePreview":fileInput.id==="logoFile"?"logoPreview":"coverPreview";const preview=document.getElementById(previewId);if(!preview)return;
+    const reader=new FileReader();reader.onload=function(){preview.innerHTML='<img alt="Görsel önizlemesi" src="'+reader.result+'">';};reader.readAsDataURL(fileInput.files[0]);
   });
   document.addEventListener("input",function(event){
     if(event.target.id==="productSearch"){state.productSearch=event.target.value;const cursor=event.target.selectionStart;render("products",false);const input=document.getElementById("productSearch");input.focus();input.setSelectionRange(cursor,cursor);}
