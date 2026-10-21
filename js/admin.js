@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
   }
   const state = { products:load("products"), categories:load("categories"), staff:load("staff"), settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all" };
-  function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); } catch (e) { notify("Tarayıcı depolaması dolu; görsel dosyası yerine görsel bağlantısı kullanın."); } }
+  function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); return true; } catch (e) { notify("Tarayıcı depolama alanı doldu. Daha küçük görseller seçin."); return false; } }
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
     toastMessage.textContent = message;
@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const product={id:id||Date.now(),name:data.name.trim(),category:data.category,price:Number(data.price),description:data.description.trim(),status:data.status,image:image};
       if(!product.name||!Number.isFinite(product.price)||product.price<0){notify("Ürün adı ve geçerli bir fiyat girin.");return;}
       if(id){state.products=state.products.map(function(p){return p.id===id?product:p;});}else{state.products.unshift(product);}
-      save("products");if(modal)modal.hide();render("products",false);notify(id?"Ürün güncellendi.":"Yeni ürün eklendi.");return;
+      if(!save("products"))return;if(modal)modal.hide();render("products",false);notify(id?"Ürün güncellendi.":"Yeni ürün eklendi.");return;
     }
     if(form.id==="categoryForm"){
       event.preventDefault();const data=formObject(form);const id=Number(data.id);const name=data.name.trim();
@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", function () {
       event.preventDefault();const data=formObject(form);let logo=data.currentLogo||"",cover=data.currentCover||"";
       try{const logoFile=form.querySelector('[name="logoFile"]')?.files?.[0];const coverFile=form.querySelector('[name="coverFile"]')?.files?.[0];if(logoFile)logo=await imageFileToDataUrl(logoFile,500);if(coverFile)cover=await imageFileToDataUrl(coverFile,1400);}catch(error){notify("Görsel işlenemedi. Daha küçük veya farklı bir görsel seçin.");return;}
       state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:cover,logo:logo,accent:data.accent,openStatus:data.openStatus.trim(),locationLabel:data.locationLabel.trim(),locationText:data.locationText.trim(),hoursLabel:data.hoursLabel.trim(),hoursText:data.hoursText.trim()};
-      try{save("appearance");}catch(error){notify("Görsel tarayıcı depolama sınırını aştı. Daha küçük bir görsel seçin.");return;}render("appearance",false);notify("Header ve slider ayarları kaydedildi.");return;
+      if(!save("appearance"))return;render("appearance",false);notify("Header ve slider ayarları kaydedildi.");return;
     }
     if(form.id==="settingsForm"||form.id==="contactForm"){
       event.preventDefault();const data=formObject(form);Object.keys(data).forEach(function(key){state.settings[key]=data[key].trim();});save("settings");notify("İşletme bilgileri kaydedildi.");return;
