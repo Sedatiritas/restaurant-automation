@@ -4,7 +4,7 @@ function applySavedAppearance() {
         if (!appearance) return;
 
         const logo = document.querySelector(".brand-logo img");
-        if (logo && appearance.logo) logo.src = appearance.logo;
+        if (logo) { logo.parentElement.style.display = appearance.logo ? "block" : "none"; if (appearance.logo) logo.src = appearance.logo; }
 
         const brandName = document.querySelector(".brand-name");
         if (brandName && appearance.brandName) brandName.textContent = appearance.brandName;
@@ -21,7 +21,7 @@ function applySavedAppearance() {
         }
 
         const heroImage = document.querySelector(".hero-image");
-        if (heroImage && appearance.cover) heroImage.src = appearance.cover;
+        if (heroImage) { heroImage.style.display = appearance.cover ? "block" : "none"; if (appearance.cover) heroImage.src = appearance.cover; }
 
         const heroLabel = document.querySelector(".hero-label");
         if (heroLabel && appearance.eyebrow) {
