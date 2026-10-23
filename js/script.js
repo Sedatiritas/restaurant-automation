@@ -13,11 +13,14 @@ function applySavedAppearance() {
         if (subtitle && appearance.tagline) subtitle.textContent = appearance.tagline;
 
         const status = document.querySelector(".open-status");
-        if (status && appearance.openStatus) {
+        if (status) {
+            const isOpen = appearance.isOpen !== false;
+            status.classList.toggle("is-closed", !isOpen);
+            status.setAttribute("aria-label", isOpen ? "İşletme açık" : "İşletme kapalı");
             status.textContent = "";
             const dot = document.createElement("span");
             dot.className = "status-dot";
-            status.append(dot, document.createTextNode(appearance.openStatus));
+            status.append(dot, document.createTextNode(isOpen ? "Açığız" : "Kapalıyız"));
         }
 
         const heroImage = document.querySelector(".hero-image");
