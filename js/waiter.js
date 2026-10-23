@@ -49,9 +49,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  const tables = Array.from({ length: 12 }, function (_, index) {
+  const fallbackTables = Array.from({ length: 12 }, function (_, index) {
     return { id: index + 1, name: "Masa " + (index + 1), seats: [2, 4, 4, 2, 4, 6, 2, 4, 4, 2, 6, 4][index] };
   });
+  let tables = readArray("roastAdmin_tables", fallbackTables);
 
   // Older releases stored unsent selections as drafts. Keep only products that were sent.
   function migrateLegacyOrders(rawOrders) {
@@ -503,9 +504,17 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   $("#sendOrderButton").addEventListener("click", sendCurrentOrder);
   window.addEventListener("storage", function (event) {
-    if (event.key === "roastAdmin_products" || event.key === "roastAdmin_categories" || event.key === "roastAdmin_appearance" || event.key === "roastWaiter_orders" || event.key === "roastWaiter_schemaVersion") {
+    if (event.key === "roastAdmin_products" || event.key === "roastAdmin_categories" || event.key === "roastAdmin_tables" || event.key === "roastAdmin_appearance" || event.key === "roastWaiter_orders" || event.key === "roastWaiter_schemaVersion") {
       state.products = readArray("roastAdmin_products", fallbackProducts);
       state.categories = readArray("roastAdmin_categories", fallbackCategories);
+      if (event.key === "roastAdmin_tables") {
+        tables = readArray("roastAdmin_tables", fallbackTables);
+        if (state.selectedTableId != null && !tables.some(function (table) { return String(table.id) === String(state.selectedTableId); })) {
+          state.selectedTableId = null;
+          state.currentOrderEntry = null;
+          state.view = "tables";
+        }
+      }
       state.orders = loadOrders();
       renderAll();
     }
