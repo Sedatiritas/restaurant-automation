@@ -17,8 +17,6 @@ a{color:inherit}
 .status-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#579755}
 .service-status.is-closed{border-color:#f1dad6;background:#fff3f1;color:var(--red)}
 .service-status.is-closed .status-dot{background:var(--red)}
-.back-admin{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:11px;font-weight:750;text-decoration:none;white-space:nowrap}
-.back-admin:hover{border-color:#d7c1ae;background:#fffaf5}
 .waiter-main{width:min(1200px,100%);margin:0 auto;padding:25px clamp(14px,3vw,34px) 42px}
 .page-intro{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
 .eyebrow{display:block;margin-bottom:5px;color:var(--accent-dark);font-size:10px;font-weight:850;letter-spacing:1.1px}
@@ -191,9 +189,6 @@ a{color:inherit}
   .waiter-brand small{font-size:7px;letter-spacing:1px}
   .topbar-right{gap:7px}
   .service-status{min-height:35px;padding:0 9px;font-size:10px}
-  .back-admin{width:40px;height:40px;min-height:40px;padding:0}
-  .back-admin span{display:none}
-  .back-admin i{font-size:16px}
   .waiter-main{padding:18px 12px calc(30px + env(safe-area-inset-bottom))}
   .page-intro{align-items:flex-start;gap:10px;margin-bottom:17px}
   .page-intro h1{font-size:27px;line-height:1.15}
