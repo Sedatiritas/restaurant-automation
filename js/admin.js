@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
       {id:3,name:"Zeynep Kaya",email:"zeynep@example.com",role:"Garson",status:"inactive"}
     ],
     settings: {businessName:"Roast & Co.",phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
-    appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",openStatus:"Açığız",locationLabel:"Bizi ziyaret et",locationText:"Şehrin kalbinde",hoursLabel:"Çalışma saatleri",hoursText:"09.00 – 23.00"}
+    appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",isOpen:true,locationLabel:"Bizi ziyaret et",locationText:"Şehrin kalbinde",hoursLabel:"Çalışma saatleri",hoursText:"09.00 – 23.00"}
   };
   function imageFileToDataUrl(file,maxSize) {
     return new Promise(function(resolve,reject){
@@ -132,30 +132,47 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function appearanceView() {
     const a=state.appearance;
-    return pageHeading("MARKA VE TASARIM","Header ve slider","Müşteri menüsünün üst marka alanını, çalışma durumu satırını ve tanıtım görselini düzenleyin.") +
+    const isOpen=a.isOpen!==false;
+    return pageHeading("MENÜ TASARIMI","Menü Görünümü","Müşteri menünüzün üst bölümünü ve işletme bilgilerini kolayca özelleştirin.") +
       `<div class="appearance-editor">
-        <section class="panel-card">
-          <div class="panel-heading"><div><h3>Header ayarları</h3><p>Logo, marka bilgileri, konum ve çalışma saatleri.</p></div></div>
-          <form id="appearanceForm" class="p-3 pt-0">
-            <input type="hidden" name="currentLogo" value="${escapeHtml(a.logo||"")}">
-            <input type="hidden" name="currentCover" value="${escapeHtml(a.cover||"")}">
-            <div class="mb-3"><label class="form-label" for="brandName">Marka adı</label><input class="form-control" id="brandName" name="brandName" required maxlength="60" value="${escapeHtml(a.brandName)}"></div>
-            <div class="mb-3"><label class="form-label" for="tagline">Marka alt yazısı</label><input class="form-control" id="tagline" name="tagline" maxlength="100" value="${escapeHtml(a.tagline)}"></div>
-            <div class="mb-3"><label class="form-label" for="logoFile">Logo görseli</label><input class="form-control" id="logoFile" name="logoFile" type="file" accept="image/*"><div class="image-upload-preview mt-2" id="logoPreview">${a.logo?`<img src="${escapeHtml(a.logo)}" alt="Logo önizlemesi">`:"<span>Logo seçilmedi</span>"}</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-logo">Logoyu kaldır</button></div>
-            <div class="mb-3"><label class="form-label" for="openStatus">Çalışma durumu yazısı</label><input class="form-control" id="openStatus" name="openStatus" maxlength="40" value="${escapeHtml(a.openStatus||"Açığız")}"></div>
-            <div class="mb-3"><label class="form-label" for="locationLabel">Konum başlığı</label><input class="form-control" id="locationLabel" name="locationLabel" maxlength="60" value="${escapeHtml(a.locationLabel||"Bizi ziyaret et")}"></div>
-            <div class="mb-3"><label class="form-label" for="locationText">Konum metni</label><input class="form-control" id="locationText" name="locationText" maxlength="100" value="${escapeHtml(a.locationText||"Şehrin kalbinde")}"></div>
-            <div class="mb-3"><label class="form-label" for="hoursLabel">Çalışma saatleri başlığı</label><input class="form-control" id="hoursLabel" name="hoursLabel" maxlength="60" value="${escapeHtml(a.hoursLabel||"Çalışma saatleri")}"></div>
-            <div class="mb-3"><label class="form-label" for="hoursText">Çalışma saatleri</label><input class="form-control" id="hoursText" name="hoursText" maxlength="80" value="${escapeHtml(a.hoursText||"09.00 – 23.00")}"></div>
-            <hr><h3 class="form-section-title">Slider / kapak alanı</h3>
-            <div class="mb-3"><label class="form-label" for="coverFile">Slider görseli</label><input class="form-control" id="coverFile" name="coverFile" type="file" accept="image/*"><div class="form-text">Bilgisayarınızdan görsel seçin; görsel boyutu otomatik küçültülür.</div><div class="image-upload-preview mt-2" id="coverPreview">${a.cover?`<img src="${escapeHtml(a.cover)}" alt="Slider önizlemesi">`:"<span>Görsel seçilmedi</span>"}</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-cover">Slider görselini kaldır</button></div>
-            <div class="mb-3"><label class="form-label" for="appearanceEyebrow">Üst başlık</label><input class="form-control" id="appearanceEyebrow" name="eyebrow" maxlength="80" value="${escapeHtml(a.eyebrow)}"></div>
-            <div class="mb-3"><label class="form-label" for="appearanceHeadline">Ana başlık</label><textarea class="form-control" id="appearanceHeadline" name="headline" rows="2" maxlength="140">${escapeHtml(a.headline)}</textarea></div>
-            <div class="mb-3"><label class="form-label" for="accentColor">Vurgu rengi</label><input class="form-control form-control-color" id="accentColor" name="accent" type="color" value="${escapeHtml(a.accent||"#b96e43")}"></div>
-            <button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Değişiklikleri kaydet</button>
-          </form>
-        </section>
-
+        <form id="appearanceForm" class="appearance-form">
+          <input type="hidden" name="currentLogo" value="${escapeHtml(a.logo||"")}">
+          <input type="hidden" name="currentCover" value="${escapeHtml(a.cover||"")}">
+          <section class="appearance-section">
+            <div class="appearance-section-heading"><span class="appearance-section-icon"><i class="bi bi-shop"></i></span><div><h3>İşletme durumu</h3><p>Menüde işletmenizin açık veya kapalı olduğunu gösterin.</p></div></div>
+            <div class="business-status-control ${isOpen?"is-open":"is-closed"}">
+              <div><strong id="businessStatusTitle">${isOpen?"İşletme açık":"İşletme kapalı"}</strong><small id="businessStatusHelp">${isOpen?"Müşteriler menüde Açığız bilgisini görecek.":"Müşteriler menüde Kapalıyız bilgisini kırmızı renkte görecek."}</small></div>
+              <div class="form-check form-switch status-switch"><input class="form-check-input" type="checkbox" role="switch" id="isOpenToggle" name="isOpen" value="true" ${isOpen?"checked":""}><label class="form-check-label" for="isOpenToggle">Açığız</label></div>
+            </div>
+          </section>
+          <section class="appearance-section">
+            <div class="appearance-section-heading"><span class="appearance-section-icon"><i class="bi bi-type"></i></span><div><h3>Marka ve logo</h3><p>İşletmenizin adını, kısa sloganını ve logosunu ekleyin.</p></div></div>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="brandName">İşletme adı</label><input class="form-control" id="brandName" name="brandName" required maxlength="60" value="${escapeHtml(a.brandName)}"></div>
+              <div class="col-md-6"><label class="form-label" for="tagline">Kısa slogan</label><input class="form-control" id="tagline" name="tagline" maxlength="100" value="${escapeHtml(a.tagline)}" placeholder="Örn. Kahve · Tatlı · Mutluluk"></div>
+              <div class="col-12"><label class="form-label" for="logoFile">Logo görseli</label><input class="form-control" id="logoFile" name="logoFile" type="file" accept="image/*"><div class="form-text">Bilgisayarınızdan PNG, JPG veya WebP seçebilirsiniz.</div><div class="image-upload-preview mt-2" id="logoPreview">${a.logo?`<img src="${escapeHtml(a.logo)}" alt="Logo önizlemesi">`:"<span>Henüz logo seçilmedi</span>"}</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-logo"><i class="bi bi-trash3 me-1"></i>Logoyu kaldır</button></div>
+            </div>
+          </section>
+          <section class="appearance-section">
+            <div class="appearance-section-heading"><span class="appearance-section-icon"><i class="bi bi-geo-alt"></i></span><div><h3>Ziyaret ve çalışma saatleri</h3><p>Müşterilerin işletmenizi bulmasına yardımcı olacak bilgileri girin.</p></div></div>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="locationLabel">Konum başlığı</label><input class="form-control" id="locationLabel" name="locationLabel" maxlength="60" value="${escapeHtml(a.locationLabel||"Bizi ziyaret et")}"></div>
+              <div class="col-md-6"><label class="form-label" for="locationText">Konum bilgisi</label><input class="form-control" id="locationText" name="locationText" maxlength="100" value="${escapeHtml(a.locationText||"Şehrin kalbinde")}" placeholder="Örn. Adana, Seyhan"></div>
+              <div class="col-md-6"><label class="form-label" for="hoursLabel">Saatler başlığı</label><input class="form-control" id="hoursLabel" name="hoursLabel" maxlength="60" value="${escapeHtml(a.hoursLabel||"Çalışma saatleri")}"></div>
+              <div class="col-md-6"><label class="form-label" for="hoursText">Çalışma saatleri</label><input class="form-control" id="hoursText" name="hoursText" maxlength="80" value="${escapeHtml(a.hoursText||"09.00 – 23.00")}" placeholder="Örn. Her gün 09.00 – 23.00"></div>
+            </div>
+          </section>
+          <section class="appearance-section">
+            <div class="appearance-section-heading"><span class="appearance-section-icon"><i class="bi bi-image"></i></span><div><h3>Kapak alanı</h3><p>Müşteri menüsünün üst kısmındaki görseli ve karşılama yazısını düzenleyin.</p></div></div>
+            <div class="row g-3">
+              <div class="col-12"><label class="form-label" for="coverFile">Kapak görseli</label><input class="form-control" id="coverFile" name="coverFile" type="file" accept="image/*"><div class="form-text">Geniş yatay görseller en iyi sonucu verir. Görsel otomatik olarak küçültülür.</div><div class="image-upload-preview cover-upload-preview mt-2" id="coverPreview">${a.cover?`<img src="${escapeHtml(a.cover)}" alt="Kapak görseli önizlemesi">`:"<span>Henüz kapak görseli seçilmedi</span>"}</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-cover"><i class="bi bi-trash3 me-1"></i>Kapak görselini kaldır</button></div>
+              <div class="col-md-6"><label class="form-label" for="appearanceEyebrow">Kısa üst yazı</label><input class="form-control" id="appearanceEyebrow" name="eyebrow" maxlength="80" value="${escapeHtml(a.eyebrow)}" placeholder="Örn. HER FİNCANDA MUTLULUK"></div>
+              <div class="col-md-6"><label class="form-label" for="appearanceHeadline">Ana başlık</label><textarea class="form-control" id="appearanceHeadline" name="headline" rows="2" maxlength="140" placeholder="Müşterilerin göreceği karşılama yazısı">${escapeHtml(a.headline)}</textarea></div>
+              <div class="col-md-6"><label class="form-label" for="accentColor">Tema rengi</label><div class="theme-color-field"><input class="form-control form-control-color" id="accentColor" name="accent" type="color" value="${escapeHtml(a.accent||"#b96e43")}"><span>Buton ve vurgularda kullanılacak renk</span></div></div>
+            </div>
+          </section>
+          <div class="appearance-savebar"><span><i class="bi bi-info-circle me-1"></i>Değişiklikler kaydedildikten sonra müşteri menüsüne uygulanır.</span><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Değişiklikleri kaydet</button></div>
+        </form>
       </div>`;
   }
   function staffView() {
@@ -195,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ["bi-cup-hot","Sıcak kahve"],["bi-cup-straw","Soğuk içecek"],["bi-cup","Çay / fincan"],["bi-cake2","Pasta ve tatlı"],
     ["bi-cookie","Kurabiye"],["bi-egg-fried","Atıştırmalık"],["bi-egg","Kahvaltı"],["bi-droplet","Smoothie"],
     ["bi-sun","Taze / ferah"],["bi-snow","Soğuk ürün"],["bi-cup-fill","İçecek"],["bi-basket2","Sepet / yiyecek"],
-    ["bi-bread-slice","Fırın ürünleri"],["bi-ice-cream","Dondurma"],["bi-apple","Meyve"],["bi-heart","Favoriler"],
+    ["bi-basket2","Fırın ürünleri"],["bi-cone-striped","Dondurma"],["bi-apple","Meyve"],["bi-heart","Favoriler"],
     ["bi-star","Öne çıkanlar"],["bi-lightning","Enerji içeceği"],["bi-flower1","Bitkisel"],["bi-collection","Genel kategori"],
     ["bi-shop","Mağaza"],["bi-fire","Izgara / sıcak"],["bi-gift","Kampanya"],["bi-tags","Diğer ürünler"]
   ];
@@ -275,7 +292,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if(form.id==="appearanceForm"){
       event.preventDefault();const data=formObject(form);let logo=data.currentLogo||"",cover=data.currentCover||"";
       try{const logoFile=form.querySelector('[name="logoFile"]')?.files?.[0];const coverFile=form.querySelector('[name="coverFile"]')?.files?.[0];if(logoFile)logo=await imageFileToDataUrl(logoFile,500);if(coverFile)cover=await imageFileToDataUrl(coverFile,1400);}catch(error){notify("Görsel işlenemedi. Daha küçük veya farklı bir görsel seçin.");return;}
-      state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:cover,logo:logo,accent:data.accent,openStatus:data.openStatus.trim(),locationLabel:data.locationLabel.trim(),locationText:data.locationText.trim(),hoursLabel:data.hoursLabel.trim(),hoursText:data.hoursText.trim()};
+      state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:cover,logo:logo,accent:data.accent,isOpen:form.querySelector("#isOpenToggle").checked,locationLabel:data.locationLabel.trim(),locationText:data.locationText.trim(),hoursLabel:data.hoursLabel.trim(),hoursText:data.hoursText.trim()};
       if(!save("appearance"))return;render("appearance",false);notify("Header ve slider ayarları kaydedildi.");return;
     }
     if(form.id==="settingsForm"||form.id==="contactForm"){
