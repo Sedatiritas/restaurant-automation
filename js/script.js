@@ -1,16 +1,49 @@
 function applySavedBusinessSettings() {
     try {
         const settings = JSON.parse(localStorage.getItem("roastAdmin_settings") || "null");
-        const address = (settings && settings.address || "").trim();
+        if (!settings) return;
+
+        const address = (settings.address || "").trim();
         const addressLine = document.querySelector("#footerAddress");
         const addressText = document.querySelector("#footerAddressText");
-
         if (addressLine && addressText && address) {
             addressText.textContent = address;
             addressLine.classList.remove("d-none");
         } else if (addressLine) {
             addressLine.classList.add("d-none");
         }
+
+        const description = document.querySelector("#footerDescription");
+        if (description && settings.description) description.textContent = settings.description;
+
+        const phone = (settings.phone || "").trim();
+        const phoneLink = document.querySelector("#footerPhone");
+        if (phoneLink) {
+            if (phone) {
+                phoneLink.href = "tel:" + phone.replace(/[^+\\d]/g, "");
+                phoneLink.querySelector("span").textContent = phone;
+                phoneLink.classList.remove("d-none");
+            } else {
+                phoneLink.classList.add("d-none");
+            }
+        }
+
+        const email = (settings.email || "").trim();
+        const emailLink = document.querySelector("#footerEmail");
+        if (emailLink) {
+            if (email) {
+                emailLink.href = "mailto:" + email;
+                emailLink.querySelector("span").textContent = email;
+                emailLink.classList.remove("d-none");
+            } else {
+                emailLink.classList.add("d-none");
+            }
+        }
+
+        const instagram = document.querySelector("#footerInstagram");
+        if (instagram && settings.instagram) instagram.href = settings.instagram;
+        const whatsapp = document.querySelector("#footerWhatsapp");
+        if (whatsapp && settings.whatsapp) whatsapp.href = settings.whatsapp;
     } catch (error) {
         console.warn("İşletme ayarları okunamadı.", error);
     }
