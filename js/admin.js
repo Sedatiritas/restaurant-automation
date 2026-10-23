@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
       {id:2,name:"Mehmet Demir",email:"mehmet@example.com",role:"Kasiyer",status:"active"},
       {id:3,name:"Zeynep Kaya",email:"zeynep@example.com",role:"Garson",status:"inactive"}
     ],
-    settings: {businessName:"Roast & Co.",phone:"",email:"",address:"",instagram:"",whatsapp:"",currency:"TL",description:"Kahve, tatlı ve güzel anlar."},
+    settings: {businessName:"Roast & Co.",phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
     appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",openStatus:"Açığız",locationLabel:"Bizi ziyaret et",locationText:"Şehrin kalbinde",hoursLabel:"Çalışma saatleri",hoursText:"09.00 – 23.00"}
   };
   function imageFileToDataUrl(file,maxSize) {
@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function appearanceView() {
     const a=state.appearance;
     return pageHeading("MARKA VE TASARIM","Header ve slider","Müşteri menüsünün üst marka alanını, çalışma durumu satırını ve tanıtım görselini düzenleyin.") +
-      `<div class="appearance-grid">
+      `<div class="appearance-editor">
         <section class="panel-card">
           <div class="panel-heading"><div><h3>Header ayarları</h3><p>Logo, marka bilgileri, konum ve çalışma saatleri.</p></div></div>
           <form id="appearanceForm" class="p-3 pt-0">
@@ -155,15 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Değişiklikleri kaydet</button>
           </form>
         </section>
-        <section class="panel-card">
-          <div class="panel-heading"><div><h3>Önizleme</h3><p>Kaydedilen değişiklikler aynı tarayıcıdaki müşteri menüsüne yansır.</p></div></div>
-          <div class="appearance-preview mx-3 mb-3">
-            <div class="preview-brand">${a.logo?`<img src="${escapeHtml(a.logo)}" alt="Logo">`:'<span class="brand-mark" style="width:44px;height:44px;flex-basis:44px;border-radius:12px"><i class="bi bi-cup-hot-fill"></i></span>'}<span><strong>${escapeHtml(a.brandName)}</strong><small>${escapeHtml(a.tagline)}</small></span></div>
-            <div class="preview-cover" style="background-image:linear-gradient(100deg,#261e17d9,#261e1733),url(&quot;${escapeHtml(a.cover)}&quot;)"><span>${escapeHtml(a.eyebrow)}</span><strong>${escapeHtml(a.headline).split("\n").join("<br>")}</strong></div>
-            <div class="p-3"><span class="status-pill status-live">${escapeHtml(a.openStatus||"Açığız")}</span><p class="form-text mt-2 mb-0">${escapeHtml(a.locationText||"Şehrin kalbinde")} · ${escapeHtml(a.hoursText||"09.00 – 23.00")}</p></div>
-          </div>
-          <div class="p-3 pt-0"><a class="btn btn-outline-soft w-100" href="index.html" target="_blank" rel="noopener noreferrer">Müşteri menüsünü aç <i class="bi bi-arrow-up-right ms-2"></i></a></div>
-        </section>
+
       </div>`;
   }
   function staffView() {
@@ -174,8 +166,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function settingsView() {
     const s=state.settings;
-    return pageHeading("İŞLETME","İşletme Ayarları","İşletme bilgilerini, iletişim bağlantılarını ve para birimini düzenleyin.") +
-      '<div class="settings-grid"><section class="panel-card"><div class="panel-heading"><div><h3>Temel bilgiler</h3><p>İşletme ve iletişim detayları.</p></div></div><form id="settingsForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="businessName">İşletme adı</label><input class="form-control" id="businessName" name="businessName" required maxlength="100" value="'+escapeHtml(s.businessName)+'"></div><div class="mb-3"><label class="form-label" for="businessPhone">Telefon</label><input class="form-control" id="businessPhone" name="phone" type="tel" value="'+escapeHtml(s.phone)+'" placeholder="05xx xxx xx xx"></div><div class="mb-3"><label class="form-label" for="businessEmail">E-posta</label><input class="form-control" id="businessEmail" name="email" type="email" value="'+escapeHtml(s.email)+'" placeholder="info@isletme.com"></div><div class="mb-3"><label class="form-label" for="businessAddress">Adres</label><textarea class="form-control" id="businessAddress" name="address" rows="2">'+escapeHtml(s.address)+'</textarea></div><div class="mb-3"><label class="form-label" for="businessDescription">Kısa açıklama</label><textarea class="form-control" id="businessDescription" name="description" rows="2">'+escapeHtml(s.description)+'</textarea></div><div class="mb-3"><label class="form-label" for="currency">Para birimi</label><select class="form-select" id="currency" name="currency"><option value="TL" '+(s.currency==="TL"?"selected":"")+'>Türk lirası (TL)</option><option value="EUR" '+(s.currency==="EUR"?"selected":"")+'>Euro (EUR)</option><option value="USD" '+(s.currency==="USD"?"selected":"")+'>ABD doları (USD)</option></select></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Bilgileri kaydet</button></form></section>' +
+    return pageHeading("İŞLETME","İşletme Ayarları","İşletme bilgilerini ve iletişim bağlantılarını düzenleyin.") +
+      '<div class="settings-grid"><section class="panel-card"><div class="panel-heading"><div><h3>Temel bilgiler</h3><p>İşletme ve iletişim detayları.</p></div></div><form id="settingsForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="businessName">İşletme adı</label><input class="form-control" id="businessName" name="businessName" required maxlength="100" value="'+escapeHtml(s.businessName)+'"></div><div class="mb-3"><label class="form-label" for="businessPhone">Telefon</label><input class="form-control" id="businessPhone" name="phone" type="tel" value="'+escapeHtml(s.phone)+'" placeholder="05xx xxx xx xx"></div><div class="mb-3"><label class="form-label" for="businessEmail">E-posta</label><input class="form-control" id="businessEmail" name="email" type="email" value="'+escapeHtml(s.email)+'" placeholder="info@isletme.com"></div><div class="mb-3"><label class="form-label" for="businessAddress">Adres</label><textarea class="form-control" id="businessAddress" name="address" rows="2">'+escapeHtml(s.address)+'</textarea></div><div class="mb-3"><label class="form-label" for="businessDescription">Kısa açıklama</label><textarea class="form-control" id="businessDescription" name="description" rows="2">'+escapeHtml(s.description)+'</textarea></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Bilgileri kaydet</button></form></section>' +
       '<section class="panel-card"><div class="panel-heading"><div><h3>Sosyal medya ve iletişim</h3><p>Müşterilerinizin size ulaşabileceği bağlantılar.</p></div></div><form id="contactForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="instagramUrl">Instagram bağlantısı</label><input class="form-control" id="instagramUrl" name="instagram" type="url" value="'+escapeHtml(s.instagram)+'" placeholder="https://instagram.com/..."></div><div class="mb-3"><label class="form-label" for="whatsappUrl">WhatsApp bağlantısı</label><input class="form-control" id="whatsappUrl" name="whatsapp" type="url" value="'+escapeHtml(s.whatsapp)+'" placeholder="https://wa.me/90..."></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Bağlantıları kaydet</button></form></section></div>';
   }
   const viewRenderers = {overview:overviewView,products:productsView,categories:categoriesView,appearance:appearanceView,staff:staffView,settings:settingsView};
@@ -199,9 +191,26 @@ document.addEventListener("DOMContentLoaded", function () {
     const p=product||{name:"",category:state.categories[0]?state.categories[0].name:"",price:"",description:"",status:"active",image:""};
     openModal(product?"Ürünü düzenle":"Yeni ürün ekle",'<form id="productForm"><input type="hidden" name="id" value="'+(p.id||"")+'"><input type="hidden" name="currentImage" value="'+escapeHtml(p.image||"")+'"><div class="row g-3"><div class="col-md-7"><label class="form-label" for="productName">Ürün adı *</label><input class="form-control" id="productName" name="name" required maxlength="100" value="'+escapeHtml(p.name)+'"></div><div class="col-md-5"><label class="form-label" for="productPrice">Fiyat (TL) *</label><input class="form-control" id="productPrice" name="price" type="number" min="0" step="0.01" required value="'+escapeHtml(p.price)+'"></div><div class="col-md-6"><label class="form-label" for="productCategory">Kategori *</label><select class="form-select" id="productCategory" name="category" required>'+categoryOptions(p.category)+'</select></div><div class="col-md-6"><label class="form-label" for="productStatus">Yayın durumu</label><select class="form-select" id="productStatus" name="status"><option value="active" '+(p.status==="active"?"selected":"")+'>Yayında</option><option value="out" '+(p.status==="out"?"selected":"")+'>Tükendi</option><option value="hidden" '+(p.status==="hidden"?"selected":"")+'>Taslak / gizli</option></select></div><div class="col-12"><label class="form-label" for="productDescription">Açıklama</label><textarea class="form-control" id="productDescription" name="description" rows="3" maxlength="300">'+escapeHtml(p.description)+'</textarea></div><div class="col-12"><label class="form-label" for="productImageFile">Ürün görseli</label><input class="form-control" id="productImageFile" name="imageFile" type="file" accept="image/*"><div class="form-text">Bilgisayarınızdan görsel seçin; görsel boyutu otomatik küçültülür.</div><div class="image-upload-preview mt-2" id="productImagePreview">'+(p.image?'<img src="'+escapeHtml(p.image)+'" alt="Mevcut ürün görseli">':'<span>Henüz görsel seçilmedi</span>')+'</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-product-image">Görseli kaldır</button></div></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="productForm">Kaydet</button>');
   }
+  const categoryIconOptions = [
+    ["bi-cup-hot","Sıcak kahve"],["bi-cup-straw","Soğuk içecek"],["bi-cup","Çay / fincan"],["bi-cake2","Pasta ve tatlı"],
+    ["bi-cookie","Kurabiye"],["bi-egg-fried","Atıştırmalık"],["bi-egg","Kahvaltı"],["bi-droplet","Smoothie"],
+    ["bi-sun","Taze / ferah"],["bi-snow","Soğuk ürün"],["bi-cup-fill","İçecek"],["bi-basket2","Sepet / yiyecek"],
+    ["bi-bread-slice","Fırın ürünleri"],["bi-ice-cream","Dondurma"],["bi-apple","Meyve"],["bi-heart","Favoriler"],
+    ["bi-star","Öne çıkanlar"],["bi-lightning","Enerji içeceği"],["bi-flower1","Bitkisel"],["bi-collection","Genel kategori"],
+    ["bi-shop","Mağaza"],["bi-fire","Izgara / sıcak"],["bi-gift","Kampanya"],["bi-tags","Diğer ürünler"]
+  ];
+  function categoryIconPicker(selected) {
+    const current = selected || "bi-collection";
+    return '<input type="hidden" id="categoryIcon" name="icon" value="'+escapeHtml(current)+'">'+
+      '<label class="form-label" for="categoryIconSearch">Kategori ikonu seçin</label>'+
+      '<input class="form-control mb-2" id="categoryIconSearch" type="search" placeholder="İkon ara..." aria-label="İkon ara">'+
+      '<div class="icon-picker-grid" id="categoryIconGrid">'+categoryIconOptions.map(function(item){
+        return '<button type="button" class="icon-choice '+(item[0]===current?'active':'')+'" data-icon-choice="'+item[0]+'" data-icon-label="'+escapeHtml(item[1].toLocaleLowerCase("tr"))+'"><i class="bi '+item[0]+'"></i><span>'+item[1]+'</span></button>';
+      }).join("")+'</div><div class="form-text mt-2" id="selectedIconLabel">Seçili ikon: '+escapeHtml(current)+'</div>';
+  }
   function categoryForm(category) {
     const c=category||{name:"",icon:"bi-collection",description:""};
-    openModal(category?"Kategoriyi düzenle":"Yeni kategori",'<form id="categoryForm"><input type="hidden" name="id" value="'+(c.id||"")+'"><div class="mb-3"><label class="form-label" for="categoryName">Kategori adı *</label><input class="form-control" id="categoryName" name="name" required maxlength="70" value="'+escapeHtml(c.name)+'"></div><div class="mb-3"><label class="form-label" for="categoryIcon">Bootstrap Icons adı</label><input class="form-control" id="categoryIcon" name="icon" value="'+escapeHtml(c.icon)+'" placeholder="bi-cup-hot"><div class="form-text">Örnek: bi-cup-hot, bi-cup-straw, bi-cake2</div></div><div class="mb-2"><label class="form-label" for="categoryDescription">Kısa açıklama</label><textarea class="form-control" id="categoryDescription" name="description" rows="2">'+escapeHtml(c.description)+'</textarea></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="categoryForm">Kaydet</button>');
+    openModal(category?"Kategoriyi düzenle":"Yeni kategori",'<form id="categoryForm"><input type="hidden" name="id" value="'+(c.id||"")+'"><div class="mb-3"><label class="form-label" for="categoryName">Kategori adı *</label><input class="form-control" id="categoryName" name="name" required maxlength="70" value="'+escapeHtml(c.name)+'"></div><div class="mb-3">'+categoryIconPicker(c.icon)+'</div><div class="mb-2"><label class="form-label" for="categoryDescription">Kısa açıklama</label><textarea class="form-control" id="categoryDescription" name="description" rows="2">'+escapeHtml(c.description)+'</textarea></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="categoryForm">Kaydet</button>');
   }
   function staffForm(person) {
     const s=person||{name:"",email:"",role:"Garson",status:"active"};
@@ -210,6 +219,15 @@ document.addEventListener("DOMContentLoaded", function () {
   function formObject(form) { return Object.fromEntries(new FormData(form).entries()); }
   function setView(view) { render(view); }
   document.addEventListener("click",function(event){
+    const iconChoice=event.target.closest("[data-icon-choice]");
+    if(iconChoice){
+      const hidden=document.getElementById("categoryIcon");
+      if(hidden)hidden.value=iconChoice.dataset.iconChoice;
+      document.querySelectorAll(".icon-choice").forEach(function(button){button.classList.toggle("active",button===iconChoice);});
+      const label=document.getElementById("selectedIconLabel");
+      if(label)label.textContent="Seçili ikon: "+iconChoice.dataset.iconChoice;
+      return;
+    }
     const viewLink=event.target.closest("[data-view]");
     if(viewLink){event.preventDefault();setView(viewLink.dataset.view);return;}
     const actionButton=event.target.closest("[data-action]");
@@ -270,6 +288,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const reader=new FileReader();reader.onload=function(){preview.innerHTML='<img alt="Görsel önizlemesi" src="'+reader.result+'">';};reader.readAsDataURL(fileInput.files[0]);
   });
   document.addEventListener("input",function(event){
+    if(event.target.id==="categoryIconSearch"){const query=event.target.value.toLocaleLowerCase("tr");document.querySelectorAll(".icon-choice").forEach(function(button){button.hidden=!(button.dataset.iconLabel.includes(query)||button.dataset.iconChoice.includes(query));});}
     if(event.target.id==="productSearch"){state.productSearch=event.target.value;const cursor=event.target.selectionStart;render("products",false);const input=document.getElementById("productSearch");input.focus();input.setSelectionRange(cursor,cursor);}
   });
   document.addEventListener("change",function(event){
