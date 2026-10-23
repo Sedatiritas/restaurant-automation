@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ["bi-cup-hot","Sıcak kahve"],["bi-cup-straw","Soğuk içecek"],["bi-cup","Çay / fincan"],["bi-cake2","Pasta ve tatlı"],
     ["bi-cookie","Kurabiye"],["bi-egg-fried","Atıştırmalık"],["bi-egg","Kahvaltı"],["bi-droplet","Smoothie"],
     ["bi-sun","Taze / ferah"],["bi-snow","Soğuk ürün"],["bi-cup-fill","İçecek"],["bi-basket2","Sepet / yiyecek"],
-    ["bi-basket2","Fırın ürünleri"],["bi-ice-cream","Dondurma"],["bi-apple","Meyve"],["bi-heart","Favoriler"],
+    ["bi-basket2","Fırın ürünleri"],["bi-snow","Dondurma"],["bi-apple","Meyve"],["bi-heart","Favoriler"],
     ["bi-star","Öne çıkanlar"],["bi-lightning","Enerji içeceği"],["bi-flower1","Bitkisel"],["bi-collection","Genel kategori"],
     ["bi-shop","Mağaza"],["bi-fire","Izgara / sıcak"],["bi-gift","Kampanya"],["bi-tags","Diğer ürünler"]
   ];
