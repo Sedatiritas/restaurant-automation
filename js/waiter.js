@@ -503,7 +503,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   $("#backToTablesButton").addEventListener("click", function () { setView("tables"); });
   $("#startNewOrderButton").addEventListener("click", beginNewOrder);
-  $("#continueDraftButton").addEventListener("click", beginNewOrder);
   $("#backToDetailsButton").addEventListener("click", function () { setView("details"); });
   $("#clearDraftButton").addEventListener("click", clearDraft);
   $("#categoryTabs").addEventListener("click", function (event) {
