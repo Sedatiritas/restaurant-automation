@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5f0">
+  <meta name="description" content="Roast & Co. garson sipariş ekranı">
+  <title>Garson Siparişi | Roast &amp; Co.</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/waiter.css">
+</head>
+<body>
+  <div class="waiter-app">
+    <header class="waiter-topbar">
+      <a class="waiter-brand" href="admin.html" aria-label="Yönetim paneline dön">
+        <span class="brand-mark"><i class="bi bi-cup-hot-fill"></i></span>
+        <span><strong id="waiterBrandName">roast &amp; co.</strong><small>OPERASYON PANELİ</small></span>
+      </a>
+      <div class="topbar-middle">
+        <span class="service-status" id="serviceStatus"><span class="status-dot"></span><span id="serviceStatusText">Servis açık</span></span>
+        <span class="topbar-date" id="currentDate"></span>
+      </div>
+      <a class="back-admin" href="admin.html"><i class="bi bi-grid-1x2"></i><span>Yönetim paneli</span></a>
+    </header>
+
+    <main class="waiter-main">
+      <section class="page-intro">
+        <div>
+          <span class="eyebrow">OPERASYON <span>/</span> GARSON</span>
+          <h1>Sipariş al</h1>
+          <p>Masa seç, ürünleri ekle ve siparişi mutfağa gönder.</p>
+        </div>
+        <div class="shift-summary">
+          <span class="shift-icon"><i class="bi bi-receipt-cutoff"></i></span>
+          <span><strong id="activeTableCount">0 masa</strong><small>Aktif adisyon</small></span>
+        </div>
+      </section>
+
+      <section class="waiter-workspace" aria-label="Sipariş çalışma alanı">
+        <aside class="surface-card tables-panel">
+          <div class="panel-heading">
+            <div><span class="eyebrow">SALON</span><h2>Masalar</h2></div>
+            <span class="count-chip" id="tableCount">12</span>
+          </div>
+          <label class="table-search">
+            <i class="bi bi-search"></i>
+            <input type="search" id="tableSearch" placeholder="Masa ara..." autocomplete="off" aria-label="Masa ara">
+          </label>
+          <div class="table-legend"><span><i class="legend-dot free"></i>Boş</span><span><i class="legend-dot occupied"></i>Adisyon açık</span></div>
+          <div class="tables-grid" id="tablesGrid" aria-live="polite"></div>
+          <div class="tables-panel-footer"><i class="bi bi-info-circle"></i><span>Masaya dokunarak sipariş oluşturmaya başlayın.</span></div>
+        </aside>
+
+        <section class="surface-card catalog-panel">
+          <div class="catalog-heading">
+            <div><span class="eyebrow">MENÜ</span><h2>Ürün seç</h2><p id="catalogHint">Eklemek için ürün kartına dokun.</p></div>
+            <label class="product-search"><i class="bi bi-search"></i><input type="search" id="productSearch" placeholder="Ürün ara..." autocomplete="off" aria-label="Ürün ara"></label>
+          </div>
+          <nav class="category-tabs" id="categoryTabs" aria-label="Ürün kategorileri"></nav>
+          <div class="catalog-meta"><span id="productsResultCount">Ürünler</span><span><i class="bi bi-hand-index-thumb me-1"></i>Eklemek için dokun</span></div>
+          <div class="product-grid" id="productGrid" aria-live="polite"></div>
+          <div class="catalog-empty" id="catalogEmpty" hidden><i class="bi bi-search"></i><strong>Ürün bulunamadı</strong><span>Arama kelimesini veya kategoriyi değiştirebilirsin.</span></div>
+        </section>
+
+        <aside class="surface-card order-panel" aria-label="Aktif sipariş">
+          <div class="order-panel-heading">
+            <div><span class="eyebrow">AKTİF ADİSYON</span><h2 id="orderTableTitle">Masa 1</h2></div>
+            <span class="order-status draft" id="orderStatus">Yeni sipariş</span>
+          </div>
+          <div class="order-subheading">
+            <span><i class="bi bi-clock me-1"></i><span id="orderTime">Henüz başlamadı</span></span>
+            <button class="clear-order" id="clearOrderButton" type="button" disabled title="Taslak siparişi temizle"><i class="bi bi-trash3"></i></button>
+          </div>
+          <div class="order-items" id="orderItems" aria-live="polite"></div>
+          <div class="order-empty" id="orderEmpty"><span class="empty-basket"><i class="bi bi-basket2"></i></span><strong>Henüz ürün eklenmedi</strong><span>Menüden ürün seçerek siparişi oluşturmaya başla.</span></div>
+          <div class="order-footer">
+            <div class="order-summary-line"><span>Ürün adedi</span><strong id="orderItemCount">0</strong></div>
+            <div class="order-summary-line"><span>Ara toplam</span><strong id="orderSubtotal">₺0,00</strong></div>
+            <div class="order-total"><span>Toplam</span><strong id="orderTotal">₺0,00</strong></div>
+            <button class="send-order-button" id="sendOrderButton" type="button" disabled><i class="bi bi-send-fill"></i><span>Siparişi mutfağa gönder</span></button>
+            <p class="order-footnote"><i class="bi bi-shield-check"></i> Sipariş bu tarayıcıda taslak olarak saklanır.</p>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="waiterToast" class="toast border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex"><div class="toast-body" id="waiterToastMessage"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/waiter.js"></script>
+</body>
+</html>
