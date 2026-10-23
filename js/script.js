@@ -41,9 +41,15 @@ function applySavedBusinessSettings() {
         }
 
         const instagram = document.querySelector("#footerInstagram");
-        if (instagram && settings.instagram) instagram.href = settings.instagram;
+        if (instagram) {
+            if (settings.instagram) instagram.href = settings.instagram;
+            else instagram.classList.add("d-none");
+        }
         const whatsapp = document.querySelector("#footerWhatsapp");
-        if (whatsapp && settings.whatsapp) whatsapp.href = settings.whatsapp;
+        if (whatsapp) {
+            if (settings.whatsapp) whatsapp.href = settings.whatsapp;
+            else whatsapp.classList.add("d-none");
+        }
     } catch (error) {
         console.warn("İşletme ayarları okunamadı.", error);
     }
