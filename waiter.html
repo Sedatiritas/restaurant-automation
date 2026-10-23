@@ -66,18 +66,6 @@
           </div>
         </div>
 
-        <div id="currentDraftCard" class="draft-card surface-card" hidden>
-          <div class="section-heading">
-            <div><span class="eyebrow">DEVAM EDEN İŞLEM</span><h3>Gönderilmeyi bekleyen sipariş</h3></div>
-            <span class="order-status draft">Taslak</span>
-          </div>
-          <div id="draftPreviewItems" class="draft-preview-items"></div>
-          <div class="draft-preview-footer">
-            <span id="draftPreviewCount">0 ürün</span>
-            <strong id="draftPreviewTotal">₺0,00</strong>
-          </div>
-        </div>
-
         <section class="history-section">
           <div class="history-title-row">
             <div><span class="eyebrow">ADİSYON KAYDI</span><h2>Sipariş geçmişi</h2><p>Mutfağa gönderilen siparişler burada ayrı ayrı tutulur.</p></div>
@@ -98,15 +86,15 @@
         <details class="order-summary-accordion surface-card" id="draftSummaryAccordion">
           <summary class="order-summary-trigger">
             <span class="order-summary-icon"><i class="bi bi-basket2"></i></span>
-            <span class="order-summary-copy"><strong>Sipariş özeti</strong><small id="draftItemCount">0 ürün</small></span>
+            <span class="order-summary-copy"><strong>Seçilen ürünler</strong><small id="draftItemCount">Henüz ürün seçilmedi</small></span>
             <strong class="order-summary-amount" id="draftTotal">₺0,00</strong>
             <span class="order-summary-chevron"><i class="bi bi-chevron-down"></i></span>
           </summary>
           <div class="order-summary-content">
             <div id="draftOrderItems" class="draft-order-items"></div>
-            <div id="draftOrderEmpty" class="draft-order-empty"><i class="bi bi-basket2"></i><span>Henüz ürün seçmedin. Menüden bir ürüne dokun.</span></div>
+            <div id="draftOrderEmpty" class="draft-order-empty"><i class="bi bi-basket2"></i><span>Menüden ürün ekledikçe burada görünecek.</span></div>
             <div class="order-summary-footer">
-              <button class="clear-draft-button" id="clearDraftButton" type="button" disabled><i class="bi bi-trash3"></i> Seçilen ürünleri temizle</button>
+              <button class="clear-draft-button" id="clearDraftButton" type="button" disabled><i class="bi bi-trash3"></i> Seçilenlerin hepsini temizle</button>
             </div>
           </div>
         </details>
