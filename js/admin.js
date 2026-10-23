@@ -309,6 +309,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if(event.target.id==="productSearch"){state.productSearch=event.target.value;const cursor=event.target.selectionStart;render("products",false);const input=document.getElementById("productSearch");input.focus();input.setSelectionRange(cursor,cursor);}
   });
   document.addEventListener("change",function(event){
+    if(event.target.id==="isOpenToggle"){
+      const isOpen=event.target.checked;const control=event.target.closest(".business-status-control");
+      if(control){control.classList.toggle("is-open",isOpen);control.classList.toggle("is-closed",!isOpen);}
+      const heading=document.getElementById("businessStatusTitle");const help=document.getElementById("businessStatusHelp");const label=event.target.closest(".status-switch")?.querySelector(".form-check-label");
+      if(heading)heading.textContent=isOpen?"İşletme açık":"İşletme kapalı";
+      if(help)help.textContent=isOpen?"Müşteriler menüde Açığız bilgisini görecek.":"Müşteriler menüde Kapalıyız bilgisini kırmızı renkte görecek.";
+      if(label)label.textContent=isOpen?"Açığız":"Kapalıyız";
+    }
     if(event.target.id==="productCategoryFilter"){state.productCategory=event.target.value;render("products",false);}
     if(event.target.id==="productStatusFilter"){state.productStatus=event.target.value;render("products",false);}
   });
