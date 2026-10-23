@@ -382,3 +382,21 @@ a{color:inherit}
   .order-summary-icon{width:34px;height:34px;flex-basis:34px}
   .order-summary-amount{font-size:14px}
 }
+
+/* Selected items are temporary until the send button is pressed. */
+.draft-order-controls{display:flex;align-items:center;gap:7px}
+.remove-order-item{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border:1px solid #eedbd7;border-radius:10px;background:#fff6f5;color:#a64e44;font-size:15px;touch-action:manipulation}
+.remove-order-item:hover{border-color:#d9b6b0;background:#ffefed}
+.remove-order-item:active{transform:scale(.97)}
+@media(max-width:760px){
+  .draft-order-row{grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:12px 0}
+  .draft-order-main{grid-column:1;grid-row:1 / span 2;align-self:center;min-width:0}
+  .draft-order-controls{grid-column:2;grid-row:1;gap:6px}
+  .draft-order-line-total{grid-column:2;grid-row:2;text-align:right;font-size:12px}
+  .quantity-control{grid-column:auto;grid-row:auto;min-height:44px}
+  .quantity-control button{width:44px;height:44px}
+  .quantity-control span{min-width:27px;font-size:12px}
+  .remove-order-item{width:44px;height:44px;flex-basis:44px;border-radius:10px}
+  .order-summary-trigger{min-height:68px}
+  .order-summary-copy strong{font-size:12px}
+}
