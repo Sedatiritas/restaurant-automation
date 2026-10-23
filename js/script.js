@@ -1,3 +1,21 @@
+function applySavedBusinessSettings() {
+    try {
+        const settings = JSON.parse(localStorage.getItem("roastAdmin_settings") || "null");
+        const address = (settings && settings.address || "").trim();
+        const addressLine = document.querySelector("#footerAddress");
+        const addressText = document.querySelector("#footerAddressText");
+
+        if (addressLine && addressText && address) {
+            addressText.textContent = address;
+            addressLine.classList.remove("d-none");
+        } else if (addressLine) {
+            addressLine.classList.add("d-none");
+        }
+    } catch (error) {
+        console.warn("İşletme ayarları okunamadı.", error);
+    }
+}
+
 function applySavedAppearance() {
     try {
         const appearance = JSON.parse(localStorage.getItem("roastAdmin_appearance") || "null");
@@ -307,5 +325,6 @@ categoryList.addEventListener("scroll", updateCategoryScrollHint, { passive: tru
 window.addEventListener("resize", updateCategoryScrollHint);
 
 applySavedAppearance();
+applySavedBusinessSettings();
 renderProducts();
 updateCategoryScrollHint();
