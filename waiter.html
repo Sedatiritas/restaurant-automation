@@ -63,7 +63,7 @@
           <div class="catalog-empty" id="catalogEmpty" hidden><i class="bi bi-search"></i><strong>Ürün bulunamadı</strong><span>Arama kelimesini veya kategoriyi değiştirebilirsin.</span></div>
         </section>
 
-        <aside class="surface-card order-panel" aria-label="Aktif sipariş">
+        <aside class="surface-card order-panel" id="orderPanel" aria-label="Aktif sipariş">
           <div class="order-panel-heading">
             <div><span class="eyebrow">AKTİF ADİSYON</span><h2 id="orderTableTitle">Masa 1</h2></div>
             <span class="order-status draft" id="orderStatus">Yeni sipariş</span>
@@ -83,6 +83,14 @@
           </div>
         </aside>
       </section>
+      <div class="mobile-order-dock" id="mobileOrderDock">
+        <button class="mobile-order-dock-button" id="mobileOrderDockButton" type="button" aria-label="Aktif siparişi görüntüle">
+          <span class="mobile-cart-icon"><i class="bi bi-basket2-fill"></i><span id="mobileOrderItemCount">0</span></span>
+          <span class="mobile-cart-copy"><strong id="mobileOrderDockLabel">Sipariş oluştur</strong><small id="mobileOrderDockSubtext">Henüz ürün eklenmedi</small></span>
+          <span class="mobile-cart-total" id="mobileOrderDockTotal">₺0,00</span>
+          <span class="mobile-cart-open"><i class="bi bi-chevron-up"></i></span>
+        </button>
+      </div>
     </main>
   </div>
 
