@@ -13,10 +13,10 @@
 <body>
   <div class="waiter-app">
     <header class="waiter-topbar">
-      <a class="waiter-brand" href="waiter.html" aria-label="Masalara dön">
+      <div class="waiter-brand" aria-label="Garson paneli">
         <span class="brand-mark"><i class="bi bi-cup-hot-fill"></i></span>
         <span><strong id="waiterBrandName">roast &amp; co.</strong><small>GARSON PANELİ</small></span>
-      </a>
+      </div>
       <div class="topbar-right">
         <span class="service-status" id="serviceStatus"><span class="status-dot"></span><span id="serviceStatusText">Servis açık</span></span>
         <a class="back-admin" href="admin.html" aria-label="Yönetim paneline dön"><i class="bi bi-grid-1x2"></i><span>Yönetim</span></a>
@@ -83,7 +83,7 @@
           <span class="round-chip" id="newOrderRoundLabel">Yeni tur</span>
         </div>
 
-        <details class="order-summary-accordion surface-card" id="draftSummaryAccordion">
+        <details class="order-summary-accordion surface-card" id="draftSummaryAccordion" open>
           <summary class="order-summary-trigger">
             <span class="order-summary-icon"><i class="bi bi-basket2"></i></span>
             <span class="order-summary-copy"><strong>Seçilen ürünler</strong><small id="draftItemCount">Henüz ürün seçilmedi</small></span>
