@@ -400,7 +400,7 @@ document.addEventListener("DOMContentLoaded", function () {
     state.productQuery = "";
     state.selectedCategory = "all";
     $("#productSearch").value = "";
-    $("#draftSummaryAccordion").open = false;
+    $("#draftSummaryAccordion").open = true;
     setView("new-order");
   }
   function addProduct(productId) {
