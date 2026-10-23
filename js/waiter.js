@@ -176,6 +176,12 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#catalogHint").textContent = table.name + " için ürün seç. Ürünler sipariş listesine eklenir.";
     $("#orderTime").textContent = order ? new Date(order.createdAt || Date.now()).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) + " başlangıç" : "Henüz başlamadı";
     const pending = hasPendingItems(order);
+    $("#mobileOrderItemCount").textContent = orderCount(order);
+    $("#mobileOrderDockTotal").textContent = money(orderTotal(order));
+    $("#mobileOrderDockLabel").textContent = items.length ? table.name + " · " + orderCount(order) + " ürün" : "Sipariş oluştur";
+    $("#mobileOrderDockSubtext").textContent = items.length
+      ? (pending ? "Yeni ürünler gönderilmeyi bekliyor" : "Adisyon açık · Siparişe bak")
+      : "Ürün eklemek için dokun";
     const status = $("#orderStatus");
     status.classList.toggle("sent", Boolean(order && !pending && items.length));
     status.classList.toggle("draft", !order || pending);
@@ -209,7 +215,19 @@ document.addEventListener("DOMContentLoaded", function () {
     renderCategories();
     renderProducts();
     renderOrder();
+    updateMobileOrderVisibility();
   }
+  function updateMobileOrderVisibility() {
+    const panel = $("#orderPanel");
+    if (!panel || !window.matchMedia("(max-width: 767.98px)").matches) {
+      document.body.classList.remove("mobile-order-visible");
+      return;
+    }
+    const rect = panel.getBoundingClientRect();
+    const isVisible = rect.top < window.innerHeight * 0.72 && rect.bottom > 120;
+    document.body.classList.toggle("mobile-order-visible", isVisible);
+  }
+
   function ensureCurrentOrder() {
     let order = currentOrder();
     if (!order) {
@@ -247,6 +265,18 @@ document.addEventListener("DOMContentLoaded", function () {
     renderAll();
   }
 
+  $("#mobileOrderDockButton").addEventListener("click", function () {
+    const panel = $("#orderPanel");
+    if (panel) {
+      panel.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start"
+      });
+      window.setTimeout(updateMobileOrderVisibility, 250);
+    }
+  });
+  window.addEventListener("scroll", updateMobileOrderVisibility, { passive: true });
+  window.addEventListener("resize", updateMobileOrderVisibility);
   $("#tablesGrid").addEventListener("click", function (event) {
     const tile = event.target.closest("[data-table-id]");
     if (!tile) return;
