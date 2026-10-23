@@ -23,3 +23,29 @@
 .icon-choice.active{border-color:var(--accent);background:#f7ece2;color:var(--accent-dark);box-shadow:inset 0 0 0 1px var(--accent)}
 .icon-choice[hidden]{display:none!important}
 @media(max-width:575.98px){.icon-picker-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* User-friendly appearance editor */
+.appearance-editor{display:block;max-width:1120px;margin:0 auto}
+.appearance-form{display:grid;gap:18px}
+.appearance-section{padding:22px 24px;border:1px solid var(--border);border-radius:15px;background:#fff}
+.appearance-section-heading{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.appearance-section-heading h3{margin:0;font-size:14px;font-weight:800}
+.appearance-section-heading p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.appearance-section-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:12px;background:#f3e9df;color:var(--accent-dark);font-size:19px}
+.business-status-control{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 18px;border:1px solid #d8e9d8;border-radius:12px;background:#f4faf3;transition:background .15s,border-color .15s}
+.business-status-control.is-closed{border-color:#f0d1ce;background:#fff4f3}
+.business-status-control strong{display:block;color:#386c3d;font-size:13px}
+.business-status-control.is-closed strong{color:#b23b35}
+.business-status-control small{display:block;margin-top:5px;color:var(--muted);font-size:10px}
+.status-switch{display:flex;align-items:center;gap:9px;flex-shrink:0;margin:0}
+.status-switch .form-check-input{width:2.7em;height:1.45em;margin:0;cursor:pointer}
+.status-switch .form-check-input:checked{background-color:#43874c;border-color:#43874c}
+.status-switch .form-check-label{min-width:66px;font-size:11px;font-weight:800}
+.business-status-control.is-closed .status-switch .form-check-label{color:#b23b35}
+.cover-upload-preview{min-height:190px;max-height:320px}
+.cover-upload-preview img{width:100%;max-height:310px;object-fit:cover}
+.theme-color-field{display:flex;align-items:center;gap:12px;min-height:39px}
+.theme-color-field span{color:var(--muted);font-size:10px}
+.appearance-savebar{position:sticky;bottom:12px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.96);box-shadow:0 8px 25px #30291f0d;backdrop-filter:blur(10px)}
+.appearance-savebar>span{color:var(--muted);font-size:10px}
+@media(max-width:575.98px){.appearance-section{padding:17px 14px}.appearance-section-heading{align-items:flex-start;margin-bottom:17px}.appearance-savebar{align-items:stretch;flex-direction:column}.appearance-savebar .btn{width:100%}.business-status-control{align-items:flex-start;flex-direction:column}.status-switch{align-self:flex-end}}
