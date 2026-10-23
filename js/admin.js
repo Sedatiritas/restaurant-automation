@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
       {id:2,name:"Mehmet Demir",email:"mehmet@example.com",role:"Kasiyer",status:"active"},
       {id:3,name:"Zeynep Kaya",email:"zeynep@example.com",role:"Garson",status:"inactive"}
     ],
-    settings: {businessName:"Roast & Co.",phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
+    settings: {phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
     appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",isOpen:true,locationLabel:"Bizi ziyaret et",locationText:"Şehrin kalbinde",hoursLabel:"Çalışma saatleri",hoursText:"09.00 – 23.00"}
   };
   function imageFileToDataUrl(file,maxSize) {
