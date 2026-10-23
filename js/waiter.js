@@ -83,7 +83,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (sentItems.length) {
         result.push(Object.assign({}, base, {
           id: String(oldOrder.id || ("legacy-" + orderIndex)) + "-sent",
-          roundNumber: orderIndex + 1,
           items: sentItems,
           status: oldStatus === "closed" ? "closed" : "sent",
           sentAt: oldOrder.sentAt || oldOrder.updatedAt || oldOrder.createdAt || new Date().toISOString(),
@@ -93,7 +92,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (pendingItems.length) {
         result.push(Object.assign({}, base, {
           id: String(oldOrder.id || ("legacy-" + orderIndex)) + "-draft",
-          roundNumber: orderIndex + 1,
           items: pendingItems,
           status: "draft",
           sentAt: null,
@@ -103,7 +101,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!sentItems.length && !pendingItems.length && oldStatus === "closed") {
         result.push(Object.assign({}, base, {
           id: String(oldOrder.id || ("legacy-" + orderIndex)),
-          roundNumber: orderIndex + 1,
           items: [],
           status: "closed",
           sentAt: oldOrder.updatedAt || oldOrder.createdAt || null,
@@ -114,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const perTableCount = {};
     result.sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); }).forEach(function (order) {
       perTableCount[order.tableId] = (perTableCount[order.tableId] || 0) + 1;
-      order.roundNumber = order.roundNumber || perTableCount[order.tableId];
+      order.roundNumber = perTableCount[order.tableId];
     });
     return result;
   }
@@ -357,7 +354,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const hasAccount = rounds.length > 0;
     badge.classList.toggle("is-active", hasAccount);
     badge.innerHTML = '<span class="status-dot"></span>' + (hasAccount ? "Adisyon açık" : "Henüz adisyon yok");
-    $("#startNewOrderButton").innerHTML = '<i class="bi bi-plus-lg"></i> ' + (draft && draft.items.length ? "Yeni sipariş turu ekle" : "Yeni sipariş ekle");
+    $("#startNewOrderButton").innerHTML = '<i class="bi bi-plus-lg"></i> ' + (draft && draft.items.length ? "Taslağa devam et" : "Yeni sipariş ekle");
     renderDraftPreview();
     renderHistory();
   }
