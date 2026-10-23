@@ -343,3 +343,6 @@ body {
     .product-image { height: 125px; }
     .product-body { padding: 10px; }
 }
+
+.open-status.is-closed{background:#c93636!important;border-color:#c93636!important;color:#fff!important}
+.open-status.is-closed .status-dot{background:#fff!important;box-shadow:0 0 0 3px rgba(255,255,255,.18)!important}
