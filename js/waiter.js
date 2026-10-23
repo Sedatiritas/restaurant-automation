@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char];
     });
   };
+
   const fallbackCategories = [
     { id: 1, name: "Kahveler", icon: "bi-cup-hot" },
     { id: 2, name: "Soğuk içecekler", icon: "bi-cup-straw" },
@@ -26,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { id: 7, name: "San Sebastian", category: "Tatlılar", price: 170, description: "Dışı karamelize, içi yumuşak.", status: "active", image: "" },
     { id: 8, name: "Çay", category: "Çaylar", price: 45, description: "Demlikte taze siyah çay.", status: "active", image: "" }
   ];
+
   function readArray(key, fallback) {
     try {
       const stored = localStorage.getItem(key);
@@ -46,102 +48,83 @@ document.addEventListener("DOMContentLoaded", function () {
       return fallback;
     }
   }
+
   const tables = Array.from({ length: 12 }, function (_, index) {
     return { id: index + 1, name: "Masa " + (index + 1), seats: [2, 4, 4, 2, 4, 6, 2, 4, 4, 2, 6, 4][index] };
   });
-  function legacyOrdersToRounds(rawOrders) {
-    const result = [];
-    rawOrders.forEach(function (oldOrder, orderIndex) {
+
+  // Older releases stored unsent selections as drafts. Keep only products that were sent.
+  function migrateLegacyOrders(rawOrders) {
+    const migrated = [];
+    rawOrders.forEach(function (oldOrder, index) {
       if (!oldOrder || !Array.isArray(oldOrder.items)) return;
-      const tableId = Number(oldOrder.tableId) || 1;
-      const tableName = oldOrder.tableName || ("Masa " + tableId);
-      const oldStatus = oldOrder.status || "draft";
-      const sentItems = [];
-      const pendingItems = [];
-      oldOrder.items.forEach(function (item) {
+      const items = oldOrder.items.map(function (item) {
         const quantity = Math.max(0, Number(item.quantity) || 0);
-        if (!quantity) return;
-        const rawSentQuantity = item.sentQuantity;
-        const sentQuantity = (oldStatus === "sent" || oldStatus === "closed")
-          ? quantity
-          : Math.min(quantity, Math.max(0, Number(rawSentQuantity) || 0));
-        const pendingQuantity = Math.max(0, quantity - sentQuantity);
-        if (sentQuantity > 0) {
-          sentItems.push(Object.assign({}, item, { quantity: sentQuantity, sentQuantity: sentQuantity }));
-        }
-        if (pendingQuantity > 0) {
-          pendingItems.push(Object.assign({}, item, { quantity: pendingQuantity, sentQuantity: 0 }));
-        }
-      });
-      const base = {
+        const isWholeOrderSent = oldOrder.status === "sent" || oldOrder.status === "closed";
+        const sentQuantity = isWholeOrderSent ? quantity : Math.min(quantity, Math.max(0, Number(item.sentQuantity) || 0));
+        if (!sentQuantity) return null;
+        return Object.assign({}, item, { quantity: sentQuantity, sentQuantity: sentQuantity });
+      }).filter(Boolean);
+      if (!items.length) return;
+      const tableId = Number(oldOrder.tableId) || 1;
+      migrated.push({
+        id: "legacy-" + String(oldOrder.id || index) + "-sent",
+        legacyOrderId: oldOrder.id || null,
         tableId: tableId,
-        tableName: tableName,
+        tableName: oldOrder.tableName || ("Masa " + tableId),
+        items: items,
+        status: oldOrder.status === "closed" ? "closed" : "sent",
         createdAt: oldOrder.createdAt || oldOrder.updatedAt || new Date().toISOString(),
-        updatedAt: oldOrder.updatedAt || oldOrder.createdAt || new Date().toISOString(),
-        legacyOrderId: oldOrder.id || ("legacy-" + orderIndex)
-      };
-      if (sentItems.length) {
-        result.push(Object.assign({}, base, {
-          id: String(oldOrder.id || ("legacy-" + orderIndex)) + "-sent",
-          items: sentItems,
-          status: oldStatus === "closed" ? "closed" : "sent",
-          sentAt: oldOrder.sentAt || oldOrder.updatedAt || oldOrder.createdAt || new Date().toISOString(),
-          closedAt: oldStatus === "closed" ? (oldOrder.closedAt || oldOrder.updatedAt) : null
-        }));
-      }
-      if (pendingItems.length) {
-        result.push(Object.assign({}, base, {
-          id: String(oldOrder.id || ("legacy-" + orderIndex)) + "-draft",
-          items: pendingItems,
-          status: "draft",
-          sentAt: null,
-          closedAt: null
-        }));
-      }
-      if (!sentItems.length && !pendingItems.length && oldStatus === "closed") {
-        result.push(Object.assign({}, base, {
-          id: String(oldOrder.id || ("legacy-" + orderIndex)),
-          items: [],
-          status: "closed",
-          sentAt: oldOrder.updatedAt || oldOrder.createdAt || null,
-          closedAt: oldOrder.closedAt || oldOrder.updatedAt || null
-        }));
-      }
+        sentAt: oldOrder.sentAt || oldOrder.updatedAt || oldOrder.createdAt || new Date().toISOString(),
+        updatedAt: oldOrder.updatedAt || oldOrder.sentAt || oldOrder.createdAt || new Date().toISOString(),
+        closedAt: oldOrder.status === "closed" ? (oldOrder.closedAt || oldOrder.updatedAt || null) : null
+      });
     });
-    const perTableCount = {};
-    result.sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); }).forEach(function (order) {
-      perTableCount[order.tableId] = (perTableCount[order.tableId] || 0) + 1;
-      order.roundNumber = perTableCount[order.tableId];
+    assignRoundNumbers(migrated);
+    return migrated;
+  }
+  function assignRoundNumbers(orders) {
+    const counts = {};
+    orders.sort(function (a, b) {
+      return new Date(a.sentAt || a.createdAt || 0) - new Date(b.sentAt || b.createdAt || 0);
+    }).forEach(function (order) {
+      counts[order.tableId] = (counts[order.tableId] || 0) + 1;
+      order.roundNumber = counts[order.tableId];
     });
-    return result;
+    return orders;
   }
   function loadOrders() {
     const raw = readArray("roastWaiter_orders", []);
-    let version = 1;
-    try { version = Number(localStorage.getItem("roastWaiter_schemaVersion")) || 1; } catch (error) { version = 1; }
-    if (version < 2) {
-      const migrated = legacyOrdersToRounds(raw);
+    let schemaVersion = 1;
+    try { schemaVersion = Number(localStorage.getItem("roastWaiter_schemaVersion")) || 1; } catch (error) { schemaVersion = 1; }
+    let orders;
+    if (schemaVersion < 3) {
+      orders = migrateLegacyOrders(raw);
       try {
-        localStorage.setItem("roastWaiter_orders", JSON.stringify(migrated));
-        localStorage.setItem("roastWaiter_schemaVersion", "2");
+        localStorage.setItem("roastWaiter_orders", JSON.stringify(orders));
+        localStorage.setItem("roastWaiter_schemaVersion", "3");
       } catch (error) {
-        // Continue in memory if browser storage is unavailable.
+        // Keep the migrated sent orders available in memory if storage is unavailable.
       }
-      return migrated;
+      return orders;
     }
-    return raw.filter(function (order) {
-      return order && Array.isArray(order.items) && order.tableId != null;
+    orders = raw.filter(function (order) {
+      return order && Array.isArray(order.items) && order.tableId != null && (order.status === "sent" || order.status === "closed");
     }).map(function (order) {
-      const status = ["draft", "sent", "closed"].includes(order.status) ? order.status : "draft";
-      return Object.assign({}, order, { status: status, items: order.items.map(function (item) {
-        const quantity = Math.max(0, Number(item.quantity) || 0);
-        return Object.assign({}, item, {
-          quantity: quantity,
-          sentQuantity: status === "sent" || status === "closed" ? quantity : Math.min(quantity, Math.max(0, Number(item.sentQuantity) || 0))
-        });
-      }) });
+      return Object.assign({}, order, {
+        items: order.items.map(function (item) {
+          const quantity = Math.max(0, Number(item.quantity) || 0);
+          return Object.assign({}, item, { quantity: quantity, sentQuantity: quantity });
+        })
+      });
     });
+    // Remove any stale draft data left in localStorage by a previous build.
+    if (orders.length !== raw.length) {
+      try { localStorage.setItem("roastWaiter_orders", JSON.stringify(orders)); } catch (error) {}
+    }
+    return assignRoundNumbers(orders);
   }
+
   const state = {
     categories: readArray("roastAdmin_categories", fallbackCategories),
     products: readArray("roastAdmin_products", fallbackProducts),
@@ -151,11 +134,13 @@ document.addEventListener("DOMContentLoaded", function () {
     productQuery: "",
     tableQuery: "",
     tableFilter: "all",
-    view: "tables"
+    view: "tables",
+    currentOrderEntry: null
   };
+
   const toastElement = $("#waiterToast");
   const toastMessage = $("#waiterToastMessage");
-  const toast = window.bootstrap && toastElement ? bootstrap.Toast.getOrCreateInstance(toastElement, { delay: 2600 }) : null;
+  const toast = window.bootstrap && toastElement ? bootstrap.Toast.getOrCreateInstance(toastElement, { delay: 2400 }) : null;
 
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
@@ -165,10 +150,10 @@ document.addEventListener("DOMContentLoaded", function () {
   function saveOrders() {
     try {
       localStorage.setItem("roastWaiter_orders", JSON.stringify(state.orders));
-      localStorage.setItem("roastWaiter_schemaVersion", "2");
+      localStorage.setItem("roastWaiter_schemaVersion", "3");
       return true;
     } catch (error) {
-      notify("Sipariş tarayıcıya kaydedilemedi. Depolama alanını kontrol edin.");
+      notify("Sipariş kaydedilemedi. Tarayıcı depolama alanını kontrol edin.");
       return false;
     }
   }
@@ -186,16 +171,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
   function openRounds(tableId) {
-    return roundsForTable(tableId).filter(function (order) {
-      return order.status !== "closed" && (order.status === "sent" || (order.status === "draft" && order.items.length > 0));
-    });
+    return roundsForTable(tableId).filter(function (order) { return order.status !== "closed"; });
   }
-  function draftForTable(tableId) {
-    return roundsForTable(tableId).filter(function (order) { return order.status === "draft"; })
-      .sort(function (a, b) { return new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0); })[0] || null;
-  }
-  function currentDraft() {
-    return draftForTable(state.selectedTableId);
+  function currentOrderEntry() {
+    return state.currentOrderEntry && String(state.currentOrderEntry.tableId) === String(state.selectedTableId)
+      ? state.currentOrderEntry
+      : null;
   }
   function orderTotal(order) {
     return (order && Array.isArray(order.items) ? order.items : []).reduce(function (sum, item) {
@@ -213,9 +194,17 @@ document.addEventListener("DOMContentLoaded", function () {
   function roundsCount(rounds) {
     return rounds.reduce(function (sum, order) { return sum + orderCount(order); }, 0);
   }
-  function getCategoryIcon(category) {
-    const found = state.categories.find(function (item) { return item.name === category; });
-    return found && found.icon ? found.icon : "bi-collection";
+  function nextRoundNumber(tableId) {
+    return roundsForTable(tableId).reduce(function (max, order) {
+      return Math.max(max, Number(order.roundNumber) || 0);
+    }, 0) + 1;
+  }
+  function latestActivity(tableId) {
+    const rounds = roundsForTable(tableId).filter(function (round) { return round.items && round.items.length; });
+    rounds.sort(function (a, b) {
+      return new Date(b.updatedAt || b.sentAt || b.createdAt || 0) - new Date(a.updatedAt || a.sentAt || a.createdAt || 0);
+    });
+    return rounds[0] || null;
   }
   function getProductIcon(product) {
     const category = String(product.category || "").toLocaleLowerCase("tr");
@@ -236,38 +225,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (Number.isNaN(date.getTime())) return "Tarih bilinmiyor";
     return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" }) + " · " + formatTime(dateValue);
   }
-  function latestActivity(tableId) {
-    const rounds = roundsForTable(tableId).filter(function (round) { return round.items && round.items.length; });
-    rounds.sort(function (a, b) {
-      return new Date(b.updatedAt || b.sentAt || b.createdAt || 0) - new Date(a.updatedAt || a.sentAt || a.createdAt || 0);
-    });
-    return rounds[0] || null;
+  function makeId() {
+    return "order-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
   }
-  function nextRoundNumber(tableId) {
-    return roundsForTable(tableId).reduce(function (max, order) {
-      return Math.max(max, Number(order.roundNumber) || 0);
-    }, 0) + 1;
-  }
-  function ensureDraftForTable(tableId) {
-    let draft = draftForTable(tableId);
-    if (draft) return draft;
-    const table = tableFor(tableId);
-    const now = new Date().toISOString();
-    draft = {
-      id: "round-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
-      tableId: table.id,
-      tableName: table.name,
-      roundNumber: nextRoundNumber(table.id),
-      items: [],
-      status: "draft",
-      createdAt: now,
-      updatedAt: now,
-      sentAt: null,
-      closedAt: null
-    };
-    state.orders.push(draft);
-    return draft;
-  }
+
   function renderHeader() {
     const appearance = readObject("roastAdmin_appearance", { brandName: "roast & co.", isOpen: true });
     $("#waiterBrandName").textContent = appearance.brandName || "roast & co.";
@@ -276,17 +237,19 @@ document.addEventListener("DOMContentLoaded", function () {
     status.classList.toggle("is-closed", !isOpen);
     $("#serviceStatusText").textContent = isOpen ? "Servis açık" : "Servis kapalı";
     $("#activeTableCount").textContent = tables.filter(function (table) { return openRounds(table.id).length > 0; }).length + " masa";
+    const table = tableFor(state.selectedTableId);
     const titleMap = {
       tables: ["SALON YÖNETİMİ", "Masalarım", "Masa durumlarını, açık hesapları ve son siparişleri görüntüle."],
-      details: ["MASA / ADİSYON", tableFor(state.selectedTableId).name, "Önceki siparişleri incele veya bu masaya yeni sipariş ekle."],
-      "new-order": ["YENİ SİPARİŞ", "Sipariş oluştur", tableFor(state.selectedTableId).name + " için yeni sipariş turu."]
+      details: ["MASA / ADİSYON", table.name, "Önceki siparişleri incele veya bu masaya yeni sipariş ekle."],
+      "new-order": ["YENİ SİPARİŞ", table.name + " için sipariş", "Ürünleri seç, kontrol et ve mutfağa gönder."]
     };
     const viewText = titleMap[state.view] || titleMap.tables;
     $("#viewEyebrow").textContent = viewText[0];
     $("#viewTitle").textContent = viewText[1];
     $("#viewDescription").textContent = viewText[2];
-    document.title = (state.view === "tables" ? "Masalarım" : state.view === "details" ? tableFor(state.selectedTableId).name + " | Adisyon" : "Yeni sipariş") + " | Roast & Co.";
+    document.title = (state.view === "tables" ? "Masalarım" : state.view === "details" ? table.name + " | Adisyon" : "Yeni sipariş") + " | Roast & Co.";
   }
+
   function renderTableCards() {
     const query = state.tableQuery.toLocaleLowerCase("tr").trim();
     const visible = tables.filter(function (table) {
@@ -302,29 +265,17 @@ document.addEventListener("DOMContentLoaded", function () {
       const activeTotal = roundsTotal(rounds);
       const isActive = rounds.length > 0;
       const last = latestActivity(table.id);
-      const roundCount = history.length + (draftForTable(table.id) && draftForTable(table.id).items.length ? 1 : 0);
       return '<button class="table-card ' + (isActive ? "is-active" : "") + '" type="button" data-table-id="' + table.id + '">' +
         '<span class="table-card-top"><span class="table-card-title"><span class="table-card-icon"><i class="bi bi-grid-1x2-fill"></i></span><span><strong class="table-card-name">' + escapeHtml(table.name) + '</strong><span class="table-card-seats">' + table.seats + ' kişilik masa</span></span></span>' +
         '<span class="table-state-pill ' + (isActive ? "is-active" : "") + '"><i class="status-dot"></i>' + (isActive ? "Adisyon açık" : "Boş") + '</span></span>' +
         '<span class="table-card-bottom"><span class="table-card-total"><span>' + (isActive ? "Mevcut hesap" : "Hesap toplamı") + '</span><strong>' + escapeHtml(money(activeTotal)) + '</strong></span>' +
-        '<span class="table-card-last"><span>Son hareket</span><strong>' + (last ? escapeHtml(formatTime(last.updatedAt || last.sentAt || last.createdAt)) : "Henüz yok") + '</strong><span class="round-count">' + roundCount + ' sipariş turu</span></span></span></button>';
+        '<span class="table-card-last"><span>Son hareket</span><strong>' + (last ? escapeHtml(formatTime(last.updatedAt || last.sentAt || last.createdAt)) : "Henüz yok") + '</strong><span class="round-count">' + history.length + ' gönderilmiş sipariş</span></span></span></button>';
     }).join("");
     if (!visible.length) {
       $("#tablesGrid").innerHTML = '<div class="empty-history"><strong>Masa bulunamadı</strong><span>Aramayı veya filtreyi değiştirebilirsin.</span></div>';
     }
   }
-  function renderDraftPreview() {
-    const draft = currentDraft();
-    const card = $("#currentDraftCard");
-    const exists = Boolean(draft && draft.items.length);
-    card.hidden = !exists;
-    if (!exists) return;
-    $("#draftPreviewItems").innerHTML = draft.items.map(function (item) {
-      return '<div class="draft-preview-row"><span><strong class="draft-preview-name">' + escapeHtml(item.name) + '</strong><span class="draft-preview-qty">' + Number(item.quantity) + ' adet</span></span><strong class="draft-preview-price">' + escapeHtml(money((Number(item.price) || 0) * (Number(item.quantity) || 0))) + '</strong></div>';
-    }).join("");
-    $("#draftPreviewCount").textContent = orderCount(draft) + " ürün";
-    $("#draftPreviewTotal").textContent = money(orderTotal(draft));
-  }
+
   function renderHistory() {
     const rounds = historicalRounds(state.selectedTableId);
     $("#historyCount").textContent = rounds.length + " sipariş";
@@ -336,28 +287,28 @@ document.addEventListener("DOMContentLoaded", function () {
       const itemsHtml = order.items.map(function (item) {
         return '<div class="history-item"><div class="history-item-info"><strong>' + escapeHtml(item.name) + ' × ' + (Number(item.quantity) || 0) + '</strong><span>' + escapeHtml(money(item.price)) + ' / adet</span></div><strong class="history-item-price">' + escapeHtml(money((Number(item.price) || 0) * (Number(item.quantity) || 0))) + '</strong></div>';
       }).join("");
-      return '<article class="history-card"><div class="history-card-head"><div><h3>' + title + '</h3><p>' + escapeHtml(when) + '</p><span class="history-status"><i class="bi ' + (closed ? "bi-check-circle-fill" : "bi-send-check-fill") + '"></i>' + (closed ? "Hesap kapatılmış" : "Mutfağa iletildi") + '</span></div><span class="history-card-time">' + escapeHtml(formatTime(order.sentAt || order.updatedAt)) + '</span></div>' +
+      return '<article class="history-card"><div class="history-card-head"><div><h3>' + title + '</h3><p>' + escapeHtml(when) + '</p><span class="history-status"><i class="bi ' + (closed ? "bi-check-circle-fill" : "bi-send-check-fill") + '"></i>' + (closed ? "Hesap kapatılmış" : "Mutfağa gönderildi") + '</span></div><span class="history-card-time">' + escapeHtml(formatTime(order.sentAt || order.updatedAt)) + '</span></div>' +
         '<div class="history-item-list">' + itemsHtml + '</div><div class="history-card-total"><span>Sipariş toplamı</span><strong>' + escapeHtml(money(orderTotal(order))) + '</strong></div></article>';
     }).join("");
   }
+
   function renderTableDetails() {
     const table = tableFor(state.selectedTableId);
     const rounds = openRounds(table.id);
     const history = historicalRounds(table.id);
-    const draft = currentDraft();
     $("#detailsTableName").textContent = table.name;
     $("#detailsTableMeta").textContent = table.seats + " kişilik masa";
     $("#detailsGrandTotal").textContent = money(roundsTotal(rounds));
     $("#detailsItemCount").textContent = roundsCount(rounds) + " adet";
-    $("#detailsRoundCount").textContent = history.length + (draft && draft.items.length ? 1 : 0);
+    $("#detailsRoundCount").textContent = history.length;
     const badge = $("#detailsTableStatus");
     const hasAccount = rounds.length > 0;
     badge.classList.toggle("is-active", hasAccount);
     badge.innerHTML = '<span class="status-dot"></span>' + (hasAccount ? "Adisyon açık" : "Henüz adisyon yok");
-    $("#startNewOrderButton").innerHTML = '<i class="bi bi-plus-lg"></i> ' + (draft && draft.items.length ? "Taslağa devam et" : "Yeni sipariş ekle");
-    renderDraftPreview();
+    $("#startNewOrderButton").innerHTML = '<i class="bi bi-plus-lg"></i> Yeni sipariş ekle';
     renderHistory();
   }
+
   function renderCategories() {
     const buttons = [{ id: "all", name: "Tüm ürünler", icon: "bi-grid" }].concat(state.categories);
     $("#categoryTabs").innerHTML = buttons.map(function (category) {
@@ -387,24 +338,25 @@ document.addEventListener("DOMContentLoaded", function () {
         '<div class="product-card-bottom"><span class="product-price">' + escapeHtml(money(product.price)) + '</span><button type="button" class="add-product-button" data-add-product="' + escapeHtml(product.id) + '" aria-label="' + escapeHtml(product.name) + ' ürününü siparişe ekle" title="Siparişe ekle"><i class="bi bi-plus-lg"></i></button></div></div></article>';
     }).join("");
   }
-  function renderDraftOrder() {
-    const draft = currentDraft();
-    const items = draft && Array.isArray(draft.items) ? draft.items : [];
-    $("#draftItemCount").textContent = orderCount(draft) + " ürün";
+
+  function renderSelectedOrder() {
+    const order = currentOrderEntry();
+    const items = order && Array.isArray(order.items) ? order.items : [];
+    $("#draftItemCount").textContent = items.length ? orderCount(order) + " ürün seçildi" : "Henüz ürün seçilmedi";
+    $("#draftTotal").textContent = money(orderTotal(order));
     $("#draftOrderEmpty").hidden = items.length > 0;
     $("#draftOrderItems").innerHTML = items.map(function (item, index) {
       return '<div class="draft-order-row"><div class="draft-order-main"><strong class="draft-order-name">' + escapeHtml(item.name) + '</strong><span class="draft-order-unit">' + escapeHtml(money(item.price)) + ' / adet</span></div>' +
-        '<div class="quantity-control"><button type="button" data-quantity-action="minus" data-item-index="' + index + '" aria-label="' + escapeHtml(item.name) + ' adedini azalt" ' + (Number(item.quantity) <= 1 ? "disabled" : "") + '><i class="bi bi-dash"></i></button><span>' + (Number(item.quantity) || 0) + '</span><button type="button" data-quantity-action="plus" data-item-index="' + index + '" aria-label="' + escapeHtml(item.name) + ' adedini artır"><i class="bi bi-plus"></i></button></div>' +
+        '<div class="draft-order-controls"><div class="quantity-control"><button type="button" data-quantity-action="minus" data-item-index="' + index + '" aria-label="' + escapeHtml(item.name) + ' adedini azalt" ' + (Number(item.quantity) <= 1 ? "disabled" : "") + '><i class="bi bi-dash"></i></button><span>' + (Number(item.quantity) || 0) + '</span><button type="button" data-quantity-action="plus" data-item-index="' + index + '" aria-label="' + escapeHtml(item.name) + ' adedini artır"><i class="bi bi-plus"></i></button></div><button type="button" class="remove-order-item" data-remove-item-index="' + index + '" aria-label="' + escapeHtml(item.name) + ' ürününü siparişten sil" title="Ürünü kaldır"><i class="bi bi-trash3"></i></button></div>' +
         '<strong class="draft-order-line-total">' + escapeHtml(money((Number(item.price) || 0) * (Number(item.quantity) || 0))) + '</strong></div>';
     }).join("");
-    $("#draftTotal").textContent = money(orderTotal(draft));
-    $("#sendOrderCount").textContent = orderCount(draft) + " ürün";
-    $("#sendOrderTotal").textContent = money(orderTotal(draft));
+    $("#sendOrderCount").textContent = orderCount(order) + " ürün";
+    $("#sendOrderTotal").textContent = money(orderTotal(order));
     $("#sendOrderButton").disabled = !items.length;
-    $("#clearDraftButton").disabled = !items.length;
     $("#newOrderTableName").textContent = tableFor(state.selectedTableId).name;
-    $("#newOrderRoundLabel").textContent = "Sipariş turu #" + (draft ? draft.roundNumber : nextRoundNumber(state.selectedTableId));
+    $("#newOrderRoundLabel").textContent = "Sipariş #" + (order ? order.roundNumber : nextRoundNumber(state.selectedTableId));
   }
+
   function renderViewVisibility() {
     $("#tablesView").hidden = state.view !== "tables";
     $("#tableDetailsView").hidden = state.view !== "details";
@@ -418,70 +370,91 @@ document.addEventListener("DOMContentLoaded", function () {
     if (state.selectedTableId != null) renderTableDetails();
     renderCategories();
     renderProducts();
-    renderDraftOrder();
+    renderSelectedOrder();
     $$(".filter-pill").forEach(function (button) {
       button.classList.toggle("active", button.dataset.tableFilter === state.tableFilter);
     });
   }
   function setView(view, shouldScroll) {
+    if (state.view === "new-order" && view !== "new-order") {
+      // Unsent selections exist only in memory. Leaving the screen discards them.
+      state.currentOrderEntry = null;
+    }
     state.view = view;
     renderAll();
     if (shouldScroll !== false) window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }
   function beginNewOrder() {
     if (state.selectedTableId == null) return;
-    let draft = draftForTable(state.selectedTableId);
-    if (!draft) {
-      draft = ensureDraftForTable(state.selectedTableId);
-      if (!saveOrders()) return;
-    }
+    const table = tableFor(state.selectedTableId);
+    state.currentOrderEntry = {
+      id: makeId(),
+      tableId: table.id,
+      tableName: table.name,
+      roundNumber: nextRoundNumber(table.id),
+      items: [],
+      status: "unsent",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
     state.productQuery = "";
+    state.selectedCategory = "all";
     $("#productSearch").value = "";
+    $("#draftSummaryAccordion").open = false;
     setView("new-order");
   }
   function addProduct(productId) {
     const product = state.products.find(function (item) { return String(item.id) === String(productId); });
-    if (!product || product.status !== "active") return;
-    const draft = ensureDraftForTable(state.selectedTableId);
-    const found = draft.items.find(function (item) { return String(item.productId) === String(product.id); });
+    if (!product || product.status !== "active" || state.view !== "new-order") return;
+    const order = currentOrderEntry();
+    if (!order) return;
+    const found = order.items.find(function (item) { return String(item.productId) === String(product.id); });
     if (found) found.quantity = (Number(found.quantity) || 0) + 1;
-    else draft.items.push({ productId: product.id, name: product.name, price: Number(product.price) || 0, quantity: 1, sentQuantity: 0 });
-    draft.updatedAt = new Date().toISOString();
-    if (!saveOrders()) return;
-    renderAll();
+    else order.items.push({ productId: product.id, name: product.name, price: Number(product.price) || 0, quantity: 1 });
+    order.updatedAt = new Date().toISOString();
+    renderSelectedOrder();
+    renderTableCards();
   }
-  function changeDraftQuantity(index, action) {
-    const draft = currentDraft();
-    if (!draft || !draft.items[index]) return;
-    const item = draft.items[index];
+  function changeSelectedQuantity(index, action) {
+    const order = currentOrderEntry();
+    if (!order || !order.items[index]) return;
+    const item = order.items[index];
     const quantity = Number(item.quantity) || 0;
     if (action === "plus") item.quantity = quantity + 1;
     if (action === "minus" && quantity > 1) item.quantity = quantity - 1;
-    draft.updatedAt = new Date().toISOString();
-    if (!saveOrders()) return;
+    order.updatedAt = new Date().toISOString();
     renderAll();
   }
-  function clearDraft() {
-    const draft = currentDraft();
-    if (!draft || !draft.items.length) return;
-    if (!window.confirm("Bu sipariş taslağındaki tüm ürünleri silmek istiyor musun?")) return;
-    state.orders = state.orders.filter(function (order) { return order.id !== draft.id; });
-    if (!saveOrders()) return;
+  function removeSelectedItem(index) {
+    const order = currentOrderEntry();
+    if (!order || !order.items[index]) return;
+    const removedName = order.items[index].name;
+    order.items.splice(index, 1);
+    order.updatedAt = new Date().toISOString();
     renderAll();
-    notify("Sipariş taslağı temizlendi.");
+    notify(removedName + " siparişten kaldırıldı.");
   }
-  function sendCurrentDraft() {
-    const draft = currentDraft();
-    if (!draft || !draft.items.length) return;
+  function sendCurrentOrder() {
+    const pending = currentOrderEntry();
+    if (!pending || !pending.items.length) return;
     const now = new Date().toISOString();
-    draft.items.forEach(function (item) { item.sentQuantity = Number(item.quantity) || 0; });
-    draft.status = "sent";
-    draft.sentAt = now;
-    draft.updatedAt = now;
-    draft.tableName = tableFor(state.selectedTableId).name;
-    if (!saveOrders()) return;
+    const sentOrder = Object.assign({}, pending, {
+      status: "sent",
+      sentAt: now,
+      updatedAt: now,
+      items: pending.items.map(function (item) {
+        return Object.assign({}, item, { sentQuantity: Number(item.quantity) || 0 });
+      })
+    });
+    state.orders.push(sentOrder);
+    assignRoundNumbers(state.orders.filter(function (order) { return String(order.tableId) === String(sentOrder.tableId); }));
+    if (!saveOrders()) {
+      state.orders = state.orders.filter(function (order) { return order.id !== sentOrder.id; });
+      return;
+    }
+    state.currentOrderEntry = null;
     setView("details");
-    notify("Sipariş " + draft.tableName + " için kaydedildi ve mutfağa gönderildi.");
+    notify("Sipariş " + sentOrder.tableName + " mutfağa gönderildi.");
   }
 
   $("#tablesGrid").addEventListener("click", function (event) {
@@ -504,7 +477,6 @@ document.addEventListener("DOMContentLoaded", function () {
   $("#backToTablesButton").addEventListener("click", function () { setView("tables"); });
   $("#startNewOrderButton").addEventListener("click", beginNewOrder);
   $("#backToDetailsButton").addEventListener("click", function () { setView("details"); });
-  $("#clearDraftButton").addEventListener("click", clearDraft);
   $("#categoryTabs").addEventListener("click", function (event) {
     const button = event.target.closest("[data-category]");
     if (!button) return;
@@ -517,14 +489,19 @@ document.addEventListener("DOMContentLoaded", function () {
     if (button) addProduct(button.dataset.addProduct);
   });
   $("#draftOrderItems").addEventListener("click", function (event) {
-    const button = event.target.closest("[data-quantity-action]");
-    if (button && !button.disabled) changeDraftQuantity(Number(button.dataset.itemIndex), button.dataset.quantityAction);
+    const removeButton = event.target.closest("[data-remove-item-index]");
+    if (removeButton) {
+      removeSelectedItem(Number(removeButton.dataset.removeItemIndex));
+      return;
+    }
+    const quantityButton = event.target.closest("[data-quantity-action]");
+    if (quantityButton && !quantityButton.disabled) changeSelectedQuantity(Number(quantityButton.dataset.itemIndex), quantityButton.dataset.quantityAction);
   });
   $("#productSearch").addEventListener("input", function (event) {
     state.productQuery = event.target.value;
     renderProducts();
   });
-  $("#sendOrderButton").addEventListener("click", sendCurrentDraft);
+  $("#sendOrderButton").addEventListener("click", sendCurrentOrder);
   window.addEventListener("storage", function (event) {
     if (event.key === "roastAdmin_products" || event.key === "roastAdmin_categories" || event.key === "roastAdmin_appearance" || event.key === "roastWaiter_orders" || event.key === "roastWaiter_schemaVersion") {
       state.products = readArray("roastAdmin_products", fallbackProducts);
@@ -533,5 +510,6 @@ document.addEventListener("DOMContentLoaded", function () {
       renderAll();
     }
   });
+
   renderAll();
 });
