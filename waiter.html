@@ -2,10 +2,10 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f7f5f0">
-  <meta name="description" content="Roast & Co. garson sipariş ekranı">
-  <title>Garson Siparişi | Roast &amp; Co.</title>
+  <meta name="description" content="Roast & Co. garson masa ve sipariş yönetimi">
+  <title>Garson Paneli | Roast &amp; Co.</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/waiter.css">
@@ -13,23 +13,22 @@
 <body>
   <div class="waiter-app">
     <header class="waiter-topbar">
-      <a class="waiter-brand" href="admin.html" aria-label="Yönetim paneline dön">
+      <a class="waiter-brand" href="waiter.html" aria-label="Masalara dön">
         <span class="brand-mark"><i class="bi bi-cup-hot-fill"></i></span>
-        <span><strong id="waiterBrandName">roast &amp; co.</strong><small>OPERASYON PANELİ</small></span>
+        <span><strong id="waiterBrandName">roast &amp; co.</strong><small>GARSON PANELİ</small></span>
       </a>
-      <div class="topbar-middle">
+      <div class="topbar-right">
         <span class="service-status" id="serviceStatus"><span class="status-dot"></span><span id="serviceStatusText">Servis açık</span></span>
-        <span class="topbar-date" id="currentDate"></span>
+        <a class="back-admin" href="admin.html" aria-label="Yönetim paneline dön"><i class="bi bi-grid-1x2"></i><span>Yönetim</span></a>
       </div>
-      <a class="back-admin" href="admin.html"><i class="bi bi-grid-1x2"></i><span>Yönetim paneli</span></a>
     </header>
 
     <main class="waiter-main">
       <section class="page-intro">
-        <div>
-          <span class="eyebrow">OPERASYON <span>/</span> GARSON</span>
-          <h1>Sipariş al</h1>
-          <p>Masa seç, ürünleri ekle ve siparişi mutfağa gönder.</p>
+        <div class="intro-copy">
+          <span class="eyebrow" id="viewEyebrow">SALON YÖNETİMİ</span>
+          <h1 id="viewTitle">Masalarım</h1>
+          <p id="viewDescription">Masa durumlarını, açık hesapları ve son siparişleri görüntüle.</p>
         </div>
         <div class="shift-summary">
           <span class="shift-icon"><i class="bi bi-receipt-cutoff"></i></span>
@@ -37,60 +36,94 @@
         </div>
       </section>
 
-      <section class="waiter-workspace" aria-label="Sipariş çalışma alanı">
-        <aside class="surface-card tables-panel">
-          <div class="panel-heading">
-            <div><span class="eyebrow">SALON</span><h2>Masalar</h2></div>
-            <span class="count-chip" id="tableCount">12</span>
+      <section id="tablesView" class="view-screen" aria-label="Masa listesi">
+        <div class="list-toolbar">
+          <div class="filter-pills" role="group" aria-label="Masa filtreleri">
+            <button class="filter-pill active" type="button" data-table-filter="all">Tüm masalar <span id="allTableCount">12</span></button>
+            <button class="filter-pill" type="button" data-table-filter="active">Açık adisyonlar <span id="occupiedTableCount">0</span></button>
           </div>
-          <label class="table-search">
-            <i class="bi bi-search"></i>
-            <input type="search" id="tableSearch" placeholder="Masa ara..." autocomplete="off" aria-label="Masa ara">
-          </label>
-          <div class="table-legend"><span><i class="legend-dot free"></i>Boş</span><span><i class="legend-dot occupied"></i>Adisyon açık</span></div>
-          <div class="tables-grid" id="tablesGrid" aria-live="polite"></div>
-          <div class="tables-panel-footer"><i class="bi bi-info-circle"></i><span>Masaya dokunarak sipariş oluşturmaya başlayın.</span></div>
-        </aside>
+          <label class="table-search"><i class="bi bi-search"></i><input type="search" id="tableSearch" placeholder="Masa ara..." autocomplete="off" aria-label="Masa ara"></label>
+        </div>
+        <div class="table-grid" id="tablesGrid" aria-live="polite"></div>
+        <div class="page-footnote"><i class="bi bi-info-circle"></i><span>Masayı seçerek önceki siparişleri gör, yeni sipariş ekle veya adisyonu kontrol et.</span></div>
+      </section>
 
-        <section class="surface-card catalog-panel">
+      <section id="tableDetailsView" class="view-screen" hidden aria-label="Masa ve sipariş geçmişi">
+        <button class="back-link" id="backToTablesButton" type="button"><i class="bi bi-arrow-left"></i> Masalara dön</button>
+        <div class="table-detail-hero surface-card">
+          <div class="table-detail-title">
+            <span class="table-hero-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+            <div><span class="eyebrow">MASA DETAYI</span><h2 id="detailsTableName">Masa 1</h2><p id="detailsTableMeta">4 kişilik masa</p></div>
+          </div>
+          <span class="table-open-badge" id="detailsTableStatus"><span class="status-dot"></span>Adisyon açık</span>
+          <div class="table-summary-grid">
+            <div class="summary-stat"><span>Mevcut hesap</span><strong id="detailsGrandTotal">₺0,00</strong></div>
+            <div class="summary-stat"><span>Toplam ürün</span><strong id="detailsItemCount">0 adet</strong></div>
+            <div class="summary-stat"><span>Sipariş turu</span><strong id="detailsRoundCount">0</strong></div>
+          </div>
+          <div class="table-detail-actions">
+            <button class="btn-primary-action" id="startNewOrderButton" type="button"><i class="bi bi-plus-lg"></i> Yeni sipariş ekle</button>
+          </div>
+        </div>
+
+        <div id="currentDraftCard" class="draft-card surface-card" hidden>
+          <div class="section-heading">
+            <div><span class="eyebrow">DEVAM EDEN İŞLEM</span><h3>Gönderilmeyi bekleyen sipariş</h3></div>
+            <span class="order-status draft">Taslak</span>
+          </div>
+          <div id="draftPreviewItems" class="draft-preview-items"></div>
+          <div class="draft-preview-footer">
+            <span id="draftPreviewCount">0 ürün</span>
+            <strong id="draftPreviewTotal">₺0,00</strong>
+            <button class="btn-secondary-action" id="continueDraftButton" type="button">Siparişe devam et <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <section class="history-section">
+          <div class="history-title-row">
+            <div><span class="eyebrow">ADİSYON KAYDI</span><h2>Sipariş geçmişi</h2><p>Mutfağa gönderilen siparişler burada ayrı ayrı tutulur.</p></div>
+            <span class="history-count" id="historyCount">0 sipariş</span>
+          </div>
+          <div class="history-list" id="orderHistory" aria-live="polite"></div>
+          <div id="historyEmpty" class="empty-history" hidden><span class="empty-history-icon"><i class="bi bi-receipt"></i></span><strong>Henüz sipariş yok</strong><span>Bu masa için ilk siparişi ekleyebilirsin.</span></div>
+        </section>
+      </section>
+
+      <section id="newOrderView" class="view-screen" hidden aria-label="Yeni sipariş oluştur">
+        <button class="back-link" id="backToDetailsButton" type="button"><i class="bi bi-arrow-left"></i> <span id="newOrderBackLabel">Masa detayına dön</span></button>
+        <div class="new-order-heading">
+          <div><span class="eyebrow">YENİ SİPARİŞ</span><h2 id="newOrderTableName">Masa 1</h2><p>Yalnızca bu sipariş turunda eklediğin ürünler listelenir.</p></div>
+          <span class="round-chip" id="newOrderRoundLabel">Yeni tur</span>
+        </div>
+
+        <section class="draft-editor surface-card">
+          <div class="section-heading">
+            <div><span class="eyebrow">SİPARİŞ ÖZETİ</span><h3>Bu sipariş</h3></div>
+            <span class="count-chip" id="draftItemCount">0 ürün</span>
+          </div>
+          <div id="draftOrderItems" class="draft-order-items"></div>
+          <div id="draftOrderEmpty" class="draft-order-empty"><i class="bi bi-basket2"></i><span>Henüz ürün eklenmedi. Aşağıdaki menüden ürün seç.</span></div>
+          <div class="draft-editor-footer">
+            <button class="clear-draft-button" id="clearDraftButton" type="button" disabled><i class="bi bi-trash3"></i> Taslağı temizle</button>
+            <div><span>Bu siparişin toplamı</span><strong id="draftTotal">₺0,00</strong></div>
+          </div>
+        </section>
+
+        <section class="catalog-section">
           <div class="catalog-heading">
-            <div><span class="eyebrow">MENÜ</span><h2>Ürün seç</h2><p id="catalogHint">Eklemek için ürün kartına dokun.</p></div>
+            <div><span class="eyebrow">MENÜ</span><h2>Ürün ekle</h2><p>Bir ürüne dokunarak siparişe ekle.</p></div>
             <label class="product-search"><i class="bi bi-search"></i><input type="search" id="productSearch" placeholder="Ürün ara..." autocomplete="off" aria-label="Ürün ara"></label>
           </div>
           <nav class="category-tabs" id="categoryTabs" aria-label="Ürün kategorileri"></nav>
-          <div class="catalog-meta"><span id="productsResultCount">Ürünler</span><span><i class="bi bi-hand-index-thumb me-1"></i>Eklemek için dokun</span></div>
+          <div class="catalog-meta"><span id="productsResultCount">Ürünler</span><span>Fiyatlar TL</span></div>
           <div class="product-grid" id="productGrid" aria-live="polite"></div>
-          <div class="catalog-empty" id="catalogEmpty" hidden><i class="bi bi-search"></i><strong>Ürün bulunamadı</strong><span>Arama kelimesini veya kategoriyi değiştirebilirsin.</span></div>
+          <div class="catalog-empty" id="catalogEmpty" hidden><i class="bi bi-search"></i><strong>Ürün bulunamadı</strong><span>Arama kelimesini veya kategoriyi değiştir.</span></div>
         </section>
-
-        <aside class="surface-card order-panel" id="orderPanel" aria-label="Aktif sipariş">
-          <div class="order-panel-heading">
-            <div><span class="eyebrow">AKTİF ADİSYON</span><h2 id="orderTableTitle">Masa 1</h2></div>
-            <span class="order-status draft" id="orderStatus">Yeni sipariş</span>
-          </div>
-          <div class="order-subheading">
-            <span><i class="bi bi-clock me-1"></i><span id="orderTime">Henüz başlamadı</span></span>
-            <button class="clear-order" id="clearOrderButton" type="button" aria-label="Taslak siparişi temizle" disabled title="Taslak siparişi temizle"><i class="bi bi-trash3"></i></button>
-          </div>
-          <div class="order-items" id="orderItems" aria-live="polite"></div>
-          <div class="order-empty" id="orderEmpty"><span class="empty-basket"><i class="bi bi-basket2"></i></span><strong>Henüz ürün eklenmedi</strong><span>Menüden ürün seçerek siparişi oluşturmaya başla.</span></div>
-          <div class="order-footer">
-            <div class="order-summary-line"><span>Ürün adedi</span><strong id="orderItemCount">0</strong></div>
-            <div class="order-summary-line"><span>Ara toplam</span><strong id="orderSubtotal">₺0,00</strong></div>
-            <div class="order-total"><span>Toplam</span><strong id="orderTotal">₺0,00</strong></div>
-            <button class="send-order-button" id="sendOrderButton" type="button" disabled><i class="bi bi-send-fill"></i><span>Siparişi mutfağa gönder</span></button>
-            <p class="order-footnote"><i class="bi bi-shield-check"></i> Sipariş bu tarayıcıda taslak olarak saklanır.</p>
-          </div>
-        </aside>
+        <div class="send-order-bar">
+          <div class="send-order-summary"><span id="sendOrderCount">0 ürün</span><strong id="sendOrderTotal">₺0,00</strong></div>
+          <button class="send-order-button" id="sendOrderButton" type="button" disabled><i class="bi bi-send-fill"></i> Mutfağa gönder</button>
+        </div>
       </section>
-      <div class="mobile-order-dock" id="mobileOrderDock">
-        <button class="mobile-order-dock-button" id="mobileOrderDockButton" type="button" aria-label="Aktif siparişi görüntüle">
-          <span class="mobile-cart-icon"><i class="bi bi-basket2-fill"></i><span id="mobileOrderItemCount">0</span></span>
-          <span class="mobile-cart-copy"><strong id="mobileOrderDockLabel">Sipariş oluştur</strong><small id="mobileOrderDockSubtext">Henüz ürün eklenmedi</small></span>
-          <span class="mobile-cart-total" id="mobileOrderDockTotal">₺0,00</span>
-          <span class="mobile-cart-open"><i class="bi bi-chevron-up"></i></span>
-        </button>
-      </div>
     </main>
   </div>
 
