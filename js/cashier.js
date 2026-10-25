@@ -258,15 +258,6 @@ document.addEventListener("DOMContentLoaded", function () {
   $("#checkoutButton").addEventListener("click", completeCheckout);
   $("#refreshButton").addEventListener("click", function () { loadTables(state.selectedTableId); });
 
-  async function loadBusinessBrand() {
-    try {
-      const payload = await api("/api/business/appearance");
-      if (payload.appearance && payload.appearance.brandName) $("#cashierBrandName").textContent = payload.appearance.brandName;
-    } catch (error) {
-      // Branding is optional; cashier functionality depends on the cashier API.
-    }
-  }
   setPaymentMethod("cash");
-  loadBusinessBrand();
   loadTables();
 });
