@@ -92,27 +92,11 @@ a{color:inherit}
 .bill-summary{display:grid;gap:8px;margin:0 20px 18px;padding:14px;border-radius:11px;background:#faf8f4}
 .bill-summary-row{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:10px}
 .bill-summary-row strong{color:var(--ink);font-weight:750}
-.checkout-section{padding:17px 20px 20px;border-top:1px solid var(--border);background:#fdfcf9}
-.bill-total-row{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:17px}
+.bill-total-panel{padding:18px 20px 20px;border-top:1px solid var(--border);background:#fdfcf9}
+.bill-total-row{display:flex;align-items:center;justify-content:space-between;gap:15px}
 .bill-total-row span{color:var(--muted);font-size:11px;font-weight:700}
-.bill-total-row strong{font-size:25px;font-weight:900;letter-spacing:-.7px}
-.payment-method-title{margin-bottom:8px;color:#746c61;font-size:10px;font-weight:800}
-.payment-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.payment-method{display:flex;align-items:center;justify-content:center;gap:9px;min-height:45px;border:1px solid var(--border);border-radius:10px;background:#fff;color:#746c61;font-size:11px;font-weight:800}
-.payment-method i{font-size:16px}
-.payment-method.active{border-color:var(--accent);background:#fff4ea;color:var(--accent-dark);box-shadow:0 0 0 1px #b96e4310}
-.cash-received-field{margin-top:13px}
-.cash-received-field label{display:block;margin-bottom:6px;color:#746c61;font-size:10px;font-weight:750}
-.form-control{width:100%;min-height:41px;padding:0 12px;border:1px solid var(--border);border-radius:9px;background:#fff;font-size:12px;outline:none}
-.change-row{display:flex;justify-content:space-between;gap:12px;margin-top:9px;color:var(--muted);font-size:10px}
-.change-row strong{color:var(--ink);font-size:11px}
-.checkout-button{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:47px;margin-top:16px;border:1px solid var(--accent);border-radius:10px;background:var(--accent);color:#fff;font-size:12px;font-weight:850}
-.checkout-button:hover:not(:disabled){border-color:var(--accent-dark);background:var(--accent-dark)}
-.checkout-button:disabled{border-color:#d9d3ca;background:#d9d3ca;color:#fff;cursor:not-allowed}
-.checkout-button i{font-size:16px}
-.checkout-footnote{display:flex;align-items:flex-start;gap:7px;margin:10px 0 0;color:#9b9185;font-size:9px;line-height:1.5}
-.checkout-footnote i{padding-top:1px}
+.bill-total-row strong{font-size:27px;font-weight:900;letter-spacing:-.7px}
 .toast{border-radius:10px;background:#342b22;color:#fff;font-size:12px}
-@media(max-width:1000px){.cashier-layout{grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr)}.panel-heading{padding:16px}.bill-detail-body{padding:0 16px}.checkout-section{padding:16px}.metric-copy strong{font-size:21px}}
-@media(max-width:760px){.cashier-topbar{min-height:64px;padding:9px 12px;gap:8px}.brand-mark{width:39px;height:39px;flex-basis:39px}.cashier-brand strong{font-size:18px}.cashier-brand small{font-size:7px;letter-spacing:1px}.topbar-actions{gap:6px}.topbar-link{width:38px;height:38px;min-height:38px;padding:0;font-size:0}.topbar-link i{font-size:15px}.connection-status{min-height:32px;padding:0 8px;font-size:9px}.cashier-main{padding:19px 12px 30px}.page-heading{align-items:flex-start;margin-bottom:17px}.page-heading p{max-width:280px;font-size:11px}.refresh-button{min-height:37px;padding:0 10px;font-size:10px}.metrics-grid{gap:8px;margin-bottom:13px}.metric-card{align-items:flex-start;gap:8px;padding:10px}.metric-icon{width:32px;height:32px;flex-basis:32px;border-radius:9px;font-size:14px}.metric-copy small{font-size:8px}.metric-copy strong{font-size:16px;letter-spacing:-.3px}.cashier-layout{grid-template-columns:1fr;gap:13px}.bill-table-list{max-height:370px}.panel-heading h2{font-size:15px}.panel-heading p{font-size:9px}.bill-detail-body{min-height:140px;padding:0 14px}.checkout-section{padding:15px 14px 17px}.bill-total-row strong{font-size:23px}.api-notice{padding:12px;font-size:10px}}
+@media(max-width:1000px){.cashier-layout{grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr)}.panel-heading{padding:16px}.bill-detail-body{padding:0 16px}.bill-total-panel{padding:16px}.metric-copy strong{font-size:21px}}
+@media(max-width:760px){.cashier-topbar{min-height:64px;padding:9px 12px;gap:8px}.brand-mark{width:39px;height:39px;flex-basis:39px}.cashier-brand strong{font-size:18px}.cashier-brand small{font-size:7px;letter-spacing:1px}.topbar-actions{gap:6px}.topbar-link{width:38px;height:38px;min-height:38px;padding:0;font-size:0}.topbar-link i{font-size:15px}.connection-status{min-height:32px;padding:0 8px;font-size:9px}.cashier-main{padding:19px 12px 30px}.page-heading{align-items:flex-start;margin-bottom:17px}.page-heading p{max-width:280px;font-size:11px}.refresh-button{min-height:37px;padding:0 10px;font-size:10px}.metrics-grid{gap:8px;margin-bottom:13px}.metric-card{align-items:flex-start;gap:8px;padding:10px}.metric-icon{width:32px;height:32px;flex-basis:32px;border-radius:9px;font-size:14px}.metric-copy small{font-size:8px}.metric-copy strong{font-size:16px;letter-spacing:-.3px}.cashier-layout{grid-template-columns:1fr;gap:13px}.bill-table-list{max-height:370px}.panel-heading h2{font-size:15px}.panel-heading p{font-size:9px}.bill-detail-body{min-height:140px;padding:0 14px}.bill-total-panel{padding:15px 14px 17px}.bill-total-row strong{font-size:23px}.api-notice{padding:12px;font-size:10px}}
 @media(max-width:400px){.metrics-grid{grid-template-columns:1fr}.metric-card{align-items:center}.metric-copy strong{font-size:20px}.page-heading{gap:10px}.refresh-button span{display:none}.refresh-button{width:37px;justify-content:center;padding:0}}
