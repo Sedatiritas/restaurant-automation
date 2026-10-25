@@ -97,6 +97,29 @@ document.addEventListener("DOMContentLoaded", function () {
   function billRounds() {
     return state.bill && Array.isArray(state.bill.orders) ? state.bill.orders : [];
   }
+  function renderProductRow(item, controlId) {
+    const orderedQuantity = Math.max(0, Math.floor(Number(item.quantity) || 0));
+    const unitPrice = Number(item.price != null ? item.price : item.unitPrice) || 0;
+    const fullLineTotal = unitPrice * orderedQuantity;
+    let selectionControl = "";
+
+    if (orderedQuantity > 1) {
+      let options = "";
+      for (let selectedQuantity = 0; selectedQuantity <= orderedQuantity; selectedQuantity += 1) {
+        options += '<option value="' + selectedQuantity + '"' + (selectedQuantity === orderedQuantity ? " selected" : "") + '>' + selectedQuantity + ' adet</option>';
+      }
+      selectionControl = '<select class="bill-item-quantity" id="' + controlId + '" data-unit-price="' + unitPrice + '" data-ordered-quantity="' + orderedQuantity + '" aria-label="' + escapeHtml(item.name) + ' için seçilen adet">' + options + '</select>';
+    } else {
+      selectionControl = '<input class="bill-item-checkbox" id="' + controlId + '" type="checkbox" checked data-line-total="' + fullLineTotal + '" aria-label="' + escapeHtml(item.name) + ' ürününü hesaba dahil et">';
+    }
+
+    const quantityDescription = orderedQuantity > 1
+      ? escapeHtml(money(unitPrice)) + ' / adet · ' + orderedQuantity + ' adet sipariş edildi'
+      : escapeHtml(money(unitPrice)) + ' × ' + orderedQuantity;
+    return '<div class="order-round-item is-selected">' + selectionControl +
+      '<span class="order-product-details"><strong>' + escapeHtml(item.name) + '</strong><small>' + quantityDescription + '</small></span>' +
+      '<strong class="order-line-total">' + escapeHtml(money(fullLineTotal)) + '</strong></div>';
+  }
   function billLines() {
     let total = 0;
     let itemIndex = 0;
@@ -109,11 +132,8 @@ document.addEventListener("DOMContentLoaded", function () {
       total += roundTotal;
       const dateText = order.sentAt ? new Date(order.sentAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "";
       const productMarkup = items.map(function (item) {
-        const qty = Number(item.quantity) || 0;
-        const unitPrice = Number(item.price != null ? item.price : item.unitPrice) || 0;
-        const lineTotal = unitPrice * qty;
-        const checkboxId = "bill-item-" + (++itemIndex);
-        return '<label class="order-round-item is-selected" for="' + checkboxId + '"><input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox" checked data-line-total="' + lineTotal + '"><span class="order-product-details"><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(money(unitPrice)) + ' × ' + qty + '</small></span><strong class="order-line-total">' + escapeHtml(money(lineTotal)) + '</strong></label>';
+        const controlId = "bill-item-" + (++itemIndex);
+        return renderProductRow(item, controlId);
       }).join("");
       return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || index + 1) + '</strong><span>' + escapeHtml(dateText) + '</span></div>' +
         productMarkup + '<div class="order-round-total"><span>Seçili ürünler</span><strong>' + escapeHtml(money(roundTotal)) + '</strong></div></article>';
@@ -143,20 +163,37 @@ document.addEventListener("DOMContentLoaded", function () {
     updateSelectedTotals();
   }
   function updateSelectedTotals() {
-    const checkboxes = $("#billDetailBody .bill-item-checkbox");
-    if (!checkboxes.length) return;
+    const rows = $$("#billDetailBody .order-round-item");
+    if (!rows.length) return;
+
     let selectedTotal = 0;
-    $("#billDetailBody .order-round").forEach(function (round) {
+    $$("#billDetailBody .order-round").forEach(function (round) {
       let roundTotal = 0;
-      round.querySelectorAll(".bill-item-checkbox").forEach(function (checkbox) {
-        const lineTotal = Number(checkbox.dataset.lineTotal) || 0;
-        const selected = checkbox.checked;
+      round.querySelectorAll(".order-round-item").forEach(function (row) {
+        const quantitySelect = row.querySelector(".bill-item-quantity");
+        const checkbox = row.querySelector(".bill-item-checkbox");
+        let lineTotal = 0;
+        let selected = false;
+
+        if (quantitySelect) {
+          const orderedQuantity = Number(quantitySelect.dataset.orderedQuantity) || 0;
+          const selectedQuantity = Math.min(orderedQuantity, Math.max(0, Math.floor(Number(quantitySelect.value) || 0)));
+          const unitPrice = Number(quantitySelect.dataset.unitPrice) || 0;
+          lineTotal = unitPrice * selectedQuantity;
+          selected = selectedQuantity > 0;
+        } else if (checkbox) {
+          lineTotal = Number(checkbox.dataset.lineTotal) || 0;
+          selected = checkbox.checked;
+          if (!selected) lineTotal = 0;
+        }
+
+        const lineTotalElement = row.querySelector(".order-line-total");
+        if (lineTotalElement) lineTotalElement.textContent = money(lineTotal);
+        row.classList.toggle("is-selected", selected);
         if (selected) {
           selectedTotal += lineTotal;
           roundTotal += lineTotal;
         }
-        const row = checkbox.closest(".order-round-item");
-        if (row) row.classList.toggle("is-selected", selected);
       });
       const roundTotalElement = round.querySelector(".order-round-total strong");
       if (roundTotalElement) roundTotalElement.textContent = money(roundTotal);
@@ -188,9 +225,8 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#billDetailBody").innerHTML = table.orders.map(function (order, orderIndex) {
       const dateText = order.sentAt || "";
       const products = order.items.map(function (item, itemIndex) {
-        const lineTotal = Number(item.price) * Number(item.quantity);
-        const checkboxId = "demo-item-" + tableId + "-" + orderIndex + "-" + itemIndex;
-        return '<label class="order-round-item is-selected" for="' + checkboxId + '"><input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox" checked data-line-total="' + lineTotal + '"><span class="order-product-details"><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(money(item.price)) + ' × ' + Number(item.quantity) + '</small></span><strong class="order-line-total">' + escapeHtml(money(lineTotal)) + '</strong></label>';
+        const controlId = "demo-item-" + tableId + "-" + orderIndex + "-" + itemIndex;
+        return renderProductRow(item, controlId);
       }).join("");
       return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || orderIndex + 1) + '</strong><span>' + escapeHtml(dateText) + '</span></div>' + products + '<div class="order-round-total"><span>Seçili ürünler</span><strong>' + escapeHtml(money(table.total)) + '</strong></div></article>';
     }).join("");
@@ -270,7 +306,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (button && state.apiLoaded) loadBill(button.dataset.tableId);
   });
   $("#billDetailBody").addEventListener("change", function (event) {
-    if (event.target.matches(".bill-item-checkbox")) updateSelectedTotals();
+    if (event.target.matches(".bill-item-checkbox, .bill-item-quantity")) updateSelectedTotals();
   });
   $("#tableSearch").addEventListener("input", function (event) {
     state.query = event.target.value;
