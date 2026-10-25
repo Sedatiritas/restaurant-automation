@@ -130,8 +130,8 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div class="revenue-month-filter"><label for="revenueMonth">Rapor ayı</label><input class="form-control" id="revenueMonth" type="month" value="' + escapeHtml(selectedMonth) + '"></div>') +
       '<div class="revenue-preview-note"><i class="bi bi-info-circle"></i><span><strong>Önizleme verisi</strong> Bu rapor, kasiyer ekranında örnek adisyon kapatılarak oluşturulan kayıtları gösterir. Kalıcı ve tüm cihazlarda ortak raporlama için backend/veritabanı bağlantısı gerekir.</span></div>' +
       '<section class="stats-grid revenue-stats">' +
-      statCard("Aylık ciro", money(summary.total), "bi-graph-up-arrow", "green", "Seçilen ayda kapatılan adisyonlar") +
-      statCard("Kapanan adisyon", String(summary.count), "bi-receipt-cutoff", "", "Seçilen ay") +
+      statCard("Aylık ciro", money(summary.total), "bi-graph-up-arrow", "green", "Seçilen ayda kaydedilen tahsilatlar") +
+      statCard("Tahsilat işlemi", String(summary.count), "bi-receipt-cutoff", "", "Seçilen ay") +
       statCard("Nakit", money(summary.cash), "bi-cash-coin", "orange", cashPercent.toFixed(1) + "% of ciro") +
       statCard("Kart", money(summary.card), "bi-credit-card", "purple", cardPercent.toFixed(1) + "% of ciro") +
       '</section>' +
@@ -140,8 +140,8 @@ document.addEventListener("DOMContentLoaded", function () {
       '<span class="revenue-payment-cash" style="width:' + cashPercent.toFixed(2) + '%"></span><span class="revenue-payment-card-segment" style="width:' + cardPercent.toFixed(2) + '%"></span></div>' +
       '<div class="revenue-payment-legend"><div><span class="revenue-legend-dot cash"></span><span><strong>Nakit</strong><small>' + cashPercent.toFixed(1) + '%</small></span><b>' + money(summary.cash) + '</b></div>' +
       '<div><span class="revenue-legend-dot card"></span><span><strong>Kart</strong><small>' + cardPercent.toFixed(1) + '%</small></span><b>' + money(summary.card) + '</b></div></div></div></section>' +
-      '<section class="panel-card revenue-daily-card"><div class="panel-heading"><div><h3>Günlük ciro dökümü</h3><p>Seçtiğiniz ayda adisyon kapanan günler, en yeniden eskiye sıralanır.</p></div><span class="count-pill">' + Object.keys(dailyTotals).length + ' gün</span></div>' +
-      '<div class="table-responsive"><table class="table data-table align-middle revenue-table"><thead><tr><th>GÜN</th><th>ADİSYON</th><th>TOPLAM CİRO</th><th>NAKİT</th><th>KART</th></tr></thead><tbody>' +
+      '<section class="panel-card revenue-daily-card"><div class="panel-heading"><div><h3>Günlük ciro dökümü</h3><p>Seçtiğiniz ayda tahsilat yapılan günler, en yeniden eskiye sıralanır.</p></div><span class="count-pill">' + Object.keys(dailyTotals).length + ' gün</span></div>' +
+      '<div class="table-responsive"><table class="table data-table align-middle revenue-table"><thead><tr><th>GÜN</th><th>TAHSİLAT</th><th>TOPLAM CİRO</th><th>NAKİT</th><th>KART</th></tr></thead><tbody>' +
       (dailyRows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-bar-chart-line"></i><strong>Bu ay için ciro kaydı yok</strong><p>Kasiyer ekranında örnek bir adisyonu nakit veya kart seçerek kapattığınızda burada günlük ve aylık dağılım görünür.</p></div></td></tr>') +
       '</tbody></table></div></section>';
   }
