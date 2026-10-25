@@ -99,11 +99,16 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderBill() {
     const bill = state.bill;
     if (!bill) {
-      $("#selectedTableName").textContent = "Masa seçilmedi";
-      $("#selectedTableMeta").textContent = "Bir masa seçerek siparişleri ve toplam ücreti görüntüle.";
-      $("#selectedBillStatus").textContent = "Bekliyor";
+      const selectedTable = state.tables.find(function (table) { return String(table.id) === String(state.selectedTableId); });
+      $("#selectedTableName").textContent = selectedTable ? selectedTable.name : "Masa seçilmedi";
+      $("#selectedTableMeta").textContent = selectedTable
+        ? (Number(selectedTable.seats) || 0) + " kişilik masa"
+        : "Bir masa seçerek ürünleri ve fiyatları görüntüle.";
+      $("#selectedBillStatus").textContent = selectedTable ? "Sipariş yok" : "Masa seçilmedi";
       $("#selectedBillStatus").className = "bill-status";
-      $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın siparişleri ve toplam ücreti burada görünecek.</span></div>';
+      $("#billDetailBody").innerHTML = selectedTable
+        ? '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Henüz sipariş yok</strong><span>Bu masaya ürün eklendiğinde adetler ve fiyatlar burada listelenir.</span></div>'
+        : '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın ürünleri, adetleri ve fiyatları burada görünecek.</span></div>';
       $("#billTotal").textContent = money(0);
       return;
     }
@@ -161,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (error) {
       state.bill = null;
       renderBill();
-      notify(error.status === 404 ? "Bu masa için açık adisyon bulunamadı." : "Adisyon verileri alınamadı.");
+      if (error.status !== 404) notify("Adisyon verileri alınamadı.");
     } finally {
       state.loading = false;
       renderTables();
