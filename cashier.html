@@ -104,6 +104,22 @@
           <div class="bill-total-panel">
             <div class="bill-total-row"><span>Seçilen ürünlerin toplamı</span><strong id="billTotal">₺545,00</strong></div>
             <p class="close-bill-note">Adisyonu kapatmak tüm hesabı kapatır; seçili ürün toplamından bağımsızdır.</p>
+            <fieldset class="payment-method-picker">
+              <legend>Ödeme türü</legend>
+              <div class="payment-method-options">
+                <label class="payment-method-option is-selected" for="paymentCash">
+                  <input id="paymentCash" type="radio" name="paymentMethod" value="cash" checked>
+                  <span class="payment-method-icon"><i class="bi bi-cash-coin"></i></span>
+                  <span class="payment-method-copy"><strong>Nakit</strong><small>Nakit ödeme</small></span>
+                </label>
+                <label class="payment-method-option" for="paymentCard">
+                  <input id="paymentCard" type="radio" name="paymentMethod" value="card">
+                  <span class="payment-method-icon"><i class="bi bi-credit-card"></i></span>
+                  <span class="payment-method-copy"><strong>Kart</strong><small>Kartla ödeme</small></span>
+                </label>
+              </div>
+              <small class="payment-method-note">Bu seçim yalnızca ciro raporlaması içindir; ödeme çekimi yapılmaz.</small>
+            </fieldset>
             <button class="close-bill-button" id="closeBillButton" type="button">
               <i class="bi bi-check2-circle"></i><span>Adisyonu kapat</span>
             </button>
