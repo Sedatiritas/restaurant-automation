@@ -254,7 +254,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const orderId = context.order && context.order.id != null ? context.order.id : (context.order && context.order.orderId != null ? context.order.orderId : "");
       const itemId = item.id != null ? item.id : (item.itemId != null ? item.itemId : (item.productId != null ? item.productId : ""));
       return '<label class="order-round-item ' + (paid ? "is-paid" : "") + '" for="' + checkboxId + '">' +
-        '<input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox"' + (paid ? ' disabled data-paid="true"' : ' data-paid="false"') +
+        '<input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox"' + (paid ? ' disabled data-paid="true"' : ' checked data-paid="false"') +
         ' data-line-total="' + price + '" data-unit-key="' + escapeHtml(key) + '" data-table-id="' + escapeHtml(context.tableId) + '"' +
         ' data-order-id="' + escapeHtml(orderId) + '" data-item-id="' + escapeHtml(itemId) + '" data-unit-index="' + (index + 1) + '" data-product-name="' + name + '"' +
         ' aria-label="' + name + ' ' + (index + 1) + '. adet ' + (paid ? "ödendi" : "tahsilata ekle") + '">' +
