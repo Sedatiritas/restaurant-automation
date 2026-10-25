@@ -1,7 +1,19 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false };
+  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2" };
+
+  const demoBills = {
+    "1": { name: "Masa 01", seats: 2, total: 320, orders: [{ roundNumber: 1, sentAt: "14:10", items: [
+      { name: "Latte", price: 130, quantity: 1 }, { name: "Türk Kahvesi", price: 90, quantity: 1 }, { name: "Cheesecake", price: 100, quantity: 1 }
+    ]}]},
+    "2": { name: "Masa 02", seats: 4, total: 545, orders: [{ roundNumber: 1, sentAt: "14:26", items: [
+      { name: "Latte", price: 130, quantity: 2 }, { name: "Americano", price: 100, quantity: 1 }, { name: "San Sebastian", price: 185, quantity: 1 }
+    ]}]},
+    "3": { name: "Masa 03", seats: 4, total: 760, orders: [{ roundNumber: 1, sentAt: "14:32", items: [
+      { name: "Cappuccino", price: 140, quantity: 2 }, { name: "Mocha", price: 150, quantity: 2 }, { name: "Brownie", price: 90, quantity: 2 }
+    ]}]}
+  };
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
   const toastEl = $("#cashierToast");
@@ -87,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function billLines() {
     let total = 0;
+    let itemIndex = 0;
     const rounds = billRounds();
     const markup = rounds.map(function (order, index) {
       const items = Array.isArray(order.items) ? order.items : [];
@@ -98,12 +111,13 @@ document.addEventListener("DOMContentLoaded", function () {
       const productMarkup = items.map(function (item) {
         const qty = Number(item.quantity) || 0;
         const unitPrice = Number(item.price != null ? item.price : item.unitPrice) || 0;
-        return '<div class="order-round-item"><span class="order-product-details"><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(money(unitPrice)) + ' × ' + qty + '</small></span><strong class="order-line-total">' + escapeHtml(money(unitPrice * qty)) + '</strong></div>';
+        const lineTotal = unitPrice * qty;
+        const checkboxId = "bill-item-" + (++itemIndex);
+        return '<label class="order-round-item is-selected" for="' + checkboxId + '"><input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox" checked data-line-total="' + lineTotal + '"><span class="order-product-details"><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(money(unitPrice)) + ' × ' + qty + '</small></span><strong class="order-line-total">' + escapeHtml(money(lineTotal)) + '</strong></label>';
       }).join("");
       return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || index + 1) + '</strong><span>' + escapeHtml(dateText) + '</span></div>' +
-        productMarkup + '<div class="order-round-total"><span>Tur toplamı</span><strong>' + escapeHtml(money(roundTotal)) + '</strong></div></article>';
+        productMarkup + '<div class="order-round-total"><span>Seçili ürünler</span><strong>' + escapeHtml(money(roundTotal)) + '</strong></div></article>';
     }).join("");
-    if (state.bill && state.bill.total != null) total = Number(state.bill.total) || 0;
     return { markup: markup, total: total };
   }
   function renderBill() {
@@ -126,6 +140,62 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#selectedBillStatus").className = "bill-status " + (rounds.length ? "is-open" : "");
     $("#billDetailBody").innerHTML = lines.markup || '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bu masada açık sipariş yok</strong><span>Başka bir masa seçebilirsin.</span></div>';
     $("#billTotal").textContent = money(lines.total);
+    updateSelectedTotals();
+  }
+  function updateSelectedTotals() {
+    const checkboxes = $("#billDetailBody .bill-item-checkbox");
+    if (!checkboxes.length) return;
+    let selectedTotal = 0;
+    $("#billDetailBody .order-round").forEach(function (round) {
+      let roundTotal = 0;
+      round.querySelectorAll(".bill-item-checkbox").forEach(function (checkbox) {
+        const lineTotal = Number(checkbox.dataset.lineTotal) || 0;
+        const selected = checkbox.checked;
+        if (selected) {
+          selectedTotal += lineTotal;
+          roundTotal += lineTotal;
+        }
+        const row = checkbox.closest(".order-round-item");
+        if (row) row.classList.toggle("is-selected", selected);
+      });
+      const roundTotalElement = round.querySelector(".order-round-total strong");
+      if (roundTotalElement) roundTotalElement.textContent = money(roundTotal);
+    });
+    $("#billTotal").textContent = money(selectedTotal);
+  }
+  function renderDemoTables() {
+    const query = state.query.toLocaleLowerCase("tr").trim();
+    let visibleCount = 0;
+    $(".demo-table-card").forEach(function (card) {
+      const isOpen = card.dataset.demoOpen === "true";
+      const isVisibleByFilter = state.filter === "all" || isOpen;
+      const matchesSearch = !query || card.textContent.toLocaleLowerCase("tr").includes(query);
+      card.hidden = !(isVisibleByFilter && matchesSearch);
+      const selected = card.dataset.demoTableId === state.demoSelectedId;
+      card.classList.toggle("active", selected);
+      card.setAttribute("aria-pressed", selected ? "true" : "false");
+      if (!card.hidden) visibleCount += 1;
+    });
+    $("#tableResultCount").textContent = visibleCount + " masa";
+  }
+  function renderDemoBill(tableId) {
+    const table = demoBills[String(tableId)];
+    if (!table) return;
+    $("#selectedTableName").textContent = table.name;
+    $("#selectedTableMeta").textContent = table.seats + " kişilik masa · " + table.orders.length + " sipariş turu";
+    $("#selectedBillStatus").textContent = "Adisyon açık";
+    $("#selectedBillStatus").className = "bill-status is-open";
+    $("#billDetailBody").innerHTML = table.orders.map(function (order, orderIndex) {
+      const dateText = order.sentAt || "";
+      const products = order.items.map(function (item, itemIndex) {
+        const lineTotal = Number(item.price) * Number(item.quantity);
+        const checkboxId = "demo-item-" + tableId + "-" + orderIndex + "-" + itemIndex;
+        return '<label class="order-round-item is-selected" for="' + checkboxId + '"><input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox" checked data-line-total="' + lineTotal + '"><span class="order-product-details"><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(money(item.price)) + ' × ' + Number(item.quantity) + '</small></span><strong class="order-line-total">' + escapeHtml(money(lineTotal)) + '</strong></label>';
+      }).join("");
+      return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || orderIndex + 1) + '</strong><span>' + escapeHtml(dateText) + '</span></div>' + products + '<div class="order-round-total"><span>Seçili ürünler</span><strong>' + escapeHtml(money(table.total)) + '</strong></div></article>';
+    }).join("");
+    $("#billTotal").textContent = money(table.total);
+    updateSelectedTotals();
   }
   async function loadTables(preferredId) {
     state.loading = true;
@@ -150,9 +220,11 @@ document.addEventListener("DOMContentLoaded", function () {
       else { state.bill = null; renderBill(); }
     } catch (error) {
       if (!state.apiLoaded) {
-        // API henüz hazır değilken HTML'deki tasarım örneklerini görünür bırak.
+        // API henüz hazır değilken tasarım için eklenen örnek masaları etkileşimli göster.
         setConnection("preview", "Örnek görünüm");
         notice.hidden = true;
+        renderDemoTables();
+        renderDemoBill(state.demoSelectedId);
       } else {
         setConnection("error", "Bağlantı yok");
         notice.hidden = false;
@@ -185,15 +257,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
   $("#billTableList").addEventListener("click", function (event) {
+    const demoButton = event.target.closest("[data-demo-table-id]");
+    if (demoButton && !state.apiLoaded) {
+      if (demoButton.dataset.demoOpen === "true") {
+        state.demoSelectedId = demoButton.dataset.demoTableId;
+        renderDemoTables();
+        renderDemoBill(state.demoSelectedId);
+      }
+      return;
+    }
     const button = event.target.closest("[data-table-id]");
-    if (button) loadBill(button.dataset.tableId);
+    if (button && state.apiLoaded) loadBill(button.dataset.tableId);
   });
-  $("#tableSearch").addEventListener("input", function (event) { state.query = event.target.value; renderTables(); });
-  $$(".filter-pill").forEach(function (button) {
+  $("#billDetailBody").addEventListener("change", function (event) {
+    if (event.target.matches(".bill-item-checkbox")) updateSelectedTotals();
+  });
+  $("#tableSearch").addEventListener("input", function (event) {
+    state.query = event.target.value;
+    if (state.apiLoaded) renderTables();
+    else renderDemoTables();
+  });
+  $(".filter-pill").forEach(function (button) {
     button.addEventListener("click", function () {
       state.filter = button.dataset.filter;
-      $$(".filter-pill").forEach(function (pill) { pill.classList.toggle("active", pill === button); });
-      renderTables();
+      $(".filter-pill").forEach(function (pill) { pill.classList.toggle("active", pill === button); });
+      if (state.apiLoaded) renderTables();
+      else renderDemoTables();
     });
   });
   $("#refreshButton").addEventListener("click", function () { loadTables(state.selectedTableId); });
