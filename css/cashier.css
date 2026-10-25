@@ -255,3 +255,18 @@ a{color:inherit}
 @media(max-width:760px){
   .close-bill-button{min-height:44px;font-size:12px}
 }
+
+
+/* Adisyon kapatırken ödeme türü seçimi */
+.payment-method-picker{min-width:0;margin:0 20px 16px;padding:0;border:0}
+.payment-method-picker legend{float:none;width:auto;margin:0 0 9px;color:var(--muted);font-size:10px;font-weight:800}
+.payment-method-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.payment-method-option{display:flex;align-items:center;gap:9px;min-width:0;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;transition:border-color .15s,background .15s}
+.payment-method-option.is-selected{border-color:var(--accent);background:#fff6ed;box-shadow:inset 0 0 0 1px #b96e4320}
+.payment-method-option input{width:15px;height:15px;flex:0 0 15px;margin:0;accent-color:var(--accent)}
+.payment-method-icon{display:grid;place-items:center;width:32px;height:32px;flex:0 0 32px;border-radius:9px;background:#f3e8dc;color:var(--accent-dark);font-size:15px}
+.payment-method-copy{display:grid;gap:3px;min-width:0}
+.payment-method-copy strong{color:var(--ink);font-size:11px}
+.payment-method-copy small{color:var(--muted);font-size:9px}
+.payment-method-note{display:block;margin-top:9px;color:var(--muted);font-size:9px;line-height:1.5}
+@media(max-width:760px){.payment-method-picker{margin-right:14px;margin-left:14px}.payment-method-options{gap:7px}.payment-method-option{gap:7px;padding:10px 8px}.payment-method-icon{width:28px;height:28px;flex-basis:28px;font-size:13px}}
