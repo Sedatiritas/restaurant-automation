@@ -179,3 +179,33 @@ a{color:inherit}
   .order-round-item{gap:8px}
   .bill-item-checkbox{width:17px;height:17px;flex-basis:17px}
 }
+
+
+/* Miktar seçimi: birden fazla adetli ürünlerde seçilen adet üzerinden hesapla */
+.bill-item-quantity{
+  width:88px;
+  min-width:76px;
+  height:34px;
+  flex:0 0 88px;
+  padding:0 7px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  color:var(--ink);
+  font-size:10px;
+  font-weight:750;
+  cursor:pointer;
+}
+.bill-item-quantity:focus{
+  border-color:#c89a78;
+  outline:0;
+  box-shadow:0 0 0 3px #b96e4312;
+}
+.order-round-item:not(.is-selected) .bill-item-quantity{
+  border-color:#e7e0d6;
+  background:#f5f2ed;
+  color:#8f887f;
+}
+@media(max-width:480px){
+  .bill-item-quantity{width:78px;min-width:70px;flex-basis:78px;padding:0 4px;font-size:9px}
+}
