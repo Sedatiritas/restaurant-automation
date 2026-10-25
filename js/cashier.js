@@ -1,7 +1,18 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2", demoClosedIds: new Set() };
+  function loadDemoClosedIds() {
+    try {
+      const ids = JSON.parse(localStorage.getItem("roastCashier_demoClosedIds") || "[]");
+      return Array.isArray(ids) ? ids.map(String) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+  function localDateValue(date) {
+    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+  }
+  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2", demoClosedIds: new Set(loadDemoClosedIds()) };
 
   const demoBills = {
     "1": { name: "Masa 01", seats: 2, total: 320, orders: [{ roundNumber: 1, sentAt: "14:10", items: [
@@ -14,6 +25,9 @@ document.addEventListener("DOMContentLoaded", function () {
       { name: "Cappuccino", price: 140, quantity: 2 }, { name: "Mocha", price: 150, quantity: 2 }, { name: "Brownie", price: 90, quantity: 2 }
     ]}]}
   };
+  if (state.demoClosedIds.has(state.demoSelectedId)) {
+    state.demoSelectedId = Object.keys(demoBills).find(function (id) { return !state.demoClosedIds.has(id); }) || null;
+  }
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
   const toastEl = $("#cashierToast");
@@ -32,6 +46,43 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!toast || !toastMessage) { window.alert(message); return; }
     toastMessage.textContent = message;
     toast.show();
+  }
+  function selectedPaymentMethod() {
+    const selected = document.querySelector('input[name="paymentMethod"]:checked');
+    return selected && selected.value === "card" ? "card" : "cash";
+  }
+  function paymentMethodLabel(method) {
+    return method === "card" ? "Kart" : "Nakit";
+  }
+  function saveDemoSale(tableId, tableName, amount, paymentMethod) {
+    try {
+      const current = JSON.parse(localStorage.getItem("roastCashier_sales") || "[]");
+      const sales = Array.isArray(current) ? current : [];
+      const now = new Date();
+      sales.push({
+        id: "demo-sale-" + now.getTime() + "-" + String(tableId),
+        tableId: String(tableId),
+        tableName: tableName,
+        amount: Number(amount) || 0,
+        paymentMethod: paymentMethod,
+        date: localDateValue(now),
+        closedAt: now.toISOString(),
+        source: "preview"
+      });
+      localStorage.setItem("roastCashier_sales", JSON.stringify(sales));
+      return true;
+    } catch (error) {
+      notify("Ciro kaydı tarayıcıya yazılamadı. Depolama alanını kontrol edip tekrar deneyin.");
+      return false;
+    }
+  }
+  function saveDemoClosedIds() {
+    try {
+      localStorage.setItem("roastCashier_demoClosedIds", JSON.stringify(Array.from(state.demoClosedIds)));
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
   function setConnection(status, label) {
     connectionStatus.classList.toggle("is-connected", status === "connected");
@@ -212,6 +263,14 @@ document.addEventListener("DOMContentLoaded", function () {
       const matchesSearch = !query || card.textContent.toLocaleLowerCase("tr").includes(query);
       card.hidden = !(isVisibleByFilter && matchesSearch);
       card.disabled = !isOpen;
+      if (state.demoClosedIds.has(tableId)) {
+        const info = card.querySelector(".bill-table-info small");
+        const amount = card.querySelector(".bill-table-end strong");
+        const status = card.querySelector(".bill-table-end small");
+        if (info) info.textContent = info.textContent.replace("Adisyon açık", "Kapalı masa").replace("Seçili masa", "Kapalı masa");
+        if (amount) amount.textContent = "—";
+        if (status) status.textContent = "Kapalı masa";
+      }
       const selected = tableId === String(state.demoSelectedId);
       card.classList.toggle("active", selected);
       card.setAttribute("aria-pressed", selected ? "true" : "false");
@@ -286,13 +345,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const demoTotal = getFullBillTotal();
       const demoTableName = demoBill.name;
+      const demoPaymentMethod = selectedPaymentMethod();
       const confirmedDemo = window.confirm(
-        demoTableName + " adisyonunun tamamını (" + money(demoTotal) + ") kapatmak istiyor musun?\\n\\nBu işlem örnek ekrandaki tüm adisyonu kapatır."
+        demoTableName + " adisyonunun tamamını (" + money(demoTotal) + ") " + paymentMethodLabel(demoPaymentMethod) + " olarak kapatmak istiyor musun?\\n\\nBu işlem örnek ekrandaki tüm adisyonu kapatır."
       );
       if (!confirmedDemo) return;
+      if (!saveDemoSale(demoId, demoTableName, demoTotal, demoPaymentMethod)) return;
 
       const demoCard = $('#billTableList [data-demo-table-id="' + demoId + '"]');
       state.demoClosedIds.add(demoId);
+      saveDemoClosedIds();
       if (demoCard) {
         demoCard.dataset.demoOpen = "false";
         demoCard.disabled = true;
@@ -307,7 +369,7 @@ document.addEventListener("DOMContentLoaded", function () {
       state.demoSelectedId = null;
       renderDemoTables();
       clearDemoBill();
-      notify("Örnek adisyon kapatıldı. Gerçek adisyonların kalıcı kapanması için backend API'si gerekir.");
+      notify("Örnek adisyon " + paymentMethodLabel(demoPaymentMethod) + " olarak kapatıldı. Ciro raporu güncellendi.");
       return;
     }
     if (state.selectedTableId == null || !state.bill) {
@@ -317,8 +379,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const tableName = $("#selectedTableName").textContent.trim();
     const fullTotal = getFullBillTotal();
+    const paymentMethod = selectedPaymentMethod();
     const confirmed = window.confirm(
-      tableName + " adisyonunun tamamını (" + money(fullTotal) + ") kapatmak istiyor musun?\n\nBu işlem yalnızca seçili ürünleri değil, masanın tüm adisyonunu kapatır."
+      tableName + " adisyonunun tamamını (" + money(fullTotal) + ") " + paymentMethodLabel(paymentMethod) + " olarak kapatmak istiyor musun?\n\nBu işlem yalnızca seçili ürünleri değil, masanın tüm adisyonunu kapatır."
     );
     if (!confirmed) return;
 
@@ -334,7 +397,7 @@ document.addEventListener("DOMContentLoaded", function () {
           "Accept": "application/json",
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({ paymentMethod: paymentMethod })
       });
       const payload = await response.json().catch(function () { return null; });
       if (!response.ok) {
@@ -429,6 +492,14 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   $("#billDetailBody").addEventListener("change", function (event) {
     if (event.target.matches(".bill-item-checkbox")) updateSelectedTotals();
+  });
+  $('input[name="paymentMethod"]').forEach(function (input) {
+    input.addEventListener("change", function () {
+      $(".payment-method-option").forEach(function (option) {
+        const radio = option.querySelector('input[name="paymentMethod"]');
+        option.classList.toggle("is-selected", Boolean(radio && radio.checked));
+      });
+    });
   });
   $("#tableSearch").addEventListener("input", function (event) {
     state.query = event.target.value;
