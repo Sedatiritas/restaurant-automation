@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f5f0">
-  <meta name="description" content="Roast & Co. açık adisyon ve toplam ücret görüntüleme">
+  <meta name="description" content="Roast & Co. masa adisyonlarını görüntüleme">
   <title>Kasa | Roast &amp; Co.</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -27,9 +27,9 @@
     <main class="cashier-main">
       <section class="page-heading">
         <div>
-          <span class="eyebrow">ÖDEME VE ADİSYON</span>
+          <span class="eyebrow">ADİSYON TAKİBİ</span>
           <h1>Kasa</h1>
-          <p>Açık adisyonları ve masaların toplam ücretlerini görüntüle.</p>
+          <p>Masayı seç, siparişleri ve ürün tutarlarını görüntüle.</p>
         </div>
         <button class="refresh-button" id="refreshButton" type="button"><i class="bi bi-arrow-clockwise"></i><span>Yenile</span></button>
       </section>
@@ -57,7 +57,7 @@
       <section class="cashier-layout">
         <section class="panel table-panel" aria-label="Açık adisyonlar">
           <div class="panel-heading">
-            <div><span class="eyebrow">MASALAR</span><h2>Adisyonlar</h2><p>Hesabı açık olan masayı seç.</p></div>
+            <div><span class="eyebrow">MASA SEÇİMİ</span><h2>Masalar</h2><p>Detaylarını görmek için masa seç.</p></div>
             <span class="count-pill" id="tableResultCount">0 masa</span>
           </div>
           <div class="table-tools">
@@ -74,11 +74,11 @@
 
         <section class="panel bill-detail-panel" aria-label="Seçili masa hesabı">
           <div class="panel-heading detail-panel-heading">
-            <div><span class="eyebrow">ADİSYON DETAYI</span><h2 id="selectedTableName">Masa seçilmedi</h2><p id="selectedTableMeta">Bir masa seçerek siparişleri ve toplam ücreti görüntüle.</p></div>
+            <div><span class="eyebrow">SEÇİLİ MASA</span><h2 id="selectedTableName">Masa seçilmedi</h2><p id="selectedTableMeta">Ürünler ve tutarlar burada görünecek.</p></div>
             <span class="bill-status" id="selectedBillStatus">Bekliyor</span>
           </div>
           <div class="bill-detail-body" id="billDetailBody">
-            <div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın siparişleri ve toplam ücreti burada görünecek.</span></div>
+            <div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın ürünleri ve tutarları burada görüntülenecek.</span></div>
           </div>
           <div class="bill-total-panel">
             <div class="bill-total-row"><span>Toplam ücret</span><strong id="billTotal">₺0,00</strong></div>
