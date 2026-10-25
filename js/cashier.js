@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderDemoTables() {
     const query = state.query.toLocaleLowerCase("tr").trim();
     let visibleCount = 0;
-    $(".demo-table-card").forEach(function (card) {
+    $$(".demo-table-card").forEach(function (card) {
       const tableId = String(card.dataset.demoTableId);
       const isOpen = card.dataset.demoOpen === "true" && !state.demoClosedIds.has(tableId);
       const isVisibleByFilter = state.filter === "all" || isOpen;
@@ -433,10 +433,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (state.apiLoaded) renderTables();
     else renderDemoTables();
   });
-  $(".filter-pill").forEach(function (button) {
+  $$(".filter-pill").forEach(function (button) {
     button.addEventListener("click", function () {
       state.filter = button.dataset.filter;
-      $(".filter-pill").forEach(function (pill) { pill.classList.toggle("active", pill === button); });
+      $$(".filter-pill").forEach(function (pill) { pill.classList.toggle("active", pill === button); });
       if (state.apiLoaded) renderTables();
       else renderDemoTables();
     });
