@@ -100,3 +100,52 @@ a{color:inherit}
 @media(max-width:1000px){.cashier-layout{grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr)}.panel-heading{padding:16px}.bill-detail-body{padding:0 16px}.bill-total-panel{padding:16px}.metric-copy strong{font-size:21px}}
 @media(max-width:760px){.cashier-topbar{min-height:64px;padding:9px 12px;gap:8px}.brand-mark{width:39px;height:39px;flex-basis:39px}.cashier-brand strong{font-size:18px}.cashier-brand small{font-size:7px;letter-spacing:1px}.topbar-actions{gap:6px}.topbar-link{width:38px;height:38px;min-height:38px;padding:0;font-size:0}.topbar-link i{font-size:15px}.connection-status{min-height:32px;padding:0 8px;font-size:9px}.cashier-main{padding:19px 12px 30px}.page-heading{align-items:flex-start;margin-bottom:17px}.page-heading p{max-width:280px;font-size:11px}.refresh-button{min-height:37px;padding:0 10px;font-size:10px}.metrics-grid{gap:8px;margin-bottom:13px}.metric-card{align-items:flex-start;gap:8px;padding:10px}.metric-icon{width:32px;height:32px;flex-basis:32px;border-radius:9px;font-size:14px}.metric-copy small{font-size:8px}.metric-copy strong{font-size:16px;letter-spacing:-.3px}.cashier-layout{grid-template-columns:1fr;gap:13px}.bill-table-list{max-height:370px}.panel-heading h2{font-size:15px}.panel-heading p{font-size:9px}.bill-detail-body{min-height:140px;padding:0 14px}.bill-total-panel{padding:15px 14px 17px}.bill-total-row strong{font-size:23px}.api-notice{padding:12px;font-size:10px}}
 @media(max-width:400px){.metrics-grid{grid-template-columns:1fr}.metric-card{align-items:center}.metric-copy strong{font-size:20px}.page-heading{gap:10px}.refresh-button span{display:none}.refresh-button{width:37px;justify-content:center;padding:0}}
+
+
+/* Kasa arayüzü: masa seçimi ve adisyon detayına odaklanan sade görünüm */
+.metrics-grid{display:none}
+.filter-pills{display:none}
+.table-tools{grid-template-columns:minmax(0,1fr)}
+.cashier-layout{grid-template-columns:minmax(280px,.72fr) minmax(0,1.65fr);gap:16px}
+.table-panel .panel-heading{padding-bottom:14px}
+.bill-table-list{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:9px;padding:11px;max-height:680px}
+.bill-table-card{display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:13px;min-width:0;min-height:122px;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fcfbf8}
+.bill-table-card-main{align-items:flex-start;gap:8px}
+.bill-table-icon{width:31px;height:31px;flex-basis:31px;border-radius:9px;font-size:14px}
+.bill-table-info strong{font-size:11px}
+.bill-table-info small{font-size:9px;line-height:1.45}
+.bill-table-end{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding-top:9px;border-top:1px solid #eee8df;text-align:left;white-space:normal}
+.bill-table-end strong{font-size:13px;letter-spacing:-.2px}
+.bill-table-end small{margin-top:0;font-size:9px}
+.bill-table-card.active .bill-table-icon{background:var(--accent);color:#fff}
+.bill-table-card.active .bill-table-end{border-top-color:#ead7c6}
+.detail-panel-heading{min-height:100px}
+.bill-detail-body{min-height:255px}
+.order-round{padding:18px 0}
+.order-round-item{align-items:center;padding:9px 0}
+.order-product-details{display:flex;flex-direction:column;gap:3px;min-width:0}
+.order-product-details strong{overflow-wrap:anywhere;color:var(--ink);font-size:11px;font-weight:750}
+.order-product-details small{color:var(--muted);font-size:10px}
+.order-line-total{font-size:11px!important;font-weight:850!important}
+.bill-total-panel{background:#fbf7f1}
+.bill-total-row span{color:#75695e}
+.bill-total-row strong{color:var(--accent-dark)}
+@media(max-width:1000px){
+  .cashier-layout{grid-template-columns:minmax(245px,.85fr) minmax(0,1.35fr)}
+  .bill-table-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .cashier-layout{grid-template-columns:1fr}
+  .bill-table-list{grid-template-columns:repeat(3,minmax(0,1fr));max-height:350px}
+  .bill-table-card{min-height:112px;padding:10px}
+  .bill-table-card-main{gap:7px}
+  .bill-table-icon{width:28px;height:28px;flex-basis:28px}
+  .bill-table-info strong{font-size:10px}
+  .bill-table-info small{font-size:8px}
+  .bill-table-end strong{font-size:12px}
+  .bill-table-end small{font-size:8px}
+  .bill-detail-body{min-height:180px}
+}
+@media(max-width:480px){
+  .bill-table-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
