@@ -1,6 +1,35 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
+  const previewMode = new URLSearchParams(window.location.search).get("preview") === "1";
+  const previewTables = [
+    { id: "preview-1", name: "Masa 01", seats: 4, hasOpenBill: true, openTotal: 660, openOrderCount: 2 },
+    { id: "preview-2", name: "Masa 02", seats: 2, hasOpenBill: true, openTotal: 285, openOrderCount: 1 },
+    { id: "preview-3", name: "Masa 03", seats: 4, hasOpenBill: false, openTotal: 0, openOrderCount: 0 },
+    { id: "preview-garden", name: "Bahçe 01", seats: 6, hasOpenBill: false, openTotal: 0, openOrderCount: 0 }
+  ];
+  const previewBills = {
+    "preview-1": {
+      table: previewTables[0], total: 660, orders: [
+        { roundNumber: 1, sentAt: "2026-10-25T14:05:00+03:00", items: [
+          { name: "Cappuccino", price: 125, quantity: 2 },
+          { name: "San Sebastian", price: 170, quantity: 1 }
+        ]},
+        { roundNumber: 2, sentAt: "2026-10-25T14:17:00+03:00", items: [
+          { name: "Iced Latte", price: 140, quantity: 1 },
+          { name: "Americano", price: 100, quantity: 1 }
+        ]}
+      ]
+    },
+    "preview-2": {
+      table: previewTables[1], total: 285, orders: [
+        { roundNumber: 1, sentAt: "2026-10-25T14:11:00+03:00", items: [
+          { name: "Cappuccino", price: 125, quantity: 1 },
+          { name: "Çilekli Cheesecake", price: 160, quantity: 1 }
+        ]}
+      ]
+    }
+  };
   const state = { tables: [], selectedTableId: null, bill: null, query: "", loading: false };
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
@@ -24,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function setConnection(status, label) {
     connectionStatus.classList.toggle("is-connected", status === "connected");
     connectionStatus.classList.toggle("is-error", status === "error");
+    connectionStatus.classList.toggle("is-preview", status === "preview");
     connectionStatus.querySelector("span:last-child").textContent = label;
   }
   async function api(path) {
@@ -175,10 +205,35 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   $("#billTableList").addEventListener("click", function (event) {
     const button = event.target.closest("[data-table-id]");
-    if (button) loadBill(button.dataset.tableId);
+    if (!button) return;
+    if (previewMode) {
+      state.selectedTableId = button.dataset.tableId;
+      state.bill = previewBills[state.selectedTableId] || null;
+      renderTables();
+      renderBill();
+      return;
+    }
+    loadBill(button.dataset.tableId);
   });
   $("#tableSearch").addEventListener("input", function (event) { state.query = event.target.value; renderTables(); });
-  $("#refreshButton").addEventListener("click", function () { loadTables(state.selectedTableId); });
+  $("#refreshButton").addEventListener("click", function () {
+    if (previewMode) {
+      window.location.href = window.location.pathname;
+      return;
+    }
+    loadTables(state.selectedTableId);
+  });
 
-  loadTables();
+  if (previewMode) {
+    state.tables = previewTables;
+    state.selectedTableId = previewTables[0].id;
+    state.bill = previewBills[state.selectedTableId];
+    notice.hidden = true;
+    setConnection("preview", "Tanıtım önizlemesi");
+    $("#refreshButton").innerHTML = '<i class="bi bi-arrow-up-right"></i><span>Canlı ekran</span>';
+    renderTables();
+    renderBill();
+  } else {
+    loadTables();
+  }
 });
