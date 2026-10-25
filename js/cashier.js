@@ -1,18 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  function loadDemoClosedIds() {
-    try {
-      const ids = JSON.parse(localStorage.getItem("roastCashier_demoClosedIds") || "[]");
-      return Array.isArray(ids) ? ids.map(String) : [];
-    } catch (error) {
-      return [];
-    }
-  }
   function localDateValue(date) {
     return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
   }
-  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2", demoClosedIds: new Set(loadDemoClosedIds()) };
+  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2", demoClosedIds: new Set() };
 
   const demoBills = {
     "1": { name: "Masa 01", seats: 2, total: 320, orders: [{ roundNumber: 1, sentAt: "14:10", items: [
@@ -25,9 +17,6 @@ document.addEventListener("DOMContentLoaded", function () {
       { name: "Cappuccino", price: 140, quantity: 2 }, { name: "Mocha", price: 150, quantity: 2 }, { name: "Brownie", price: 90, quantity: 2 }
     ]}]}
   };
-  if (state.demoClosedIds.has(state.demoSelectedId)) {
-    state.demoSelectedId = Object.keys(demoBills).find(function (id) { return !state.demoClosedIds.has(id); }) || null;
-  }
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
   const toastEl = $("#cashierToast");
@@ -73,14 +62,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return true;
     } catch (error) {
       notify("Ciro kaydı tarayıcıya yazılamadı. Depolama alanını kontrol edip tekrar deneyin.");
-      return false;
-    }
-  }
-  function saveDemoClosedIds() {
-    try {
-      localStorage.setItem("roastCashier_demoClosedIds", JSON.stringify(Array.from(state.demoClosedIds)));
-      return true;
-    } catch (error) {
       return false;
     }
   }
@@ -354,7 +335,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const demoCard = $('#billTableList [data-demo-table-id="' + demoId + '"]');
       state.demoClosedIds.add(demoId);
-      saveDemoClosedIds();
       if (demoCard) {
         demoCard.dataset.demoOpen = "false";
         demoCard.disabled = true;
