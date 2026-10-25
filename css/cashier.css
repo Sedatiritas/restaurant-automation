@@ -104,7 +104,7 @@ a{color:inherit}
 
 /* Kasa arayüzü: masa seçimi ve adisyon detayına odaklanan sade görünüm */
 .metrics-grid{display:none}
-.filter-pills{display:none}
+.filter-pills{display:flex}
 .table-tools{grid-template-columns:minmax(0,1fr)}
 .cashier-layout{grid-template-columns:minmax(280px,.72fr) minmax(0,1.65fr);gap:16px}
 .table-panel .panel-heading{padding-bottom:14px}
@@ -156,3 +156,26 @@ a{color:inherit}
 .demo-open-label{color:var(--green)!important;font-weight:750}
 .connection-status.is-preview{border-color:#eadbc7;background:#fff9f0;color:#8a5838}
 .connection-status.is-preview .status-dot{background:var(--accent)}
+
+
+/* Seçili ürünlerle adisyon tutarı hesaplama arayüzü */
+.filter-pills{display:flex;gap:7px;flex-wrap:wrap}
+.filter-pill{min-height:34px;padding:0 13px;font-size:10px}
+.demo-table-card{cursor:pointer}
+.demo-table-card:hover{border-color:#dec8b4;background:#fffaf5}
+.demo-table-card[hidden]{display:none!important}
+.bill-table-card[aria-pressed="true"]{border-color:var(--accent);background:#fff6ed;box-shadow:inset 3px 0 var(--accent)}
+.order-round-item{width:100%;border:0;background:transparent;text-align:left;text-decoration:none;cursor:pointer}
+.bill-item-checkbox{width:16px;height:16px;flex:0 0 16px;margin:2px 2px 0 0;accent-color:var(--accent);cursor:pointer}
+.order-product-details{flex:1}
+.order-round-item.is-selected{padding:9px;border-radius:9px;background:#fffaf5}
+.order-round-item:not(.is-selected) .order-product-details strong{color:#8f887f;font-weight:600}
+.order-round-item:not(.is-selected) .order-product-details small{color:#aaa196}
+.order-round-item:not(.is-selected) .order-line-total{color:#aaa196}
+.order-round-total{font-weight:700}
+@media(max-width:760px){
+  .filter-pills{display:flex}
+  .filter-pill{flex:1;padding:0 8px}
+  .order-round-item{gap:8px}
+  .bill-item-checkbox{width:17px;height:17px;flex-basis:17px}
+}
