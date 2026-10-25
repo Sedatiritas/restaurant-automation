@@ -27,35 +27,54 @@
     <main class="cashier-main">
       <section class="page-heading">
         <div>
-          <span class="eyebrow">ADİSYON GÖRÜNTÜLEME</span>
+          <span class="eyebrow">ÖDEME VE ADİSYON</span>
           <h1>Kasa</h1>
-          <p>Masaları seç, ürün fiyatlarını ve hesap toplamını tek ekranda gör.</p>
+          <p>Açık adisyonları ve masaların toplam ücretlerini görüntüle.</p>
         </div>
         <button class="refresh-button" id="refreshButton" type="button"><i class="bi bi-arrow-clockwise"></i><span>Yenile</span></button>
       </section>
 
       <div class="api-notice" id="apiNotice" hidden role="status">
         <i class="bi bi-info-circle"></i>
-        <div><strong>Kasa servisi henüz bağlanmadı.</strong><span>Masa, sipariş ve fiyat bilgileri backend bağlantısı kurulduğunda burada görüntülenecek.</span></div>
+        <div><strong>Kasa servisi henüz bağlanmadı.</strong><span>Bu ekran açık adisyonları ve toplam ücretleri API üzerinden görüntüleyecek.</span></div>
       </div>
 
+      <section class="metrics-grid" aria-label="Kasa özeti">
+        <article class="metric-card">
+          <span class="metric-icon"><i class="bi bi-receipt"></i></span>
+          <span class="metric-copy"><small>Açık hesap</small><strong id="openBillCount">—</strong></span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon metric-icon-warm"><i class="bi bi-wallet2"></i></span>
+          <span class="metric-copy"><small>Açık hesap toplamı</small><strong id="openBillTotal">—</strong></span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon metric-icon-green"><i class="bi bi-grid-3x3-gap"></i></span>
+          <span class="metric-copy"><small>Hesabı açık masa</small><strong id="openTableCount">—</strong></span>
+        </article>
+      </section>
+
       <section class="cashier-layout">
-        <section class="panel table-panel" aria-label="Masa seçimi">
+        <section class="panel table-panel" aria-label="Açık adisyonlar">
           <div class="panel-heading">
-            <div><span class="eyebrow">MASA SEÇİMİ</span><h2>Masalar</h2><p>Masayı seçince ürünler, adetler ve fiyatlar sağda görünür.</p></div>
+            <div><span class="eyebrow">MASALAR</span><h2>Adisyonlar</h2><p>Hesabı açık olan masayı seç.</p></div>
             <span class="count-pill" id="tableResultCount">0 masa</span>
           </div>
           <div class="table-tools">
             <label class="search-control"><i class="bi bi-search"></i><input id="tableSearch" type="search" placeholder="Masa ara..." autocomplete="off" aria-label="Masa ara"></label>
+            <div class="filter-pills" role="group" aria-label="Masa filtresi">
+              <button type="button" class="filter-pill active" data-filter="open">Açık hesap</button>
+              <button type="button" class="filter-pill" data-filter="all">Tüm masalar</button>
+            </div>
           </div>
           <div class="bill-table-list" id="billTableList" aria-live="polite">
             <div class="list-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Adisyonlar yükleniyor</strong><span>Kasa verileri sunucudan alınacak.</span></div>
           </div>
         </section>
 
-        <section class="panel bill-detail-panel" aria-label="Ürün ve fiyat detayları">
+        <section class="panel bill-detail-panel" aria-label="Seçili masa hesabı">
           <div class="panel-heading detail-panel-heading">
-            <div><span class="eyebrow">ÜRÜN VE FİYAT DETAYI</span><h2 id="selectedTableName">Masa seçilmedi</h2><p id="selectedTableMeta">Seçili masanın ürünleri ve fiyatları burada listelenir.</p></div>
+            <div><span class="eyebrow">ADİSYON DETAYI</span><h2 id="selectedTableName">Masa seçilmedi</h2><p id="selectedTableMeta">Bir masa seçerek siparişleri ve toplam ücreti görüntüle.</p></div>
             <span class="bill-status" id="selectedBillStatus">Bekliyor</span>
           </div>
           <div class="bill-detail-body" id="billDetailBody">
