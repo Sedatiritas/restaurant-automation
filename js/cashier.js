@@ -165,7 +165,6 @@ document.addEventListener("DOMContentLoaded", function () {
     state.selectedTableId = tableId;
     state.loading = true;
     renderTables();
-    checkoutButton.disabled = true;
     $("#billDetailBody").innerHTML = '<div class="list-placeholder"><span class="placeholder-icon"><i class="bi bi-arrow-repeat"></i></span><strong>Adisyon yükleniyor</strong><span>Siparişler sunucudan alınıyor.</span></div>';
     try {
       state.bill = await api("/api/cashier/tables/" + encodeURIComponent(tableId) + "/bill");
