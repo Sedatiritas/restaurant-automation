@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const open = tableHasOpenBill(table);
       const detail = Number(table.openOrderCount || table.roundCount || 0) + " sipariş";
       return '<button type="button" class="bill-table-card ' + (selected ? "active" : "") + '" data-table-id="' + escapeHtml(table.id) + '"' +
-        (open ? "" : ' aria-label="' + escapeHtml(table.name) + ', açık hesap yok"') + '>' +
+        (open ? "" : ' disabled aria-label="' + escapeHtml(table.name) + ', açık hesap yok"') + '>' +
         '<span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>' + escapeHtml(table.name) + '</strong><small>' +
         (Number(table.seats) || 0) + ' kişilik masa · ' + (open ? detail : "Hesap kapalı") + '</small></span></span>' +
         '<span class="bill-table-end"><strong>' + escapeHtml(money(table.openTotal)) + '</strong><small>' + (open ? "Açık hesap" : "Boş") + '</small></span></button>';
