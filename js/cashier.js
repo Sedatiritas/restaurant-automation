@@ -1,7 +1,24 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2", demoClosedIds: new Set() };
+  function loadDemoState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem("roastCashier_demoState") || "{}");
+      return {
+        paidUnits: saved && saved.paidUnits && typeof saved.paidUnits === "object" ? saved.paidUnits : {},
+        closedTableIds: Array.isArray(saved && saved.closedTableIds) ? saved.closedTableIds.map(String) : []
+      };
+    } catch (error) {
+      return { paidUnits: {}, closedTableIds: [] };
+    }
+  }
+  const savedDemoState = loadDemoState();
+  const state = {
+    tables: [], selectedTableId: null, bill: null, filter: "open", query: "",
+    loading: false, apiLoaded: false, demoSelectedId: "2",
+    demoPaidUnits: savedDemoState.paidUnits,
+    demoClosedIds: new Set(savedDemoState.closedTableIds)
+  };
 
   const demoBills = {
     "1": { name: "Masa 01", seats: 2, total: 320, orders: [{ roundNumber: 1, sentAt: "14:10", items: [
@@ -14,6 +31,9 @@ document.addEventListener("DOMContentLoaded", function () {
       { name: "Cappuccino", price: 140, quantity: 2 }, { name: "Mocha", price: 150, quantity: 2 }, { name: "Brownie", price: 90, quantity: 2 }
     ]}]}
   };
+  if (state.demoClosedIds.has(String(state.demoSelectedId))) {
+    state.demoSelectedId = Object.keys(demoBills).find(function (id) { return !state.demoClosedIds.has(String(id)); }) || null;
+  }
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
   const toastEl = $("#cashierToast");
@@ -37,30 +57,109 @@ document.addEventListener("DOMContentLoaded", function () {
     const selected = document.querySelector('input[name="paymentMethod"]:checked');
     return selected && selected.value === "card" ? "card" : "cash";
   }
-  function paymentMethodLabel(method) {
-    return method === "card" ? "Kart" : "Nakit";
-  }
-  function saveDemoSale(tableId, tableName, amount, paymentMethod) {
+  function paymentMethodLabel(method) { return method === "card" ? "Kart" : "Nakit"; }
+  function saveDemoState() {
     try {
-      const saved = JSON.parse(localStorage.getItem("roastCashier_sales") || "[]");
+      localStorage.setItem("roastCashier_demoState", JSON.stringify({
+        paidUnits: state.demoPaidUnits, closedTableIds: Array.from(state.demoClosedIds)
+      }));
+      return true;
+    } catch (error) { return false; }
+  }
+  function saveDemoCollection(tableId, tableName, units, method, total) {
+    const oldSalesRaw = localStorage.getItem("roastCashier_sales");
+    const oldStateRaw = localStorage.getItem("roastCashier_demoState");
+    const before = JSON.parse(JSON.stringify(state.demoPaidUnits));
+    const now = new Date();
+    const paymentId = "demo-payment-" + now.getTime() + "-" + Math.random().toString(36).slice(2, 7);
+    try {
+      const saved = oldSalesRaw ? JSON.parse(oldSalesRaw) : [];
       const sales = Array.isArray(saved) ? saved : [];
-      const now = new Date();
+      const tablePayments = Object.assign({}, state.demoPaidUnits[String(tableId)] || {});
+      units.forEach(function (unit) {
+        if (tablePayments[unit.unitKey]) throw new Error("Bu ürün adedi daha önce tahsil edilmiş.");
+        tablePayments[unit.unitKey] = { paymentId: paymentId, paymentMethod: method, amount: unit.amount, paidAt: now.toISOString(), productName: unit.productName };
+      });
+      state.demoPaidUnits[String(tableId)] = tablePayments;
       sales.push({
-        id: "demo-sale-" + now.getTime() + "-" + String(tableId),
-        tableId: String(tableId),
-        tableName: tableName,
-        amount: Number(amount) || 0,
-        paymentMethod: paymentMethod,
+        id: paymentId, tableId: String(tableId), tableName: tableName, amount: total, paymentMethod: method,
         date: now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0"),
         closedAt: now.toISOString(),
+        items: units.map(function (unit) { return { unitKey: unit.unitKey, itemId: unit.itemId, orderId: unit.orderId, unitIndex: unit.unitIndex, name: unit.productName, amount: unit.amount }; }),
         source: "preview"
       });
       localStorage.setItem("roastCashier_sales", JSON.stringify(sales));
+      if (!saveDemoState()) throw new Error("Tahsilat durumu tarayıcıya kaydedilemedi.");
       return true;
     } catch (error) {
-      notify("Ciro kaydı tarayıcıya yazılamadı. Depolama alanını kontrol edip tekrar deneyin.");
+      state.demoPaidUnits = before;
+      try {
+        if (oldSalesRaw === null) localStorage.removeItem("roastCashier_sales"); else localStorage.setItem("roastCashier_sales", oldSalesRaw);
+        if (oldStateRaw === null) localStorage.removeItem("roastCashier_demoState"); else localStorage.setItem("roastCashier_demoState", oldStateRaw);
+      } catch (rollbackError) {}
+      notify(error.message || "Tahsilat kaydedilemedi.");
       return false;
     }
+  }
+  function makeUnitKey(order, item, orderIndex, itemIndex, unitIndex) {
+    const orderKey = order && order.id != null ? order.id : (order && order.orderId != null ? order.orderId : (order && order.roundNumber != null ? "round-" + order.roundNumber : "round-" + orderIndex));
+    const itemKey = item && item.id != null ? item.id : (item && item.itemId != null ? item.itemId : (item && item.productId != null ? item.productId : "item-" + itemIndex));
+    return "order-" + String(orderKey) + "-item-" + String(itemKey) + "-unit-" + (unitIndex + 1);
+  }
+  function unitPaymentRecord(tableId, order, item, orderIndex, itemIndex, unitIndex, unitKey) {
+    if (!state.apiLoaded) return (state.demoPaidUnits[String(tableId)] || {})[unitKey] || null;
+    const records = Array.isArray(item.unitPayments) ? item.unitPayments : (Array.isArray(item.paidUnits) ? item.paidUnits : []);
+    const record = records.find(function (entry) {
+      if (entry && typeof entry === "object") return Number(entry.unitIndex) === unitIndex + 1;
+      return Number(entry) === unitIndex + 1;
+    });
+    if (record) return typeof record === "object" ? record : { paymentMethod: item.paymentMethod || "" };
+    if (Number(item.paidQuantity) > unitIndex || item.paid === true) return { paymentMethod: item.paymentMethod || "", paidAt: item.paidAt || "" };
+    return null;
+  }
+  function paymentOverview(orders, tableId) {
+    const summary = { total: 0, paid: 0, remaining: 0, unitCount: 0, paidUnitCount: 0 };
+    (Array.isArray(orders) ? orders : []).forEach(function (order, orderIndex) {
+      (Array.isArray(order.items) ? order.items : []).forEach(function (item, itemIndex) {
+        const quantity = Math.max(0, Math.floor(Number(item.quantity) || 0));
+        const price = Number(item.price != null ? item.price : item.unitPrice) || 0;
+        for (let unitIndex = 0; unitIndex < quantity; unitIndex += 1) {
+          const key = makeUnitKey(order, item, orderIndex, itemIndex, unitIndex);
+          summary.total += price;
+          summary.unitCount += 1;
+          if (unitPaymentRecord(tableId, order, item, orderIndex, itemIndex, unitIndex, key)) {
+            summary.paid += price;
+            summary.paidUnitCount += 1;
+          }
+        }
+      });
+    });
+    summary.remaining = Math.max(0, summary.total - summary.paid);
+    return summary;
+  }
+  function selectedUnitsFromUI() {
+    return $$("#billDetailBody .bill-item-checkbox:checked:not(:disabled)").map(function (checkbox) {
+      return {
+        unitKey: checkbox.dataset.unitKey, tableId: checkbox.dataset.tableId,
+        orderId: checkbox.dataset.orderId || "", itemId: checkbox.dataset.itemId || "",
+        unitIndex: Number(checkbox.dataset.unitIndex) || 1,
+        productName: checkbox.dataset.productName || "Ürün",
+        amount: Number(checkbox.dataset.lineTotal) || 0
+      };
+    });
+  }
+  function updatePaymentSummary(summary, closed) {
+    $("#billGrandTotal").textContent = money(summary.total);
+    $("#paidTotal").textContent = money(summary.paid);
+    $("#remainingTotal").textContent = money(summary.remaining);
+    $("#closeBillButton").disabled = Boolean(closed || summary.remaining > 0.001);
+    $("#closeBillNote").textContent = summary.remaining > 0.001
+      ? money(summary.remaining) + " tutarında ödenmemiş ürün var. Tahsilat yapmadan adisyonu kapatamazsın."
+      : "Tüm ürünler tahsil edildi. Adisyonu kapatmak için aşağıdaki butona bas.";
+  }
+  function refreshCollectButton(selectedTotal) {
+    const button = $("#collectSelectedButton");
+    if (button) button.disabled = !(selectedTotal > 0) || (!state.apiLoaded && (!state.demoSelectedId || state.demoClosedIds.has(String(state.demoSelectedId)))) || (state.apiLoaded && (!state.bill || state.selectedTableId == null));
   }
   function setConnection(status, label) {
     connectionStatus.classList.toggle("is-connected", status === "connected");
@@ -140,107 +239,132 @@ document.addEventListener("DOMContentLoaded", function () {
   function billRounds() {
     return state.bill && Array.isArray(state.bill.orders) ? state.bill.orders : [];
   }
-  function renderProductRow(item, controlId) {
-    const orderedQuantity = Math.max(0, Math.floor(Number(item.quantity) || 0));
-    const unitPrice = Number(item.price != null ? item.price : item.unitPrice) || 0;
-    const safeName = escapeHtml(item.name);
-    if (orderedQuantity <= 0) return "";
-
-    // Adetleri tek tek satırlara aç: aynı üründen iki tane varsa iki bağımsız seçim göster.
-    return Array.from({ length: orderedQuantity }, function (_, index) {
+  function renderProductRow(item, controlId, context) {
+    const quantity = Math.max(0, Math.floor(Number(item.quantity) || 0));
+    const price = Number(item.price != null ? item.price : item.unitPrice) || 0;
+    const name = escapeHtml(item.name);
+    if (quantity <= 0) return "";
+    return Array.from({ length: quantity }, function (_, index) {
       const checkboxId = controlId + "-unit-" + (index + 1);
-      const lineDescription = (index + 1) + " / " + orderedQuantity + " adet · " + escapeHtml(money(unitPrice));
-      return '<label class="order-round-item is-selected" for="' + checkboxId + '">' +
-        '<input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox" checked data-line-total="' + unitPrice + '" aria-label="' + safeName + ' ' + (index + 1) + '. adet hesaba dahil et">' +
-        '<span class="order-product-details"><strong>' + safeName + '</strong><small>' + lineDescription + '</small></span>' +
-        '<strong class="order-line-total">' + escapeHtml(money(unitPrice)) + '</strong></label>';
+      const key = makeUnitKey(context.order, item, context.orderIndex, context.itemIndex, index);
+      const payment = unitPaymentRecord(context.tableId, context.order, item, context.orderIndex, context.itemIndex, index, key);
+      const paid = Boolean(payment);
+      const methodLabel = payment && payment.paymentMethod ? " · " + paymentMethodLabel(payment.paymentMethod) : "";
+      const badge = paid ? '<span class="unit-payment-status">Ödendi' + escapeHtml(methodLabel) + '</span>' : "";
+      const orderId = context.order && context.order.id != null ? context.order.id : (context.order && context.order.orderId != null ? context.order.orderId : "");
+      const itemId = item.id != null ? item.id : (item.itemId != null ? item.itemId : (item.productId != null ? item.productId : ""));
+      return '<label class="order-round-item ' + (paid ? "is-paid" : "") + '" for="' + checkboxId + '">' +
+        '<input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox"' + (paid ? ' disabled data-paid="true"' : ' data-paid="false"') +
+        ' data-line-total="' + price + '" data-unit-key="' + escapeHtml(key) + '" data-table-id="' + escapeHtml(context.tableId) + '"' +
+        ' data-order-id="' + escapeHtml(orderId) + '" data-item-id="' + escapeHtml(itemId) + '" data-unit-index="' + (index + 1) + '" data-product-name="' + name + '"' +
+        ' aria-label="' + name + ' ' + (index + 1) + '. adet ' + (paid ? "ödendi" : "tahsilata ekle") + '">' +
+        '<span class="order-product-details"><strong>' + name + '</strong><small>' + (index + 1) + " / " + quantity + ' adet · ' + escapeHtml(money(price)) + '</small></span>' +
+        badge + '<strong class="order-line-total">' + escapeHtml(money(price)) + '</strong></label>';
     }).join("");
   }
   function billLines() {
-    let total = 0;
-    let itemIndex = 0;
-    const rounds = billRounds();
-    const markup = rounds.map(function (order, index) {
-      const items = Array.isArray(order.items) ? order.items : [];
-      const roundTotal = items.reduce(function (sum, item) {
-        return sum + (Number(item.price != null ? item.price : item.unitPrice) || 0) * (Number(item.quantity) || 0);
-      }, 0);
-      total += roundTotal;
-      const dateText = order.sentAt ? new Date(order.sentAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "";
-      const productMarkup = items.map(function (item) {
-        const controlId = "bill-item-" + (++itemIndex);
-        return renderProductRow(item, controlId);
-      }).join("");
-      return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || index + 1) + '</strong><span>' + escapeHtml(dateText) + '</span></div>' +
-        productMarkup + '<div class="order-round-total"><span>Seçili ürünler</span><strong>' + escapeHtml(money(roundTotal)) + '</strong></div></article>';
-    }).join("");
-    return { markup: markup, total: total };
+    let rowIndex = 0;
+    const tableId = state.bill && state.bill.table && state.bill.table.id != null ? state.bill.table.id : state.selectedTableId;
+    return {
+      markup: billRounds().map(function (order, orderIndex) {
+        const items = Array.isArray(order.items) ? order.items : [];
+        const time = order.sentAt ? new Date(order.sentAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "";
+        const products = items.map(function (item, itemIndex) {
+          const controlId = "bill-item-" + (++rowIndex);
+          return renderProductRow(item, controlId, { tableId: tableId, order: order, orderIndex: orderIndex, itemIndex: itemIndex });
+        }).join("");
+        return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || orderIndex + 1) + '</strong><span>' + escapeHtml(time) + '</span></div>' +
+          products + '<div class="order-round-total"><span>Seçilenleri tahsil et</span><strong>' + escapeHtml(money(0)) + '</strong></div></article>';
+      }).join("")
+    };
   }
   function renderBill() {
     const bill = state.bill;
     if (!bill) {
-      const closeButton = $("#closeBillButton");
-      if (closeButton) closeButton.disabled = true;
+      $("#closeBillButton").disabled = true;
+      $("#collectSelectedButton").disabled = true;
       $("#selectedTableName").textContent = "Masa seçilmedi";
       $("#selectedTableMeta").textContent = "Ürünler ve tutarlar burada görünecek.";
       $("#selectedBillStatus").textContent = "Bekliyor";
       $("#selectedBillStatus").className = "bill-status";
       $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın ürünleri ve tutarları burada görüntülenecek.</span></div>';
+      updatePaymentSummary({ total: 0, paid: 0, remaining: 0 }, true);
       $("#billTotal").textContent = money(0);
       return;
     }
-    const closeButton = $("#closeBillButton");
-    if (closeButton) closeButton.disabled = false;
     const table = bill.table || {};
     const rounds = billRounds();
     const lines = billLines();
+    const summary = paymentOverview(rounds, table.id != null ? table.id : state.selectedTableId);
     $("#selectedTableName").textContent = table.name || "Masa " + state.selectedTableId;
     $("#selectedTableMeta").textContent = (Number(table.seats) || 0) + " kişilik masa · " + rounds.length + " sipariş turu";
-    $("#selectedBillStatus").textContent = rounds.length ? "Adisyon açık" : "Açık sipariş yok";
-    $("#selectedBillStatus").className = "bill-status " + (rounds.length ? "is-open" : "");
+    $("#selectedBillStatus").textContent = summary.remaining <= 0.001 ? "Tahsil edildi · Adisyon açık" : "Adisyon açık";
+    $("#selectedBillStatus").className = "bill-status " + (summary.remaining <= 0.001 ? "is-paid-status" : "is-open");
     $("#billDetailBody").innerHTML = lines.markup || '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bu masada açık sipariş yok</strong><span>Başka bir masa seçebilirsin.</span></div>';
-    $("#billTotal").textContent = money(lines.total);
+    updatePaymentSummary(summary, false);
+    $("#billTotal").textContent = money(0);
     updateSelectedTotals();
   }
   function updateSelectedTotals() {
-    const rows = $$("#billDetailBody .order-round-item");
-    if (!rows.length) return;
-
     let selectedTotal = 0;
     $$("#billDetailBody .order-round").forEach(function (round) {
       let roundTotal = 0;
       round.querySelectorAll(".order-round-item").forEach(function (row) {
         const checkbox = row.querySelector(".bill-item-checkbox");
         if (!checkbox) return;
-
-        const unitTotal = Number(checkbox.dataset.lineTotal) || 0;
-        const selected = checkbox.checked;
-        const lineTotalElement = row.querySelector(".order-line-total");
-
-        // Keep the original item price visible even when it is excluded from this split.
-        if (lineTotalElement) lineTotalElement.textContent = money(unitTotal);
+        const price = Number(checkbox.dataset.lineTotal) || 0;
+        const paid = checkbox.dataset.paid === "true";
+        const selected = !paid && checkbox.checked;
+        if (paid) checkbox.checked = false;
+        const priceNode = row.querySelector(".order-line-total");
+        if (priceNode) priceNode.textContent = money(price);
         row.classList.toggle("is-selected", selected);
-
-        if (selected) {
-          selectedTotal += unitTotal;
-          roundTotal += unitTotal;
-        }
+        row.classList.toggle("is-paid", paid);
+        if (selected) { selectedTotal += price; roundTotal += price; }
       });
-      const roundTotalElement = round.querySelector(".order-round-total strong");
-      if (roundTotalElement) roundTotalElement.textContent = money(roundTotal);
+      const roundSum = round.querySelector(".order-round-total strong");
+      if (roundSum) roundSum.textContent = money(roundTotal);
     });
     $("#billTotal").textContent = money(selectedTotal);
+    refreshCollectButton(selectedTotal);
+    return selectedTotal;
   }
   function renderDemoTables() {
     const query = state.query.toLocaleLowerCase("tr").trim();
     let visibleCount = 0;
     $$(".demo-table-card").forEach(function (card) {
       const tableId = String(card.dataset.demoTableId);
-      const isOpen = card.dataset.demoOpen === "true" && !state.demoClosedIds.has(tableId);
-      const isVisibleByFilter = state.filter === "all" || isOpen;
+      const closed = state.demoClosedIds.has(tableId);
+      if (closed) card.dataset.demoOpen = "false";
+      const hasOpenBill = card.dataset.demoOpen === "true" && !closed;
+      const visibleByTab = state.filter === "all" || hasOpenBill;
       const matchesSearch = !query || card.textContent.toLocaleLowerCase("tr").includes(query);
-      card.hidden = !(isVisibleByFilter && matchesSearch);
-      card.disabled = !isOpen;
+      const demoBill = demoBills[tableId];
+      if (closed) {
+        const info = card.querySelector(".bill-table-info small");
+        const amount = card.querySelector(".bill-table-end strong");
+        const status = card.querySelector(".bill-table-end small");
+        if (info) info.textContent = info.textContent.replace(/ · .+$/, " · Kapalı masa");
+        if (amount) amount.textContent = "—";
+        if (status) status.textContent = "Kapalı masa";
+      } else if (demoBill) {
+        const summary = paymentOverview(demoBill.orders, tableId);
+        const info = card.querySelector(".bill-table-info small");
+        const amount = card.querySelector(".bill-table-end strong");
+        const status = card.querySelector(".bill-table-end small");
+        if (info) info.textContent = demoBill.seats + " kişilik masa · " + (summary.remaining <= 0.001 ? "Tahsil edildi, kapatılmayı bekliyor" : summary.paid > 0 ? money(summary.paid) + " tahsil edildi" : "Adisyon açık");
+        if (amount) amount.textContent = money(summary.remaining);
+        if (status) status.textContent = summary.remaining <= 0.001 ? "Kapatılmayı bekliyor" : (tableId === String(state.demoSelectedId) ? "Seçili masa" : "Adisyon açık");
+      } else if (!hasOpenBill) {
+        const info = card.querySelector(".bill-table-info small");
+        const amount = card.querySelector(".bill-table-end strong");
+        const status = card.querySelector(".bill-table-end small");
+        if (info) info.textContent = info.textContent.replace(/ · .+$/, " · Boş");
+        if (amount) amount.textContent = "—";
+        if (status) status.textContent = "Boş masa";
+      }
+      card.hidden = !(visibleByTab && matchesSearch);
+      card.disabled = !hasOpenBill;
       const selected = tableId === String(state.demoSelectedId);
       card.classList.toggle("active", selected);
       card.setAttribute("aria-pressed", selected ? "true" : "false");
@@ -255,136 +379,119 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#selectedBillStatus").className = "bill-status";
     $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Açık adisyon seçilmedi</strong><span>Açık adisyonlar sekmesinden başka bir masa seçebilirsin.</span></div>';
     $("#billTotal").textContent = money(0);
-    const closeButton = $("#closeBillButton");
-    if (closeButton) closeButton.disabled = true;
+    updatePaymentSummary({ total: 0, paid: 0, remaining: 0 }, true);
+    $("#collectSelectedButton").disabled = true;
   }
   function renderDemoBill(tableId) {
     const table = demoBills[String(tableId)];
-    if (!table || state.demoClosedIds.has(String(tableId))) {
-      clearDemoBill();
-      return;
-    }
-    const closeButton = $("#closeBillButton");
-    if (closeButton) closeButton.disabled = false;
-    if (!table) return;
+    if (!table || state.demoClosedIds.has(String(tableId))) { clearDemoBill(); return; }
     $("#selectedTableName").textContent = table.name;
     $("#selectedTableMeta").textContent = table.seats + " kişilik masa · " + table.orders.length + " sipariş turu";
-    $("#selectedBillStatus").textContent = "Adisyon açık";
-    $("#selectedBillStatus").className = "bill-status is-open";
+    const summary = paymentOverview(table.orders, tableId);
+    $("#selectedBillStatus").textContent = summary.remaining <= 0.001 ? "Tahsil edildi · Adisyon açık" : "Adisyon açık";
+    $("#selectedBillStatus").className = "bill-status " + (summary.remaining <= 0.001 ? "is-paid-status" : "is-open");
     $("#billDetailBody").innerHTML = table.orders.map(function (order, orderIndex) {
-      const dateText = order.sentAt || "";
       const products = order.items.map(function (item, itemIndex) {
         const controlId = "demo-item-" + tableId + "-" + orderIndex + "-" + itemIndex;
-        return renderProductRow(item, controlId);
+        return renderProductRow(item, controlId, { tableId: tableId, order: order, orderIndex: orderIndex, itemIndex: itemIndex });
       }).join("");
-      return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || orderIndex + 1) + '</strong><span>' + escapeHtml(dateText) + '</span></div>' + products + '<div class="order-round-total"><span>Seçili ürünler</span><strong>' + escapeHtml(money(table.total)) + '</strong></div></article>';
+      return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || orderIndex + 1) + '</strong><span>' + escapeHtml(order.sentAt || "") + '</span></div>' + products + '<div class="order-round-total"><span>Seçilenleri tahsil et</span><strong>' + escapeHtml(money(0)) + '</strong></div></article>';
     }).join("");
-    $("#billTotal").textContent = money(table.total);
+    updatePaymentSummary(summary, false);
+    $("#billTotal").textContent = money(0);
     updateSelectedTotals();
   }
-
-  function getFullBillTotal() {
-    if (state.apiLoaded && state.bill) {
-      if (state.bill.total != null && Number.isFinite(Number(state.bill.total))) {
-        return Math.max(0, Number(state.bill.total) || 0);
-      }
-      return billRounds().reduce(function (sum, order) {
-        const items = Array.isArray(order.items) ? order.items : [];
-        return sum + items.reduce(function (orderSum, item) {
-          const price = Number(item.price != null ? item.price : item.unitPrice) || 0;
-          return orderSum + price * (Number(item.quantity) || 0);
-        }, 0);
-      }, 0);
-    }
-    const demoBill = demoBills[String(state.demoSelectedId)];
-    if (!demoBill) return 0;
-    return demoBill.orders.reduce(function (sum, order) {
-      return sum + order.items.reduce(function (orderSum, item) {
-        return orderSum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
-      }, 0);
-    }, 0);
-  }
-  async function closeBill() {
-    if (!state.apiLoaded) {
-      const demoId = String(state.demoSelectedId || "");
-      const demoBill = demoBills[demoId];
-      if (!demoBill || state.demoClosedIds.has(demoId)) {
-        notify("Önce açık adisyonu olan bir masa seç.");
+  async function collectSelected() {
+    const tableId = state.apiLoaded ? state.selectedTableId : state.demoSelectedId;
+    const demoBill = !state.apiLoaded ? demoBills[String(tableId)] : null;
+    if (tableId == null || (state.apiLoaded ? !state.bill : !demoBill)) { notify("Önce açık adisyonu olan bir masa seç."); return; }
+    const units = selectedUnitsFromUI();
+    if (!units.length) { notify("Önce tahsil edilecek, ödenmemiş ürünleri seç."); return; }
+    const total = units.reduce(function (sum, unit) { return sum + unit.amount; }, 0);
+    if (!(total > 0)) { notify("Seçilen ürünler için geçerli bir tahsilat tutarı bulunamadı."); return; }
+    const method = selectedPaymentMethod();
+    const tableName = state.apiLoaded ? $("#selectedTableName").textContent.trim() : demoBill.name;
+    if (!window.confirm(tableName + " için " + money(total) + " tutarındaki " + units.length + " ürün adedini " + paymentMethodLabel(method) + " olarak tahsil etmek istiyor musun?")) return;
+    const button = $("#collectSelectedButton");
+    const originalMarkup = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>Tahsilat kaydediliyor...</span>';
+    try {
+      if (!state.apiLoaded) {
+        if (!saveDemoCollection(tableId, tableName, units, method, total)) return;
+        renderDemoBill(tableId);
+        renderDemoTables();
+        notify(money(total) + " " + paymentMethodLabel(method).toLocaleLowerCase("tr") + " olarak tahsil edildi. Ürünler listede kaldı ve tekrar seçilemez.");
         return;
       }
-
-      const demoTotal = getFullBillTotal();
-      const demoTableName = demoBill.name;
-      const demoPaymentMethod = selectedPaymentMethod();
-      const confirmedDemo = window.confirm(
-        demoTableName + " adisyonunun tamamını (" + money(demoTotal) + ") " + paymentMethodLabel(demoPaymentMethod) + " olarak kapatmak istiyor musun?\\n\\nBu işlem örnek ekrandaki tüm adisyonu kapatır."
-      );
-      if (!confirmedDemo) return;
-      if (!saveDemoSale(demoId, demoTableName, demoTotal, demoPaymentMethod)) return;
-
-      const demoCard = $('#billTableList [data-demo-table-id="' + demoId + '"]');
-      state.demoClosedIds.add(demoId);
-      if (demoCard) {
-        demoCard.dataset.demoOpen = "false";
-        demoCard.disabled = true;
-        const info = demoCard.querySelector(".bill-table-info small");
-        const amount = demoCard.querySelector(".bill-table-end strong");
-        const status = demoCard.querySelector(".bill-table-end small");
-        if (info) info.textContent = info.textContent.replace("Adisyon açık", "Kapalı masa").replace("Seçili masa", "Kapalı masa");
-        if (amount) amount.textContent = "—";
-        if (status) status.textContent = "Kapalı masa";
-      }
-
-      state.demoSelectedId = null;
-      renderDemoTables();
-      clearDemoBill();
-      notify("Örnek adisyon " + paymentMethodLabel(demoPaymentMethod) + " olarak kapatıldı. Ciro raporu güncellendi.");
+      const response = await fetch("/api/cashier/tables/" + encodeURIComponent(tableId) + "/collect", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentMethod: method, items: units.map(function (unit) {
+          return { orderId: unit.orderId, itemId: unit.itemId, unitIndex: unit.unitIndex, amount: unit.amount };
+        }) })
+      });
+      const payload = await response.json().catch(function () { return null; });
+      if (!response.ok) throw new Error(payload && payload.message ? payload.message : "Tahsilat kaydedilemedi. Sunucuda tahsilat API'si bulunmuyor veya istek başarısız oldu.");
+      await loadTables(tableId);
+      notify(money(total) + " tutarındaki tahsilat kaydedildi.");
+    } catch (error) {
+      notify(error.message || "Tahsilat sırasında hata oluştu; ürünler ödenmiş olarak işaretlenmedi.");
+    } finally {
+      button.innerHTML = originalMarkup;
+      if (state.apiLoaded) updateSelectedTotals();
+      else if (state.demoSelectedId) updateSelectedTotals();
+      else button.disabled = true;
+    }
+  }
+  async function closeBill() {
+    const tableId = state.apiLoaded ? state.selectedTableId : state.demoSelectedId;
+    const demoBill = !state.apiLoaded ? demoBills[String(tableId)] : null;
+    if (tableId == null || (state.apiLoaded ? !state.bill : !demoBill)) { notify("Önce açık adisyonu olan bir masa seç."); return; }
+    const summary = paymentOverview(state.apiLoaded ? billRounds() : demoBill.orders, tableId);
+    if (summary.remaining > 0.001) {
+      notify("Adisyon kapatılamaz. Önce kalan " + money(summary.remaining) + " tutarındaki ürünleri tahsil et.");
       return;
     }
-    if (state.selectedTableId == null || !state.bill) {
-      notify("Önce açık adisyonu olan bir masa seç.");
-      return;
-    }
-
-    const tableName = $("#selectedTableName").textContent.trim();
-    const fullTotal = getFullBillTotal();
-    const paymentMethod = selectedPaymentMethod();
-    const confirmed = window.confirm(
-      tableName + " adisyonunun tamamını (" + money(fullTotal) + ") " + paymentMethodLabel(paymentMethod) + " olarak kapatmak istiyor musun?\n\nBu işlem yalnızca seçili ürünleri değil, masanın tüm adisyonunu kapatır."
-    );
-    if (!confirmed) return;
-
+    const tableName = state.apiLoaded ? $("#selectedTableName").textContent.trim() : demoBill.name;
+    if (!window.confirm("Tüm ürünler tahsil edildi. " + tableName + " adisyonunu kapatmak istiyor musun? Bu işlem yeni bir ciro kaydı oluşturmaz.")) return;
     const button = $("#closeBillButton");
     const originalMarkup = button.innerHTML;
     button.disabled = true;
     button.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>Adisyon kapatılıyor...</span>';
     try {
-      const response = await fetch("/api/cashier/tables/" + encodeURIComponent(state.selectedTableId) + "/close", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ paymentMethod: paymentMethod })
+      if (!state.apiLoaded) {
+        state.demoClosedIds.add(String(tableId));
+        if (!saveDemoState()) {
+          state.demoClosedIds.delete(String(tableId));
+          notify("Adisyon kapatılamadı; masa durumu tarayıcıya kaydedilemedi.");
+          return;
+        }
+        const card = $('#billTableList [data-demo-table-id="' + String(tableId) + '"]');
+        if (card) { card.dataset.demoOpen = "false"; card.disabled = true; }
+        state.demoSelectedId = null;
+        renderDemoTables();
+        clearDemoBill();
+        notify("Adisyon kapatıldı. Tahsilatlar ciroya daha önce kaydedildi.");
+        return;
+      }
+      const response = await fetch("/api/cashier/tables/" + encodeURIComponent(tableId) + "/close", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({})
       });
       const payload = await response.json().catch(function () { return null; });
-      if (!response.ok) {
-        const message = payload && payload.message
-          ? payload.message
-          : "Adisyon kapatılamadı. Sunucuda kapatma API'si henüz bulunmuyor veya istek başarısız oldu.";
-        throw new Error(message);
-      }
-
-      notify("Adisyon kapatıldı.");
+      if (!response.ok) throw new Error(payload && payload.message ? payload.message : "Adisyon kapatılamadı.");
       state.selectedTableId = null;
       state.bill = null;
       await loadTables(null);
+      notify("Adisyon kapatıldı. Yeni ciro kaydı oluşturulmadı.");
     } catch (error) {
       notify(error.message || "Adisyon kapatılırken bir hata oluştu.");
     } finally {
       button.innerHTML = originalMarkup;
-      button.disabled = state.apiLoaded ? !state.bill : (!state.demoSelectedId || state.demoClosedIds.has(String(state.demoSelectedId)));
+      if (state.apiLoaded) button.disabled = !state.bill || paymentOverview(billRounds(), state.selectedTableId).remaining > 0.001;
+      else button.disabled = !state.demoSelectedId || state.demoClosedIds.has(String(state.demoSelectedId)) || (demoBills[String(state.demoSelectedId)] && paymentOverview(demoBills[String(state.demoSelectedId)].orders, state.demoSelectedId).remaining > 0.001);
     }
   }
   async function loadTables(preferredId) {
@@ -489,6 +596,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
   $("#refreshButton").addEventListener("click", function () { loadTables(state.selectedTableId); });
+  $("#collectSelectedButton").addEventListener("click", collectSelected);
   $("#closeBillButton").addEventListener("click", closeBill);
 
   loadTables();
