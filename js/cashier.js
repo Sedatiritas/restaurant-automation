@@ -349,8 +349,8 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (error) {
       notify(error.message || "Adisyon kapatılırken bir hata oluştu.");
     } finally {
-      button.disabled = false;
       button.innerHTML = originalMarkup;
+      button.disabled = state.apiLoaded ? !state.bill : (!state.demoSelectedId || state.demoClosedIds.has(String(state.demoSelectedId)));
     }
   }
   async function loadTables(preferredId) {
