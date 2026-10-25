@@ -214,3 +214,44 @@ a{color:inherit}
   .order-round-item{gap:8px;padding:8px 6px}
   .order-round-item .bill-item-checkbox{width:17px;height:17px;flex-basis:17px}
 }
+
+
+/* Adisyonu kapatma eylemi */
+.close-bill-note{
+  margin:10px 0 12px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.5;
+}
+.close-bill-button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  width:100%;
+  min-height:42px;
+  padding:10px 14px;
+  border:1px solid var(--accent-dark);
+  border-radius:10px;
+  background:var(--accent-dark);
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  transition:background .15s,border-color .15s,opacity .15s;
+}
+.close-bill-button:hover:not(:disabled){
+  border-color:#713d24;
+  background:#713d24;
+}
+.close-bill-button:focus-visible{
+  outline:3px solid #b96e4350;
+  outline-offset:2px;
+}
+.close-bill-button:disabled{
+  cursor:wait;
+  opacity:.65;
+}
+.close-bill-button i{font-size:15px}
+@media(max-width:760px){
+  .close-bill-button{min-height:44px;font-size:12px}
+}
