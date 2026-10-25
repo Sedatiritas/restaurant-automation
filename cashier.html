@@ -20,7 +20,6 @@
       <div class="topbar-actions">
         <span class="connection-status" id="connectionStatus"><span class="status-dot"></span><span>Bağlanıyor</span></span>
         <a class="topbar-link" href="waiter.html"><i class="bi bi-receipt-cutoff"></i><span>Garson</span></a>
-        <a class="topbar-link" href="admin.html"><i class="bi bi-grid-1x2"></i><span>Yönetim</span></a>
       </div>
     </header>
 
@@ -63,27 +62,27 @@
           <div class="table-tools">
             <label class="search-control"><i class="bi bi-search"></i><input id="tableSearch" type="search" placeholder="Masa ara..." autocomplete="off" aria-label="Masa ara"></label>
             <div class="filter-pills" role="group" aria-label="Masa filtresi">
-              <button type="button" class="filter-pill active" data-filter="open">Açık hesap</button>
+              <button type="button" class="filter-pill active" data-filter="open">Açık adisyonlar</button>
               <button type="button" class="filter-pill" data-filter="all">Tüm masalar</button>
             </div>
           </div>
           <div class="bill-table-list" id="billTableList" aria-live="polite">
-            <div class="bill-table-card demo-table-card">
+            <button type="button" class="bill-table-card demo-table-card" data-demo-table-id="1" data-demo-open="true">
               <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>Masa 01</strong><small>2 kişilik masa · Adisyon açık</small></span></span>
               <span class="bill-table-end"><strong>₺320,00</strong><small class="demo-open-label">Adisyon açık</small></span>
-            </div>
-            <div class="bill-table-card active demo-table-card">
+            </button>
+            <button type="button" class="bill-table-card demo-table-card active" data-demo-table-id="2" data-demo-open="true" aria-pressed="true">
               <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>Masa 02</strong><small>4 kişilik masa · Adisyon açık</small></span></span>
               <span class="bill-table-end"><strong>₺545,00</strong><small class="demo-open-label">Seçili masa</small></span>
-            </div>
-            <div class="bill-table-card demo-table-card">
+            </button>
+            <button type="button" class="bill-table-card demo-table-card" data-demo-table-id="3" data-demo-open="true">
               <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>Masa 03</strong><small>4 kişilik masa · Adisyon açık</small></span></span>
               <span class="bill-table-end"><strong>₺760,00</strong><small class="demo-open-label">Adisyon açık</small></span>
-            </div>
-            <div class="bill-table-card demo-table-card">
-              <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>Masa 04</strong><small>2 kişilik masa · Adisyon açık</small></span></span>
-              <span class="bill-table-end"><strong>₺210,00</strong><small class="demo-open-label">Adisyon açık</small></span>
-            </div>
+            </button>
+            <button type="button" class="bill-table-card demo-table-card" data-demo-table-id="4" data-demo-open="false" disabled>
+              <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2"></i></span><span class="bill-table-info"><strong>Masa 04</strong><small>2 kişilik masa · Boş</small></span></span>
+              <span class="bill-table-end"><strong>—</strong><small>Boş masa</small></span>
+            </button>
           </div>
         </section>
 
@@ -95,14 +94,14 @@
           <div class="bill-detail-body" id="billDetailBody">
             <article class="order-round">
               <div class="order-round-head"><strong>Sipariş turu #1</strong><span>14:26</span></div>
-              <div class="order-round-item"><span class="order-product-details"><strong>Latte</strong><small>₺130,00 × 2</small></span><strong class="order-line-total">₺260,00</strong></div>
-              <div class="order-round-item"><span class="order-product-details"><strong>Americano</strong><small>₺100,00 × 1</small></span><strong class="order-line-total">₺100,00</strong></div>
-              <div class="order-round-item"><span class="order-product-details"><strong>San Sebastian</strong><small>₺185,00 × 1</small></span><strong class="order-line-total">₺185,00</strong></div>
-              <div class="order-round-total"><span>Sipariş toplamı</span><strong>₺545,00</strong></div>
+              <label class="order-round-item is-selected" for="demo-item-2-1"><input class="bill-item-checkbox" id="demo-item-2-1" type="checkbox" checked data-line-total="260"><span class="order-product-details"><strong>Latte</strong><small>₺130,00 × 2</small></span><strong class="order-line-total">₺260,00</strong></label>
+              <label class="order-round-item is-selected" for="demo-item-2-2"><input class="bill-item-checkbox" id="demo-item-2-2" type="checkbox" checked data-line-total="100"><span class="order-product-details"><strong>Americano</strong><small>₺100,00 × 1</small></span><strong class="order-line-total">₺100,00</strong></label>
+              <label class="order-round-item is-selected" for="demo-item-2-3"><input class="bill-item-checkbox" id="demo-item-2-3" type="checkbox" checked data-line-total="185"><span class="order-product-details"><strong>San Sebastian</strong><small>₺185,00 × 1</small></span><strong class="order-line-total">₺185,00</strong></label>
+              <div class="order-round-total"><span>Seçili ürünler</span><strong>₺545,00</strong></div>
             </article>
           </div>
           <div class="bill-total-panel">
-            <div class="bill-total-row"><span>Toplam ücret</span><strong id="billTotal">₺545,00</strong></div>
+            <div class="bill-total-row"><span>Seçilen ürünlerin toplamı</span><strong id="billTotal">₺545,00</strong></div>
           </div>
         </section>
       </section>
