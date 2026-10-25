@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
   }
-  const state = { products:load("products"), categories:load("categories"), tables:load("tables"), staff:load("staff"), settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all" };
+  const state = { products:load("products"), categories:load("categories"), tables:load("tables"), staff:load("staff"), settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
   function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); return true; } catch (e) { notify("Tarayıcı depolama alanı doldu. Daha küçük görseller seçin."); return false; } }
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
@@ -88,6 +88,62 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function statCard(label, value, icon, tone, foot) {
     return '<article class="stat-card"><div class="stat-top"><span>' + label + '</span><span class="stat-icon ' + (tone||"") + '"><i class="bi ' + icon + '"></i></span></div><div class="stat-number">' + value + '</div><div class="stat-foot">' + foot + '</div></article>';
+  }
+  function currentMonthValue(date) {
+    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
+  }
+  function getCashierSales() {
+    try {
+      const saved = JSON.parse(localStorage.getItem("roastCashier_sales") || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+      return [];
+    }
+  }
+  function revenueView() {
+    const selectedMonth = /^\d{4}-\d{2}$/.test(state.revenueMonth) ? state.revenueMonth : currentMonthValue(new Date());
+    const dailyTotals = {};
+    const summary = { total: 0, cash: 0, card: 0, count: 0 };
+    getCashierSales().forEach(function (sale) {
+      if (!sale || !sale.date || String(sale.date).slice(0, 7) !== selectedMonth) return;
+      const amount = Number(sale.amount);
+      const method = sale.paymentMethod === "card" ? "card" : sale.paymentMethod === "cash" ? "cash" : "";
+      if (!method || !Number.isFinite(amount) || amount < 0) return;
+      const date = String(sale.date).slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+      summary.total += amount;
+      summary[method] += amount;
+      summary.count += 1;
+      if (!dailyTotals[date]) dailyTotals[date] = { date: date, total: 0, cash: 0, card: 0, count: 0 };
+      dailyTotals[date].total += amount;
+      dailyTotals[date][method] += amount;
+      dailyTotals[date].count += 1;
+    });
+    const cashPercent = summary.total > 0 ? summary.cash / summary.total * 100 : 0;
+    const cardPercent = summary.total > 0 ? summary.card / summary.total * 100 : 0;
+    const dailyRows = Object.keys(dailyTotals).sort().reverse().map(function (date) {
+      const day = dailyTotals[date];
+      const formattedDate = new Date(date + "T12:00:00").toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric", weekday: "short" });
+      return '<tr><td><strong class="revenue-date">' + escapeHtml(formattedDate) + '</strong></td><td>' + day.count + '</td><td class="price-cell">' + money(day.total) + '</td><td>' + money(day.cash) + '</td><td>' + money(day.card) + '</td></tr>';
+    }).join("");
+    return pageHeading("FİNANSAL RAPORLAMA", "Ciro Raporu", "Aylık toplam ciroyu, gün gün satışları ve ödeme türü dağılımını görüntüleyin.",
+      '<div class="revenue-month-filter"><label for="revenueMonth">Rapor ayı</label><input class="form-control" id="revenueMonth" type="month" value="' + escapeHtml(selectedMonth) + '"></div>') +
+      '<div class="revenue-preview-note"><i class="bi bi-info-circle"></i><span><strong>Önizleme verisi</strong> Bu rapor, kasiyer ekranında örnek adisyon kapatılarak oluşturulan kayıtları gösterir. Kalıcı ve tüm cihazlarda ortak raporlama için backend/veritabanı bağlantısı gerekir.</span></div>' +
+      '<section class="stats-grid revenue-stats">' +
+      statCard("Aylık ciro", money(summary.total), "bi-graph-up-arrow", "green", "Seçilen ayda kapatılan adisyonlar") +
+      statCard("Kapanan adisyon", String(summary.count), "bi-receipt-cutoff", "", "Seçilen ay") +
+      statCard("Nakit", money(summary.cash), "bi-cash-coin", "orange", cashPercent.toFixed(1) + "% of ciro") +
+      statCard("Kart", money(summary.card), "bi-credit-card", "purple", cardPercent.toFixed(1) + "% of ciro") +
+      '</section>' +
+      '<section class="panel-card revenue-payment-card"><div class="panel-heading"><div><h3>Ödeme türü dağılımı</h3><p>Aylık cironun nakit ve kart olarak yüzdesel dağılımı.</p></div><span class="status-pill status-live">' + (summary.total > 0 ? "100% dağılım" : "Henüz satış yok") + '</span></div>' +
+      '<div class="revenue-payment-content"><div class="revenue-payment-bar" role="img" aria-label="Nakit yüzde ' + cashPercent.toFixed(1) + ', kart yüzde ' + cardPercent.toFixed(1) + '">' +
+      '<span class="revenue-payment-cash" style="width:' + cashPercent.toFixed(2) + '%"></span><span class="revenue-payment-card-segment" style="width:' + cardPercent.toFixed(2) + '%"></span></div>' +
+      '<div class="revenue-payment-legend"><div><span class="revenue-legend-dot cash"></span><span><strong>Nakit</strong><small>' + cashPercent.toFixed(1) + '%</small></span><b>' + money(summary.cash) + '</b></div>' +
+      '<div><span class="revenue-legend-dot card"></span><span><strong>Kart</strong><small>' + cardPercent.toFixed(1) + '%</small></span><b>' + money(summary.card) + '</b></div></div></div></section>' +
+      '<section class="panel-card revenue-daily-card"><div class="panel-heading"><div><h3>Günlük ciro dökümü</h3><p>Seçtiğiniz ayda adisyon kapanan günler, en yeniden eskiye sıralanır.</p></div><span class="count-pill">' + Object.keys(dailyTotals).length + ' gün</span></div>' +
+      '<div class="table-responsive"><table class="table data-table align-middle revenue-table"><thead><tr><th>GÜN</th><th>ADİSYON</th><th>TOPLAM CİRO</th><th>NAKİT</th><th>KART</th></tr></thead><tbody>' +
+      (dailyRows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-bar-chart-line"></i><strong>Bu ay için ciro kaydı yok</strong><p>Kasiyer ekranında örnek bir adisyonu nakit veya kart seçerek kapattığınızda burada günlük ve aylık dağılım görünür.</p></div></td></tr>') +
+      '</tbody></table></div></section>';
   }
   function productRows(products) {
     if (!products.length) return '<tr><td colspan="6"><div class="empty-state"><i class="bi bi-search"></i><strong>Ürün bulunamadı</strong><p>Arama veya filtre seçimini değiştirin.</p></div></td></tr>';
@@ -204,8 +260,8 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div class="settings-grid"><section class="panel-card"><div class="panel-heading"><div><h3>Footer bilgileri</h3><p>İşletme adı Menü Görünümü bölümünden yönetilir. Buradaki bilgiler menünün en altında gösterilir.</p></div></div><form id="settingsForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="businessPhone">Telefon</label><input class="form-control" id="businessPhone" name="phone" type="tel" value="'+escapeHtml(s.phone)+'" placeholder="05xx xxx xx xx"></div><div class="mb-3"><label class="form-label" for="businessEmail">E-posta</label><input class="form-control" id="businessEmail" name="email" type="email" value="'+escapeHtml(s.email)+'" placeholder="info@isletme.com"></div><div class="mb-3"><label class="form-label" for="businessAddress">Adres</label><textarea class="form-control" id="businessAddress" name="address" rows="2" placeholder="İşletme adresi">'+escapeHtml(s.address)+'</textarea></div><div class="mb-3"><label class="form-label" for="businessDescription">Footer açıklaması</label><textarea class="form-control" id="businessDescription" name="description" rows="2" maxlength="250" placeholder="Kısa işletme açıklaması">'+escapeHtml(s.description)+'</textarea></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Footer bilgilerini kaydet</button></form></section>' +
       '<section class="panel-card"><div class="panel-heading"><div><h3>Sosyal medya bağlantıları</h3><p>Footer bölümündeki Instagram ve WhatsApp bağlantıları.</p></div></div><form id="contactForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="instagramUrl">Instagram bağlantısı</label><input class="form-control" id="instagramUrl" name="instagram" type="url" value="'+escapeHtml(s.instagram)+'" placeholder="https://instagram.com/..."></div><div class="mb-3"><label class="form-label" for="whatsappUrl">WhatsApp bağlantısı</label><input class="form-control" id="whatsappUrl" name="whatsapp" type="url" value="'+escapeHtml(s.whatsapp)+'" placeholder="https://wa.me/90..."></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Bağlantıları kaydet</button></form></section></div>';
   }
-  const viewRenderers = {overview:overviewView,products:productsView,categories:categoriesView,tables:tablesView,appearance:appearanceView,staff:staffView,settings:settingsView};
-  const viewTitles = {overview:"Genel Bakış",products:"Ürünler",categories:"Kategoriler",tables:"Masa Yönetimi",appearance:"Menü Görünümü",staff:"Personel ve Yetkiler",settings:"İşletme Ayarları"};
+  const viewRenderers = {overview:overviewView,products:productsView,categories:categoriesView,tables:tablesView,appearance:appearanceView,staff:staffView,settings:settingsView,revenue:revenueView};
+  const viewTitles = {overview:"Genel Bakış",products:"Ürünler",categories:"Kategoriler",tables:"Masa Yönetimi",appearance:"Menü Görünümü",staff:"Personel ve Yetkiler",settings:"İşletme Ayarları",revenue:"Ciro Raporu"};
   function render(view, updateHash) {
     state.view = viewRenderers[view] ? view : "overview";
     root.innerHTML = viewRenderers[state.view]();
@@ -366,9 +422,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if(event.target.id==="productCategoryFilter"){state.productCategory=event.target.value;render("products",false);}
     if(event.target.id==="productStatusFilter"){state.productStatus=event.target.value;render("products",false);}
+    if(event.target.id==="revenueMonth"){state.revenueMonth=event.target.value||currentMonthValue(new Date());render("revenue",false);}
   });
   document.getElementById("notificationButton").addEventListener("click",function(){notify("Şimdilik yeni bildiriminiz yok.");});
   window.addEventListener("hashchange",function(){const view=window.location.hash.replace("#","");if(viewRenderers[view]&&view!==state.view)render(view,false);});
+  window.addEventListener("storage",function(event){if(event.key==="roastCashier_sales"&&state.view==="revenue")render("revenue",false);});
   const initial=window.location.hash.replace("#","")||"overview";
   render(viewRenderers[initial]?initial:"overview",false);
 });
