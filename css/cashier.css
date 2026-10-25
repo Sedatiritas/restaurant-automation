@@ -181,31 +181,53 @@ a{color:inherit}
 }
 
 
-/* Miktar seçimi: birden fazla adetli ürünlerde seçilen adet üzerinden hesapla */
-.bill-item-quantity{
-  width:88px;
-  min-width:76px;
+
+
+/* Kolay adisyon paylaştırma: adet azaltma ve artırma kontrolü */
+.bill-item-quantity-control{
+  display:inline-flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:2px;
+  width:91px;
+  min-width:91px;
   height:34px;
-  flex:0 0 88px;
-  padding:0 7px;
+  flex:0 0 91px;
+  padding:2px;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:9px;
   background:#fff;
-  color:var(--ink);
-  font-size:10px;
-  font-weight:750;
+}
+.quantity-stepper-button{
+  display:grid;
+  place-items:center;
+  width:27px;
+  height:28px;
+  flex:0 0 27px;
+  padding:0;
+  border:0;
+  border-radius:6px;
+  background:#f5eee6;
+  color:var(--accent-dark);
+  font-size:18px;
+  font-weight:700;
+  line-height:1;
   cursor:pointer;
 }
-.bill-item-quantity:focus{
-  border-color:#c89a78;
-  outline:0;
-  box-shadow:0 0 0 3px #b96e4312;
+.quantity-stepper-button:hover:not(:disabled){background:#ead8c8}
+.quantity-stepper-button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.quantity-stepper-button:disabled{background:transparent;color:#c9c2b9;cursor:default}
+.quantity-value{
+  min-width:20px;
+  color:var(--ink);
+  font-size:12px;
+  font-weight:850;
+  text-align:center;
 }
-.order-round-item:not(.is-selected) .bill-item-quantity{
-  border-color:#e7e0d6;
-  background:#f5f2ed;
-  color:#8f887f;
-}
+.order-round-item:not(.is-selected) .bill-item-quantity-control{background:#f5f2ed;border-color:#e7e0d6}
+.order-round-item:not(.is-selected) .quantity-value{color:#8f887f}
 @media(max-width:480px){
-  .bill-item-quantity{width:78px;min-width:70px;flex-basis:78px;padding:0 4px;font-size:9px}
+  .bill-item-quantity-control{width:82px;min-width:82px;flex-basis:82px;height:32px}
+  .quantity-stepper-button{width:24px;height:26px;flex-basis:24px;font-size:17px}
+  .quantity-value{min-width:18px;font-size:11px}
 }
