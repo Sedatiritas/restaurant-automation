@@ -183,51 +183,34 @@ a{color:inherit}
 
 
 
-/* Kolay adisyon paylaştırma: adet azaltma ve artırma kontrolü */
-.bill-item-quantity-control{
-  display:inline-flex;
+
+
+/* Her sipariş adedi ayrı satırda seçilebilir */
+.order-round-item{
+  display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:2px;
-  width:91px;
-  min-width:91px;
-  height:34px;
-  flex:0 0 91px;
-  padding:2px;
-  border:1px solid var(--border);
+  gap:11px;
+  width:100%;
+  padding:9px;
+  border:1px solid transparent;
   border-radius:9px;
-  background:#fff;
-}
-.quantity-stepper-button{
-  display:grid;
-  place-items:center;
-  width:27px;
-  height:28px;
-  flex:0 0 27px;
-  padding:0;
-  border:0;
-  border-radius:6px;
-  background:#f5eee6;
-  color:var(--accent-dark);
-  font-size:18px;
-  font-weight:700;
-  line-height:1;
+  background:transparent;
   cursor:pointer;
 }
-.quantity-stepper-button:hover:not(:disabled){background:#ead8c8}
-.quantity-stepper-button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.quantity-stepper-button:disabled{background:transparent;color:#c9c2b9;cursor:default}
-.quantity-value{
-  min-width:20px;
-  color:var(--ink);
-  font-size:12px;
-  font-weight:850;
-  text-align:center;
+.order-round-item.is-selected{background:#fffaf5}
+.order-round-item .bill-item-checkbox{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  margin:0;
+  accent-color:var(--accent);
+  cursor:pointer;
 }
-.order-round-item:not(.is-selected) .bill-item-quantity-control{background:#f5f2ed;border-color:#e7e0d6}
-.order-round-item:not(.is-selected) .quantity-value{color:#8f887f}
+.order-product-details{flex:1;min-width:0}
+.order-round-item:not(.is-selected) .order-product-details strong{color:#8f887f;font-weight:600}
+.order-round-item:not(.is-selected) .order-product-details small{color:#aaa196}
+.order-round-item:not(.is-selected) .order-line-total{color:#aaa196}
 @media(max-width:480px){
-  .bill-item-quantity-control{width:82px;min-width:82px;flex-basis:82px;height:32px}
-  .quantity-stepper-button{width:24px;height:26px;flex-basis:24px;font-size:17px}
-  .quantity-value{min-width:18px;font-size:11px}
+  .order-round-item{gap:8px;padding:8px 6px}
+  .order-round-item .bill-item-checkbox{width:17px;height:17px;flex-basis:17px}
 }
