@@ -20,6 +20,8 @@ a{color:inherit}
 .connection-status.is-connected .status-dot{background:#579755}
 .connection-status.is-error{border-color:#efd6d2;background:#fff4f2;color:var(--red)}
 .connection-status.is-error .status-dot{background:var(--red)}
+.connection-status.is-preview{border-color:#eadbc7;background:#fff9f0;color:#8b603d}
+.connection-status.is-preview .status-dot{background:var(--accent)}
 .cashier-main{width:min(1440px,100%);margin:0 auto;padding:27px clamp(14px,3vw,38px) 45px}
 .page-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
 .eyebrow{display:block;margin-bottom:5px;color:var(--accent-dark);font-size:9px;font-weight:850;letter-spacing:1.2px}
