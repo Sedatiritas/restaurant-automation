@@ -73,12 +73,12 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#billTableList").innerHTML = tables.map(function (table) {
       const selected = String(table.id) === String(state.selectedTableId);
       const open = tableHasOpenBill(table);
-      const detail = Number(table.openOrderCount || table.roundCount || 0) + " sipariş";
+      const detail = Number(table.openOrderCount || table.roundCount || 0) + " sipariş turu";
       return '<button type="button" class="bill-table-card ' + (selected ? "active" : "") + '" data-table-id="' + escapeHtml(table.id) + '"' +
         (open ? "" : ' disabled aria-label="' + escapeHtml(table.name) + ', açık hesap yok"') + '>' +
         '<span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>' + escapeHtml(table.name) + '</strong><small>' +
         (Number(table.seats) || 0) + ' kişilik masa · ' + (open ? detail : "Hesap kapalı") + '</small></span></span>' +
-        '<span class="bill-table-end"><strong>' + escapeHtml(money(table.openTotal)) + '</strong><small>' + (open ? "Açık hesap" : "Boş") + '</small></span></button>';
+        '<span class="bill-table-end"><strong>' + escapeHtml(money(table.openTotal)) + '</strong><small>Toplam</small></span></button>';
     }).join("");
   }
   function billRounds() {
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const productMarkup = items.map(function (item) {
         const qty = Number(item.quantity) || 0;
         const unitPrice = Number(item.price != null ? item.price : item.unitPrice) || 0;
-        return '<div class="order-round-item"><span>' + escapeHtml(item.name) + ' × ' + qty + '</span><strong>' + escapeHtml(money(unitPrice * qty)) + '</strong></div>';
+        return '<div class="order-round-item"><span class="order-product-details"><strong>' + escapeHtml(item.name) + '</strong><small>' + escapeHtml(money(unitPrice)) + ' × ' + qty + '</small></span><strong class="order-line-total">' + escapeHtml(money(unitPrice * qty)) + '</strong></div>';
       }).join("");
       return '<article class="order-round"><div class="order-round-head"><strong>Sipariş turu #' + escapeHtml(order.roundNumber || index + 1) + '</strong><span>' + escapeHtml(dateText) + '</span></div>' +
         productMarkup + '<div class="order-round-total"><span>Tur toplamı</span><strong>' + escapeHtml(money(roundTotal)) + '</strong></div></article>';
@@ -109,10 +109,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const bill = state.bill;
     if (!bill) {
       $("#selectedTableName").textContent = "Masa seçilmedi";
-      $("#selectedTableMeta").textContent = "Bir masa seçerek siparişleri ve toplam ücreti görüntüle.";
+      $("#selectedTableMeta").textContent = "Ürünler ve tutarlar burada görünecek.";
       $("#selectedBillStatus").textContent = "Bekliyor";
       $("#selectedBillStatus").className = "bill-status";
-      $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın siparişleri ve toplam ücreti burada görünecek.</span></div>';
+      $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın ürünleri ve tutarları burada görüntülenecek.</span></div>';
       $("#billTotal").textContent = money(0);
       return;
     }
