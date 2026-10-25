@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false };
+  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false };
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
   const toastEl = $("#cashierToast");
@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function setConnection(status, label) {
     connectionStatus.classList.toggle("is-connected", status === "connected");
     connectionStatus.classList.toggle("is-error", status === "error");
+    connectionStatus.classList.toggle("is-preview", status === "preview");
     connectionStatus.querySelector("span:last-child").textContent = label;
   }
   async function api(path) {
@@ -132,6 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#refreshButton").disabled = true;
     try {
       const payload = await api("/api/cashier/tables");
+      state.apiLoaded = true;
       state.tables = Array.isArray(payload.tables) ? payload.tables : [];
       const preferred = preferredId != null ? preferredId : state.selectedTableId;
       const stillExists = preferred != null && state.tables.some(function (table) { return String(table.id) === String(preferred) && tableHasOpenBill(table); });
@@ -147,18 +149,21 @@ document.addEventListener("DOMContentLoaded", function () {
       if (state.selectedTableId != null) await loadBill(state.selectedTableId);
       else { state.bill = null; renderBill(); }
     } catch (error) {
-      setConnection("error", "Bağlantı yok");
-      notice.hidden = false;
-      state.tables = [];
-      state.bill = null;
-      renderMetrics();
-      renderTables();
-      renderBill();
+      if (!state.apiLoaded) {
+        // API henüz hazır değilken HTML'deki tasarım örneklerini görünür bırak.
+        setConnection("preview", "Örnek görünüm");
+        notice.hidden = true;
+      } else {
+        setConnection("error", "Bağlantı yok");
+        notice.hidden = false;
+      }
     } finally {
       state.loading = false;
       $("#refreshButton").disabled = false;
-      renderTables();
-      renderBill();
+      if (state.apiLoaded) {
+        renderTables();
+        renderBill();
+      }
     }
   }
   async function loadBill(tableId) {
