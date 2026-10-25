@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2" };
+  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2", demoClosedIds: new Set() };
 
   const demoBills = {
     "1": { name: "Masa 01", seats: 2, total: 320, orders: [{ roundNumber: 1, sentAt: "14:10", items: [
@@ -55,7 +55,21 @@ document.addEventListener("DOMContentLoaded", function () {
     return payload || {};
   }
   function tableHasOpenBill(table) {
-    return table.hasOpenBill === true || Number(table.openTotal) > 0 || Number(table.openOrderCount) > 0;
+    if (!table) return false;
+
+    // When the API explicitly tells us the bill is open/closed, trust that value over any stale total.
+    if (typeof table.hasOpenBill === "boolean") return table.hasOpenBill;
+    if (typeof table.isOpen === "boolean") return table.isOpen;
+
+    const status = String(table.billStatus || table.accountStatus || table.status || "")
+      .trim()
+      .toLocaleLowerCase("tr");
+    if (["closed", "kapalı", "kapali", "empty", "boş", "bos", "paid", "ödendi", "odendi"].includes(status)) return false;
+    if (["open", "açık", "acik", "active", "pending", "confirmed"].includes(status)) return true;
+
+    if (table.openOrderCount != null) return Number(table.openOrderCount) > 0;
+    if (table.roundCount != null) return Number(table.roundCount) > 0;
+    return Number(table.openTotal) > 0;
   }
   function tableSearchText(table) {
     return (String(table.name || "") + " " + String(table.id || "")).toLocaleLowerCase("tr");
@@ -91,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
         (open ? "" : ' disabled aria-label="' + escapeHtml(table.name) + ', açık hesap yok"') + '>' +
         '<span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>' + escapeHtml(table.name) + '</strong><small>' +
         (Number(table.seats) || 0) + ' kişilik masa · ' + (open ? detail : "Hesap kapalı") + '</small></span></span>' +
-        '<span class="bill-table-end"><strong>' + escapeHtml(money(table.openTotal)) + '</strong><small>Toplam</small></span></button>';
+        '<span class="bill-table-end"><strong>' + escapeHtml(open ? money(table.openTotal) : "—") + '</strong><small>' + (open ? "Açık adisyon" : "Kapalı masa") + '</small></span></button>';
     }).join("");
   }
   function billRounds() {
@@ -136,6 +150,8 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderBill() {
     const bill = state.bill;
     if (!bill) {
+      const closeButton = $("#closeBillButton");
+      if (closeButton) closeButton.disabled = true;
       $("#selectedTableName").textContent = "Masa seçilmedi";
       $("#selectedTableMeta").textContent = "Ürünler ve tutarlar burada görünecek.";
       $("#selectedBillStatus").textContent = "Bekliyor";
@@ -144,6 +160,8 @@ document.addEventListener("DOMContentLoaded", function () {
       $("#billTotal").textContent = money(0);
       return;
     }
+    const closeButton = $("#closeBillButton");
+    if (closeButton) closeButton.disabled = false;
     const table = bill.table || {};
     const rounds = billRounds();
     const lines = billLines();
@@ -186,19 +204,37 @@ document.addEventListener("DOMContentLoaded", function () {
     const query = state.query.toLocaleLowerCase("tr").trim();
     let visibleCount = 0;
     $(".demo-table-card").forEach(function (card) {
-      const isOpen = card.dataset.demoOpen === "true";
+      const tableId = String(card.dataset.demoTableId);
+      const isOpen = card.dataset.demoOpen === "true" && !state.demoClosedIds.has(tableId);
       const isVisibleByFilter = state.filter === "all" || isOpen;
       const matchesSearch = !query || card.textContent.toLocaleLowerCase("tr").includes(query);
       card.hidden = !(isVisibleByFilter && matchesSearch);
-      const selected = card.dataset.demoTableId === state.demoSelectedId;
+      card.disabled = !isOpen;
+      const selected = tableId === String(state.demoSelectedId);
       card.classList.toggle("active", selected);
       card.setAttribute("aria-pressed", selected ? "true" : "false");
       if (!card.hidden) visibleCount += 1;
     });
     $("#tableResultCount").textContent = visibleCount + " masa";
   }
+  function clearDemoBill() {
+    $("#selectedTableName").textContent = "Masa seçilmedi";
+    $("#selectedTableMeta").textContent = "Açık adisyonu olan bir masa seç.";
+    $("#selectedBillStatus").textContent = "Bekliyor";
+    $("#selectedBillStatus").className = "bill-status";
+    $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Açık adisyon seçilmedi</strong><span>Açık adisyonlar sekmesinden başka bir masa seçebilirsin.</span></div>';
+    $("#billTotal").textContent = money(0);
+    const closeButton = $("#closeBillButton");
+    if (closeButton) closeButton.disabled = true;
+  }
   function renderDemoBill(tableId) {
     const table = demoBills[String(tableId)];
+    if (!table || state.demoClosedIds.has(String(tableId))) {
+      clearDemoBill();
+      return;
+    }
+    const closeButton = $("#closeBillButton");
+    if (closeButton) closeButton.disabled = false;
     if (!table) return;
     $("#selectedTableName").textContent = table.name;
     $("#selectedTableMeta").textContent = table.seats + " kişilik masa · " + table.orders.length + " sipariş turu";
@@ -239,7 +275,37 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   async function closeBill() {
     if (!state.apiLoaded) {
-      notify("Bu örnek ekranda adisyon kapatılamaz. Backend kapatma bağlantısı tamamlandığında çalışacak.");
+      const demoId = String(state.demoSelectedId || "");
+      const demoBill = demoBills[demoId];
+      if (!demoBill || state.demoClosedIds.has(demoId)) {
+        notify("Önce açık adisyonu olan bir masa seç.");
+        return;
+      }
+
+      const demoTotal = getFullBillTotal();
+      const demoTableName = demoBill.name;
+      const confirmedDemo = window.confirm(
+        demoTableName + " adisyonunun tamamını (" + money(demoTotal) + ") kapatmak istiyor musun?\\n\\nBu işlem örnek ekrandaki tüm adisyonu kapatır."
+      );
+      if (!confirmedDemo) return;
+
+      const demoCard = $('#billTableList [data-demo-table-id="' + demoId + '"]');
+      state.demoClosedIds.add(demoId);
+      if (demoCard) {
+        demoCard.dataset.demoOpen = "false";
+        demoCard.disabled = true;
+        const info = demoCard.querySelector(".bill-table-info small");
+        const amount = demoCard.querySelector(".bill-table-end strong");
+        const status = demoCard.querySelector(".bill-table-end small");
+        if (info) info.textContent = info.textContent.replace("Adisyon açık", "Kapalı masa").replace("Seçili masa", "Kapalı masa");
+        if (amount) amount.textContent = "—";
+        if (status) status.textContent = "Kapalı masa";
+      }
+
+      state.demoSelectedId = null;
+      renderDemoTables();
+      clearDemoBill();
+      notify("Örnek adisyon kapatıldı. Gerçek adisyonların kalıcı kapanması için backend API'si gerekir.");
       return;
     }
     if (state.selectedTableId == null || !state.bill) {
