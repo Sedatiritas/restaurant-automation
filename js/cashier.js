@@ -215,6 +215,78 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#billTotal").textContent = money(table.total);
     updateSelectedTotals();
   }
+
+  function getFullBillTotal() {
+    if (state.apiLoaded && state.bill) {
+      if (state.bill.total != null && Number.isFinite(Number(state.bill.total))) {
+        return Math.max(0, Number(state.bill.total) || 0);
+      }
+      return billRounds().reduce(function (sum, order) {
+        const items = Array.isArray(order.items) ? order.items : [];
+        return sum + items.reduce(function (orderSum, item) {
+          const price = Number(item.price != null ? item.price : item.unitPrice) || 0;
+          return orderSum + price * (Number(item.quantity) || 0);
+        }, 0);
+      }, 0);
+    }
+    const demoBill = demoBills[String(state.demoSelectedId)];
+    if (!demoBill) return 0;
+    return demoBill.orders.reduce(function (sum, order) {
+      return sum + order.items.reduce(function (orderSum, item) {
+        return orderSum + (Number(item.price) || 0) * (Number(item.quantity) || 0);
+      }, 0);
+    }, 0);
+  }
+  async function closeBill() {
+    if (!state.apiLoaded) {
+      notify("Bu örnek ekranda adisyon kapatılamaz. Backend kapatma bağlantısı tamamlandığında çalışacak.");
+      return;
+    }
+    if (state.selectedTableId == null || !state.bill) {
+      notify("Önce açık adisyonu olan bir masa seç.");
+      return;
+    }
+
+    const tableName = $("#selectedTableName").textContent.trim();
+    const fullTotal = getFullBillTotal();
+    const confirmed = window.confirm(
+      tableName + " adisyonunun tamamını (" + money(fullTotal) + ") kapatmak istiyor musun?\n\nBu işlem yalnızca seçili ürünleri değil, masanın tüm adisyonunu kapatır."
+    );
+    if (!confirmed) return;
+
+    const button = $("#closeBillButton");
+    const originalMarkup = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>Adisyon kapatılıyor...</span>';
+    try {
+      const response = await fetch("/api/cashier/tables/" + encodeURIComponent(state.selectedTableId) + "/close", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+      });
+      const payload = await response.json().catch(function () { return null; });
+      if (!response.ok) {
+        const message = payload && payload.message
+          ? payload.message
+          : "Adisyon kapatılamadı. Sunucuda kapatma API'si henüz bulunmuyor veya istek başarısız oldu.";
+        throw new Error(message);
+      }
+
+      notify("Adisyon kapatıldı.");
+      state.selectedTableId = null;
+      state.bill = null;
+      await loadTables(null);
+    } catch (error) {
+      notify(error.message || "Adisyon kapatılırken bir hata oluştu.");
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalMarkup;
+    }
+  }
   async function loadTables(preferredId) {
     state.loading = true;
     setConnection("connecting", "Bağlanıyor");
@@ -304,6 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
   $("#refreshButton").addEventListener("click", function () { loadTables(state.selectedTableId); });
+  $("#closeBillButton").addEventListener("click", closeBill);
 
   loadTables();
 });
