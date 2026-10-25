@@ -1,10 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", paymentMethod: "cash", loading: false };
+  const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false };
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
-  const checkoutButton = $("#checkoutButton");
   const toastEl = $("#cashierToast");
   const toastMessage = $("#cashierToastMessage");
   const toast = window.bootstrap && toastEl ? bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 2800 }) : null;
@@ -27,14 +26,12 @@ document.addEventListener("DOMContentLoaded", function () {
     connectionStatus.classList.toggle("is-error", status === "error");
     connectionStatus.querySelector("span:last-child").textContent = label;
   }
-  async function api(path, options) {
-    const config = Object.assign({ method: "GET", credentials: "same-origin", headers: { "Accept": "application/json" } }, options || {});
-    config.headers = Object.assign({ "Accept": "application/json" }, config.headers || {});
-    if (config.body && typeof config.body !== "string") {
-      config.headers["Content-Type"] = "application/json";
-      config.body = JSON.stringify(config.body);
-    }
-    const response = await fetch(path, config);
+  async function api(path) {
+    const response = await fetch(path, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" }
+    });
     const payload = await response.json().catch(function () { return null; });
     if (!response.ok) {
       const message = payload && payload.message ? payload.message : "İstek başarısız oldu (" + response.status + ").";
@@ -110,16 +107,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function renderBill() {
     const bill = state.bill;
-    const enabled = Boolean(bill && billRounds().length && !state.loading);
-    checkoutButton.disabled = !enabled;
     if (!bill) {
       $("#selectedTableName").textContent = "Masa seçilmedi";
-      $("#selectedTableMeta").textContent = "Ödeme almak için açık adisyon seç.";
+      $("#selectedTableMeta").textContent = "Bir masa seçerek siparişleri ve toplam ücreti görüntüle.";
       $("#selectedBillStatus").textContent = "Bekliyor";
       $("#selectedBillStatus").className = "bill-status";
-      $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-cash-coin"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın siparişleri ve toplam tutarı burada görünecek.</span></div>';
+      $("#billDetailBody").innerHTML = '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın siparişleri ve toplam ücreti burada görünecek.</span></div>';
       $("#billTotal").textContent = money(0);
-      updateCashChange();
       return;
     }
     const table = bill.table || {};
@@ -131,20 +125,11 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#selectedBillStatus").className = "bill-status " + (rounds.length ? "is-open" : "");
     $("#billDetailBody").innerHTML = lines.markup || '<div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Bu masada açık sipariş yok</strong><span>Başka bir masa seçebilirsin.</span></div>';
     $("#billTotal").textContent = money(lines.total);
-    updateCashChange();
-  }
-  function updateCashChange() {
-    const total = billLines().total;
-    const received = Number($("#cashReceived").value) || 0;
-    $("#cashChange").textContent = money(Math.max(0, received - total));
-    const cashReady = state.paymentMethod !== "cash" || received >= total;
-    checkoutButton.disabled = !(state.bill && billRounds().length && total > 0 && cashReady && !state.loading);
   }
   async function loadTables(preferredId) {
     state.loading = true;
     setConnection("connecting", "Bağlanıyor");
     $("#refreshButton").disabled = true;
-    checkoutButton.disabled = true;
     try {
       const payload = await api("/api/cashier/tables");
       state.tables = Array.isArray(payload.tables) ? payload.tables : [];
@@ -195,50 +180,6 @@ document.addEventListener("DOMContentLoaded", function () {
       renderBill();
     }
   }
-  function setPaymentMethod(method) {
-    state.paymentMethod = method;
-    $$(".payment-method").forEach(function (button) {
-      const selected = button.dataset.paymentMethod === method;
-      button.classList.toggle("active", selected);
-      button.setAttribute("aria-pressed", String(selected));
-    });
-    $("#cashReceivedField").hidden = method !== "cash";
-    updateCashChange();
-  }
-  async function completeCheckout() {
-    if (!state.bill || state.selectedTableId == null || state.loading) return;
-    const amountDue = billLines().total;
-    const amountReceived = state.paymentMethod === "cash" ? Number($("#cashReceived").value) : amountDue;
-    if (state.paymentMethod === "cash" && (!Number.isFinite(amountReceived) || amountReceived < amountDue)) {
-      notify("Alınan nakit, ödenecek toplamdan az olamaz.");
-      return;
-    }
-    const tableId = state.selectedTableId;
-    const confirmed = window.confirm("Bu masa için " + money(amountDue) + " tutarında " + (state.paymentMethod === "cash" ? "nakit" : "kart") + " ödemesini tamamlamak istiyor musun?");
-    if (!confirmed) return;
-    state.loading = true;
-    checkoutButton.disabled = true;
-    checkoutButton.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>İşleniyor</span>';
-    try {
-      const result = await api("/api/cashier/tables/" + encodeURIComponent(tableId) + "/checkout", {
-        method: "POST",
-        body: { paymentMethod: state.paymentMethod, amountReceived: amountReceived }
-      });
-      state.bill = null;
-      state.selectedTableId = null;
-      $("#cashReceived").value = "";
-      notify(result.message || "Ödeme sunucu tarafından tamamlandı.");
-      await loadTables();
-    } catch (error) {
-      notify(error.status === 404 ? "Kasa API rotası henüz hazır değil." : (error.message || "Ödeme tamamlanamadı."));
-    } finally {
-      state.loading = false;
-      checkoutButton.innerHTML = '<i class="bi bi-check2-circle"></i><span>Ödemeyi tamamla</span>';
-      renderTables();
-      renderBill();
-    }
-  }
-
   $("#billTableList").addEventListener("click", function (event) {
     const button = event.target.closest("[data-table-id]");
     if (button) loadBill(button.dataset.tableId);
@@ -251,13 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
       renderTables();
     });
   });
-  $$(".payment-method").forEach(function (button) {
-    button.addEventListener("click", function () { setPaymentMethod(button.dataset.paymentMethod); });
-  });
-  $("#cashReceived").addEventListener("input", updateCashChange);
-  $("#checkoutButton").addEventListener("click", completeCheckout);
   $("#refreshButton").addEventListener("click", function () { loadTables(state.selectedTableId); });
 
-  setPaymentMethod("cash");
   loadTables();
 });
