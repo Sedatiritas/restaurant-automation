@@ -1,9 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
-  function localDateValue(date) {
-    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
-  }
   const state = { tables: [], selectedTableId: null, bill: null, filter: "open", query: "", loading: false, apiLoaded: false, demoSelectedId: "2", demoClosedIds: new Set() };
 
   const demoBills = {
@@ -45,8 +42,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function saveDemoSale(tableId, tableName, amount, paymentMethod) {
     try {
-      const current = JSON.parse(localStorage.getItem("roastCashier_sales") || "[]");
-      const sales = Array.isArray(current) ? current : [];
+      const saved = JSON.parse(localStorage.getItem("roastCashier_sales") || "[]");
+      const sales = Array.isArray(saved) ? saved : [];
       const now = new Date();
       sales.push({
         id: "demo-sale-" + now.getTime() + "-" + String(tableId),
@@ -54,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
         tableName: tableName,
         amount: Number(amount) || 0,
         paymentMethod: paymentMethod,
-        date: localDateValue(now),
+        date: now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0"),
         closedAt: now.toISOString(),
         source: "preview"
       });
@@ -244,14 +241,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const matchesSearch = !query || card.textContent.toLocaleLowerCase("tr").includes(query);
       card.hidden = !(isVisibleByFilter && matchesSearch);
       card.disabled = !isOpen;
-      if (state.demoClosedIds.has(tableId)) {
-        const info = card.querySelector(".bill-table-info small");
-        const amount = card.querySelector(".bill-table-end strong");
-        const status = card.querySelector(".bill-table-end small");
-        if (info) info.textContent = info.textContent.replace("Adisyon açık", "Kapalı masa").replace("Seçili masa", "Kapalı masa");
-        if (amount) amount.textContent = "—";
-        if (status) status.textContent = "Kapalı masa";
-      }
       const selected = tableId === String(state.demoSelectedId);
       card.classList.toggle("active", selected);
       card.setAttribute("aria-pressed", selected ? "true" : "false");
