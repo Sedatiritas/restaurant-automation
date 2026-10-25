@@ -100,16 +100,18 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderProductRow(item, controlId) {
     const orderedQuantity = Math.max(0, Math.floor(Number(item.quantity) || 0));
     const unitPrice = Number(item.price != null ? item.price : item.unitPrice) || 0;
-    const fullLineTotal = unitPrice * orderedQuantity;
     const safeName = escapeHtml(item.name);
-    const selectionControl = '<div class="bill-item-quantity-control" data-unit-price="' + unitPrice + '" data-ordered-quantity="' + orderedQuantity + '" data-selected-quantity="' + orderedQuantity + '" aria-label="' + safeName + ' için seçilen adet">' +
-      '<button class="quantity-stepper-button" type="button" data-quantity-action="decrease" aria-label="' + safeName + ' adedini azalt"' + (orderedQuantity === 0 ? " disabled" : "") + '>−</button>' +
-      '<output class="quantity-value" aria-live="polite">' + orderedQuantity + '</output>' +
-      '<button class="quantity-stepper-button" type="button" data-quantity-action="increase" aria-label="' + safeName + ' adedini artır" disabled>+</button></div>';
-    const quantityDescription = escapeHtml(money(unitPrice)) + ' / adet · ' + orderedQuantity + ' sipariş edildi';
-    return '<div class="order-round-item' + (orderedQuantity > 0 ? ' is-selected' : '') + '">' + selectionControl +
-      '<span class="order-product-details"><strong>' + safeName + '</strong><small>' + quantityDescription + '</small></span>' +
-      '<strong class="order-line-total">' + escapeHtml(money(fullLineTotal)) + '</strong></div>';
+    if (orderedQuantity <= 0) return "";
+
+    // Adetleri tek tek satırlara aç: aynı üründen iki tane varsa iki bağımsız seçim göster.
+    return Array.from({ length: orderedQuantity }, function (_, index) {
+      const checkboxId = controlId + "-unit-" + (index + 1);
+      const lineDescription = (index + 1) + " / " + orderedQuantity + " adet · " + escapeHtml(money(unitPrice));
+      return '<label class="order-round-item is-selected" for="' + checkboxId + '">' +
+        '<input class="bill-item-checkbox" id="' + checkboxId + '" type="checkbox" checked data-line-total="' + unitPrice + '" aria-label="' + safeName + ' ' + (index + 1) + '. adet hesaba dahil et">' +
+        '<span class="order-product-details"><strong>' + safeName + '</strong><small>' + lineDescription + '</small></span>' +
+        '<strong class="order-line-total">' + escapeHtml(money(unitPrice)) + '</strong></label>';
+    }).join("");
   }
   function billLines() {
     let total = 0;
@@ -161,33 +163,15 @@ document.addEventListener("DOMContentLoaded", function () {
     $$("#billDetailBody .order-round").forEach(function (round) {
       let roundTotal = 0;
       round.querySelectorAll(".order-round-item").forEach(function (row) {
-        const stepper = row.querySelector(".bill-item-quantity-control");
         const checkbox = row.querySelector(".bill-item-checkbox");
-        let lineTotal = 0;
-        let selected = false;
+        if (!checkbox) return;
 
-        if (stepper) {
-          const orderedQuantity = Math.max(0, Math.floor(Number(stepper.dataset.orderedQuantity) || 0));
-          const selectedQuantity = Math.min(orderedQuantity, Math.max(0, Math.floor(Number(stepper.dataset.selectedQuantity) || 0)));
-          const unitPrice = Number(stepper.dataset.unitPrice) || 0;
-          lineTotal = unitPrice * selectedQuantity;
-          selected = selectedQuantity > 0;
-
-          const valueOutput = stepper.querySelector(".quantity-value");
-          const decreaseButton = stepper.querySelector('[data-quantity-action="decrease"]');
-          const increaseButton = stepper.querySelector('[data-quantity-action="increase"]');
-          if (valueOutput) valueOutput.textContent = selectedQuantity;
-          if (decreaseButton) decreaseButton.disabled = selectedQuantity <= 0;
-          if (increaseButton) increaseButton.disabled = selectedQuantity >= orderedQuantity;
-        } else if (checkbox) {
-          lineTotal = Number(checkbox.dataset.lineTotal) || 0;
-          selected = checkbox.checked;
-          if (!selected) lineTotal = 0;
-        }
-
+        const lineTotal = checkbox.checked ? (Number(checkbox.dataset.lineTotal) || 0) : 0;
+        const selected = checkbox.checked;
         const lineTotalElement = row.querySelector(".order-line-total");
         if (lineTotalElement) lineTotalElement.textContent = money(lineTotal);
         row.classList.toggle("is-selected", selected);
+
         if (selected) {
           selectedTotal += lineTotal;
           roundTotal += lineTotal;
@@ -302,18 +286,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     const button = event.target.closest("[data-table-id]");
     if (button && state.apiLoaded) loadBill(button.dataset.tableId);
-  });
-  $("#billDetailBody").addEventListener("click", function (event) {
-    const stepperButton = event.target.closest("[data-quantity-action]");
-    if (!stepperButton || stepperButton.disabled) return;
-    const stepper = stepperButton.closest(".bill-item-quantity-control");
-    if (!stepper) return;
-
-    const maximum = Math.max(0, Math.floor(Number(stepper.dataset.orderedQuantity) || 0));
-    const currentQuantity = Math.max(0, Math.floor(Number(stepper.dataset.selectedQuantity) || 0));
-    const direction = stepperButton.dataset.quantityAction === "increase" ? 1 : -1;
-    stepper.dataset.selectedQuantity = String(Math.min(maximum, Math.max(0, currentQuantity + direction)));
-    updateSelectedTotals();
   });
   $("#billDetailBody").addEventListener("change", function (event) {
     if (event.target.matches(".bill-item-checkbox")) updateSelectedTotals();
