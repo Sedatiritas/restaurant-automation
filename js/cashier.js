@@ -467,9 +467,9 @@ document.addEventListener("DOMContentLoaded", function () {
   $("#billDetailBody").addEventListener("change", function (event) {
     if (event.target.matches(".bill-item-checkbox")) updateSelectedTotals();
   });
-  $('input[name="paymentMethod"]').forEach(function (input) {
+  $$('input[name="paymentMethod"]').forEach(function (input) {
     input.addEventListener("change", function () {
-      $(".payment-method-option").forEach(function (option) {
+      $$(".payment-method-option").forEach(function (option) {
         const radio = option.querySelector('input[name="paymentMethod"]');
         option.classList.toggle("is-selected", Boolean(radio && radio.checked));
       });
