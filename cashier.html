@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5f0">
+  <meta name="description" content="Roast & Co. kasa ve ödeme yönetimi">
+  <title>Kasa | Roast &amp; Co.</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/cashier.css">
+</head>
+<body>
+  <div class="cashier-app">
+    <header class="cashier-topbar">
+      <a class="cashier-brand" href="cashier.html" aria-label="Kasa ana sayfa">
+        <span class="brand-mark"><i class="bi bi-cash-stack"></i></span>
+        <span><strong id="cashierBrandName">roast &amp; co.</strong><small>KASA</small></span>
+      </a>
+      <div class="topbar-actions">
+        <span class="connection-status" id="connectionStatus"><span class="status-dot"></span><span>Bağlanıyor</span></span>
+        <a class="topbar-link" href="waiter.html"><i class="bi bi-receipt-cutoff"></i><span>Garson</span></a>
+        <a class="topbar-link" href="admin.html"><i class="bi bi-grid-1x2"></i><span>Yönetim</span></a>
+      </div>
+    </header>
+
+    <main class="cashier-main">
+      <section class="page-heading">
+        <div>
+          <span class="eyebrow">ÖDEME VE ADİSYON</span>
+          <h1>Kasa</h1>
+          <p>Açık hesapları kontrol et, ödeme yöntemini seç ve tahsilatı tamamla.</p>
+        </div>
+        <button class="refresh-button" id="refreshButton" type="button"><i class="bi bi-arrow-clockwise"></i><span>Yenile</span></button>
+      </section>
+
+      <div class="api-notice" id="apiNotice" hidden role="status">
+        <i class="bi bi-info-circle"></i>
+        <div><strong>Kasa servisi henüz bağlanmadı.</strong><span>Bu ekran verileri API üzerinden alacak. Ödeme ve adisyon kapatma işlemleri sunucu tarafında yapılacak.</span></div>
+      </div>
+
+      <section class="metrics-grid" aria-label="Kasa özeti">
+        <article class="metric-card">
+          <span class="metric-icon"><i class="bi bi-receipt"></i></span>
+          <span class="metric-copy"><small>Açık hesap</small><strong id="openBillCount">—</strong></span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon metric-icon-warm"><i class="bi bi-wallet2"></i></span>
+          <span class="metric-copy"><small>Tahsil edilecek</small><strong id="openBillTotal">—</strong></span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon metric-icon-green"><i class="bi bi-grid-3x3-gap"></i></span>
+          <span class="metric-copy"><small>Hesabı açık masa</small><strong id="openTableCount">—</strong></span>
+        </article>
+      </section>
+
+      <section class="cashier-layout">
+        <section class="panel table-panel" aria-label="Açık adisyonlar">
+          <div class="panel-heading">
+            <div><span class="eyebrow">MASALAR</span><h2>Adisyonlar</h2><p>Hesabı açık olan masayı seç.</p></div>
+            <span class="count-pill" id="tableResultCount">0 masa</span>
+          </div>
+          <div class="table-tools">
+            <label class="search-control"><i class="bi bi-search"></i><input id="tableSearch" type="search" placeholder="Masa ara..." autocomplete="off" aria-label="Masa ara"></label>
+            <div class="filter-pills" role="group" aria-label="Masa filtresi">
+              <button type="button" class="filter-pill active" data-filter="open">Açık hesap</button>
+              <button type="button" class="filter-pill" data-filter="all">Tüm masalar</button>
+            </div>
+          </div>
+          <div class="bill-table-list" id="billTableList" aria-live="polite">
+            <div class="list-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Adisyonlar yükleniyor</strong><span>Kasa verileri sunucudan alınacak.</span></div>
+          </div>
+        </section>
+
+        <section class="panel bill-detail-panel" aria-label="Seçili masa hesabı">
+          <div class="panel-heading detail-panel-heading">
+            <div><span class="eyebrow">HESAP DETAYI</span><h2 id="selectedTableName">Masa seçilmedi</h2><p id="selectedTableMeta">Ödeme almak için açık adisyon seç.</p></div>
+            <span class="bill-status" id="selectedBillStatus">Bekliyor</span>
+          </div>
+          <div class="bill-detail-body" id="billDetailBody">
+            <div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-cash-coin"></i></span><strong>Bir masa seç</strong><span>Seçtiğin masanın siparişleri ve toplam tutarı burada görünecek.</span></div>
+          </div>
+          <div class="checkout-section" id="checkoutSection">
+            <div class="bill-total-row"><span>Ödenecek toplam</span><strong id="billTotal">₺0,00</strong></div>
+            <div class="payment-method-title">Ödeme yöntemi</div>
+            <div class="payment-methods" role="group" aria-label="Ödeme yöntemi">
+              <button type="button" class="payment-method active" data-payment-method="cash" aria-pressed="true"><i class="bi bi-cash"></i><span>Nakit</span></button>
+              <button type="button" class="payment-method" data-payment-method="card" aria-pressed="false"><i class="bi bi-credit-card"></i><span>Kart</span></button>
+            </div>
+            <div class="cash-received-field" id="cashReceivedField">
+              <label for="cashReceived">Alınan nakit (TL)</label>
+              <input class="form-control" id="cashReceived" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Alınan tutarı gir">
+              <div class="change-row"><span>Para üstü</span><strong id="cashChange">₺0,00</strong></div>
+            </div>
+            <button class="checkout-button" id="checkoutButton" type="button" disabled><i class="bi bi-check2-circle"></i><span>Ödemeyi tamamla</span></button>
+            <p class="checkout-footnote"><i class="bi bi-shield-check"></i> Ödeme doğrulaması ve adisyon kapatma sunucuda yapılır.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="cashierToast" class="toast border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex"><div class="toast-body" id="cashierToastMessage"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/cashier.js"></script>
+</body>
+</html>
