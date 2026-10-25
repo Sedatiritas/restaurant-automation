@@ -184,15 +184,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const checkbox = row.querySelector(".bill-item-checkbox");
         if (!checkbox) return;
 
-        const lineTotal = checkbox.checked ? (Number(checkbox.dataset.lineTotal) || 0) : 0;
+        const unitTotal = Number(checkbox.dataset.lineTotal) || 0;
         const selected = checkbox.checked;
         const lineTotalElement = row.querySelector(".order-line-total");
-        if (lineTotalElement) lineTotalElement.textContent = money(lineTotal);
+
+        // Keep the original item price visible even when it is excluded from this split.
+        if (lineTotalElement) lineTotalElement.textContent = money(unitTotal);
         row.classList.toggle("is-selected", selected);
 
         if (selected) {
-          selectedTotal += lineTotal;
-          roundTotal += lineTotal;
+          selectedTotal += unitTotal;
+          roundTotal += unitTotal;
         }
       });
       const roundTotalElement = round.querySelector(".order-round-total strong");
