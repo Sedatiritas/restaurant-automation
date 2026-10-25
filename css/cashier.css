@@ -149,3 +149,10 @@ a{color:inherit}
 @media(max-width:480px){
   .bill-table-list{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Tasarım aşamasındaki statik örnek adisyon */
+.demo-table-card{cursor:default}
+.demo-table-card:hover{border-color:var(--border);background:#fcfbf8}
+.demo-open-label{color:var(--green)!important;font-weight:750}
+.connection-status.is-preview{border-color:#eadbc7;background:#fff9f0;color:#8a5838}
+.connection-status.is-preview .status-dot{background:var(--accent)}
