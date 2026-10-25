@@ -49,3 +49,29 @@
 .appearance-savebar{position:sticky;bottom:12px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.96);box-shadow:0 8px 25px #30291f0d;backdrop-filter:blur(10px)}
 .appearance-savebar>span{color:var(--muted);font-size:10px}
 @media(max-width:575.98px){.appearance-section{padding:17px 14px}.appearance-section-heading{align-items:flex-start;margin-bottom:17px}.appearance-savebar{align-items:stretch;flex-direction:column}.appearance-savebar .btn{width:100%}.business-status-control{align-items:flex-start;flex-direction:column}.status-switch{align-self:flex-end}}
+
+
+/* Ciro raporu */
+.revenue-month-filter{display:grid;gap:5px;min-width:165px}
+.revenue-month-filter label{color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase}
+.revenue-preview-note{display:flex;align-items:flex-start;gap:10px;margin:0 0 18px;padding:12px 14px;border:1px solid #eadbc7;border-radius:10px;background:#fff9f0;color:#8a6845;font-size:10px;line-height:1.6}
+.revenue-preview-note>i{padding-top:2px;font-size:15px}
+.revenue-preview-note strong{margin-right:4px;color:#765637}
+.revenue-stats{margin-bottom:18px}
+.revenue-payment-content{padding:20px}
+.revenue-payment-bar{display:flex;overflow:hidden;height:22px;border-radius:8px;background:#eee8df}
+.revenue-payment-cash{display:block;height:100%;background:#b96e43;transition:width .2s ease}
+.revenue-payment-card-segment{display:block;height:100%;background:#6579b8;transition:width .2s ease}
+.revenue-payment-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.revenue-payment-legend>div{display:flex;align-items:center;gap:9px;min-width:0;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fcfbf9}
+.revenue-legend-dot{width:10px;height:10px;flex:0 0 10px;border-radius:3px}
+.revenue-legend-dot.cash{background:#b96e43}
+.revenue-legend-dot.card{background:#6579b8}
+.revenue-payment-legend>div>span:nth-child(2){display:grid;gap:3px;min-width:0}
+.revenue-payment-legend strong{color:var(--ink);font-size:10px}
+.revenue-payment-legend small{color:var(--muted);font-size:9px}
+.revenue-payment-legend b{margin-left:auto;color:var(--ink);font-size:12px;white-space:nowrap}
+.revenue-daily-card{margin-top:17px}
+.revenue-table{min-width:600px}
+.revenue-date{color:var(--ink);font-weight:750}
+@media(max-width:767.98px){.revenue-month-filter{width:100%}.revenue-payment-content{padding:14px}.revenue-payment-legend{grid-template-columns:1fr;gap:8px}.revenue-payment-legend>div{padding:10px}}
