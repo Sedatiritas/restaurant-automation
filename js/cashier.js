@@ -393,8 +393,13 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#refreshButton").disabled = true;
     try {
       const payload = await api("/api/cashier/tables");
+      // HTTP 200 tek başına API'nin hazır olduğunu göstermez. Boş/HTML yanıtı
+      // gelirse örnek masa arayüzüne düşüp masa filtrelerini çalışır tut.
+      if (!payload || !Array.isArray(payload.tables)) {
+        throw new Error("Kasa API'si geçerli bir masa listesi döndürmedi.");
+      }
       state.apiLoaded = true;
-      state.tables = Array.isArray(payload.tables) ? payload.tables : [];
+      state.tables = payload.tables;
       const preferred = preferredId != null ? preferredId : state.selectedTableId;
       const stillExists = preferred != null && state.tables.some(function (table) { return String(table.id) === String(preferred) && tableHasOpenBill(table); });
       if (stillExists) state.selectedTableId = preferred;
