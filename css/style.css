@@ -125,21 +125,102 @@ body {
     line-height: 1.7;
 }
 
-.info-strip {
-    padding: 17px;
-    border: 1px solid var(--menu-border);
+.review-cta-wrap[hidden] { display: none !important; }
+
+.review-cta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 84px;
+    padding: 15px 18px;
+    border: 1px solid #e8d8c7;
     border-radius: 16px;
-    background: var(--menu-card);
+    background: linear-gradient(110deg, #fffdf9 0%, #f8efe5 100%);
+    color: #382b22;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(69, 48, 31, .055);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
-.info-icon { color: var(--menu-accent); font-size: 20px; }
-.info-label { color: var(--menu-muted); font-size: 10px; }
-.info-value { font-size: 12px; font-weight: 650; }
+.review-cta:hover {
+    transform: translateY(-2px);
+    border-color: #caa17e;
+    box-shadow: 0 12px 26px rgba(69, 48, 31, .10);
+    color: #382b22;
+}
 
-.info-divider {
-    width: 1px;
-    height: 34px;
-    background: var(--menu-border);
+.review-cta-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border: 1px solid #eee4d8;
+    border-radius: 14px;
+    background: #fff;
+    color: #4285f4;
+    font-size: 21px;
+}
+
+.review-cta-copy {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.review-cta-copy strong {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -.15px;
+}
+
+.review-cta-copy small {
+    color: #89796b;
+    font-size: 10px;
+}
+
+.review-cta-stars {
+    display: flex;
+    gap: 3px;
+    margin-left: auto;
+    color: #d69a32;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.review-cta-arrow {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border-radius: 50%;
+    background: #4b3427;
+    color: #fff;
+    font-size: 14px;
+}
+
+@media(max-width:575.98px) {
+    .review-cta {
+        gap: 10px;
+        min-height: 76px;
+        padding: 12px;
+    }
+    .review-cta-icon {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+        border-radius: 12px;
+        font-size: 18px;
+    }
+    .review-cta-copy strong { font-size: 11px; }
+    .review-cta-copy small { font-size: 9px; }
+    .review-cta-stars { display: none; }
+    .review-cta-arrow {
+        width: 29px;
+        height: 29px;
+        flex-basis: 29px;
+    }
 }
 
 .section-title {
