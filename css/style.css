@@ -125,8 +125,6 @@ body {
     line-height: 1.7;
 }
 
-.review-cta-wrap[hidden] { display: none !important; }
-
 .review-cta {
     display: flex;
     align-items: center;
@@ -416,9 +414,6 @@ body {
 @media (max-width: 400px) {
     .hero-section { height: 255px; }
     .hero-content { padding: 21px; }
-    .info-strip { padding: 13px 10px; }
-    .info-value { font-size: 10px; }
-    .info-label { font-size: 9px; }
     .featured-image { width: 92px; height: 115px; }
     .featured-card { gap: 11px; }
     .product-image { height: 125px; }
