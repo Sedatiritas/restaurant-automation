@@ -100,12 +100,24 @@ function applySavedAppearance() {
             });
         }
 
-        const infoLabels = document.querySelectorAll(".info-strip .info-label");
-        const infoValues = document.querySelectorAll(".info-strip .info-value");
-        if (infoLabels[0] && appearance.locationLabel) infoLabels[0].textContent = appearance.locationLabel;
-        if (infoValues[0] && appearance.locationText) infoValues[0].textContent = appearance.locationText;
-        if (infoLabels[1] && appearance.hoursLabel) infoLabels[1].textContent = appearance.hoursLabel;
-        if (infoValues[1] && appearance.hoursText) infoValues[1].textContent = appearance.hoursText;
+        const reviewSection = document.getElementById("reviewCtaSection");
+        const reviewLink = document.getElementById("googleReviewLink");
+        const googleReviewUrl = (appearance.googleReviewUrl || "").trim();
+        if (reviewSection && reviewLink) {
+            try {
+                const parsedReviewUrl = new URL(googleReviewUrl);
+                if (["http:", "https:"].includes(parsedReviewUrl.protocol)) {
+                    reviewLink.href = parsedReviewUrl.href;
+                    reviewSection.hidden = false;
+                } else {
+                    reviewLink.removeAttribute("href");
+                    reviewSection.hidden = true;
+                }
+            } catch (error) {
+                reviewLink.removeAttribute("href");
+                reviewSection.hidden = true;
+            }
+        }
 
         if (appearance.accent) document.documentElement.style.setProperty("--menu-accent", appearance.accent);
         const footerBrand = document.querySelector(".footer-brand");
