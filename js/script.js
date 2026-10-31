@@ -100,22 +100,24 @@ function applySavedAppearance() {
             });
         }
 
-        const reviewSection = document.getElementById("reviewCtaSection");
         const reviewLink = document.getElementById("googleReviewLink");
         const googleReviewUrl = (appearance.googleReviewUrl || "").trim();
-        if (reviewSection && reviewLink) {
+        if (reviewLink) {
             try {
                 const parsedReviewUrl = new URL(googleReviewUrl);
                 if (["http:", "https:"].includes(parsedReviewUrl.protocol)) {
                     reviewLink.href = parsedReviewUrl.href;
-                    reviewSection.hidden = false;
+                    reviewLink.removeAttribute("aria-disabled");
+                    reviewLink.removeAttribute("tabindex");
                 } else {
                     reviewLink.removeAttribute("href");
-                    reviewSection.hidden = true;
+                    reviewLink.setAttribute("aria-disabled", "true");
+                    reviewLink.setAttribute("tabindex", "-1");
                 }
             } catch (error) {
                 reviewLink.removeAttribute("href");
-                reviewSection.hidden = true;
+                reviewLink.setAttribute("aria-disabled", "true");
+                reviewLink.setAttribute("tabindex", "-1");
             }
         }
 
