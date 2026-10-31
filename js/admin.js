@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
       {id:3,name:"Zeynep Kaya",email:"zeynep@example.com",role:"Garson",status:"inactive"}
     ],
     settings: {phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
-    appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",isOpen:true,locationLabel:"Bizi ziyaret et",locationText:"Şehrin kalbinde",hoursLabel:"Çalışma saatleri",hoursText:"09.00 – 23.00"}
+    appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",isOpen:true,googleReviewUrl:""}
   };
   function imageFileToDataUrl(file,maxSize) {
     return new Promise(function(resolve,reject){
@@ -227,12 +227,11 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
           </section>
           <section class="appearance-section">
-            <div class="appearance-section-heading"><span class="appearance-section-icon"><i class="bi bi-geo-alt"></i></span><div><h3>Ziyaret ve çalışma saatleri</h3><p>Müşterilerin işletmenizi bulmasına yardımcı olacak bilgileri girin.</p></div></div>
-            <div class="row g-3">
-              <div class="col-md-6"><label class="form-label" for="locationLabel">Konum başlığı</label><input class="form-control" id="locationLabel" name="locationLabel" maxlength="60" value="${escapeHtml(a.locationLabel||"Bizi ziyaret et")}"></div>
-              <div class="col-md-6"><label class="form-label" for="locationText">Konum bilgisi</label><input class="form-control" id="locationText" name="locationText" maxlength="100" value="${escapeHtml(a.locationText||"Şehrin kalbinde")}" placeholder="Örn. Adana, Seyhan"></div>
-              <div class="col-md-6"><label class="form-label" for="hoursLabel">Saatler başlığı</label><input class="form-control" id="hoursLabel" name="hoursLabel" maxlength="60" value="${escapeHtml(a.hoursLabel||"Çalışma saatleri")}"></div>
-              <div class="col-md-6"><label class="form-label" for="hoursText">Çalışma saatleri</label><input class="form-control" id="hoursText" name="hoursText" maxlength="80" value="${escapeHtml(a.hoursText||"09.00 – 23.00")}" placeholder="Örn. Her gün 09.00 – 23.00"></div>
+            <div class="appearance-section-heading"><span class="appearance-section-icon"><i class="bi bi-google"></i></span><div><h3>Google yorum bağlantısı</h3><p>Müşterilerin menüden doğrudan Google yorum sayfanıza ulaşmasını sağlayın.</p></div></div>
+            <div class="mb-3">
+              <label class="form-label" for="googleReviewUrl">Google yorum bağlantısı</label>
+              <input class="form-control" id="googleReviewUrl" name="googleReviewUrl" type="url" maxlength="1000" value="${escapeHtml(a.googleReviewUrl||"")}" placeholder="https://g.page/r/.../review">
+              <div class="form-text">Google İşletme Profilinizdeki yorum paylaşım bağlantısını buraya yapıştırın. Alan boş bırakılırsa müşteri menüsünde yorum butonu gösterilmez.</div>
             </div>
           </section>
           <section class="appearance-section">
@@ -395,8 +394,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if(form.id==="appearanceForm"){
       event.preventDefault();const data=formObject(form);let logo=data.currentLogo||"",cover=data.currentCover||"";
       try{const logoFile=form.querySelector('[name="logoFile"]')?.files?.[0];const coverFile=form.querySelector('[name="coverFile"]')?.files?.[0];if(logoFile)logo=await imageFileToDataUrl(logoFile,500);if(coverFile)cover=await imageFileToDataUrl(coverFile,1400);}catch(error){notify("Görsel işlenemedi. Daha küçük veya farklı bir görsel seçin.");return;}
-      state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:cover,logo:logo,accent:data.accent,isOpen:form.querySelector("#isOpenToggle").checked,locationLabel:data.locationLabel.trim(),locationText:data.locationText.trim(),hoursLabel:data.hoursLabel.trim(),hoursText:data.hoursText.trim()};
-      if(!save("appearance"))return;render("appearance",false);notify("Header ve slider ayarları kaydedildi.");return;
+      const googleReviewUrl=(data.googleReviewUrl||"").trim();
+      if(googleReviewUrl){
+        try{
+          const parsedReviewUrl=new URL(googleReviewUrl);
+          if(!["http:","https:"].includes(parsedReviewUrl.protocol)){notify("Google yorum bağlantısı http veya https ile başlamalıdır.");return;}
+        }catch(error){notify("Geçerli bir Google yorum bağlantısı girin.");return;}
+      }
+      state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:cover,logo:logo,accent:data.accent,isOpen:form.querySelector("#isOpenToggle").checked,googleReviewUrl:googleReviewUrl};
+      if(!save("appearance"))return;render("appearance",false);notify("Menü görünümü ve Google yorum bağlantısı kaydedildi.");return;
     }
     if(form.id==="settingsForm"||form.id==="contactForm"){
       event.preventDefault();const data=formObject(form);Object.keys(data).forEach(function(key){state.settings[key]=data[key].trim();});save("settings");notify("İşletme bilgileri kaydedildi.");return;
