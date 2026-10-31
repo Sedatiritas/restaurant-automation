@@ -267,6 +267,55 @@ const resetFilters = document.querySelector("#resetFilters");
 
 let selectedCategory = "all";
 let searchTerm = "";
+let scrollRevealObserver = null;
+
+function observeScrollReveals() {
+    const targets = document.querySelectorAll(".scroll-reveal:not(.is-visible)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reducedMotion || !("IntersectionObserver" in window)) {
+        targets.forEach((target) => target.classList.add("is-visible"));
+        return;
+    }
+
+    if (scrollRevealObserver) scrollRevealObserver.disconnect();
+
+    scrollRevealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+        });
+    }, {
+        threshold: 0.08,
+        rootMargin: "0px 0px -32px 0px"
+    });
+
+    targets.forEach((target) => scrollRevealObserver.observe(target));
+}
+
+function initializePageAnimations() {
+    const animatedSections = [
+        ".menu-container > header",
+        ".hero-section",
+        "#reviewCtaSection",
+        ".menu-heading",
+        ".search-box",
+        "#categoryList",
+        "#categoryScrollHint",
+        ".products-section",
+        ".menu-footer"
+    ];
+
+    animatedSections.forEach((selector) => {
+        document.querySelectorAll(selector).forEach((element) => {
+            element.classList.add("scroll-reveal");
+        });
+    });
+
+    document.body.classList.add("motion-ready");
+    observeScrollReveals();
+}
 
 const formatPrice = (price) =>
     new Intl.NumberFormat("tr-TR", {
@@ -288,8 +337,8 @@ function renderProducts() {
         return matchesCategory && matchesSearch;
     });
 
-    productList.innerHTML = filteredProducts.map((product) => `
-        <div class="col-6">
+    productList.innerHTML = filteredProducts.map((product, index) => `
+        <div class="col-6 scroll-reveal" style="--reveal-delay: ${Math.min(index % 4, 3) * 45}ms">
             <article class="product-card">
                 <img
                     src="${product.image}"
@@ -318,6 +367,10 @@ function renderProducts() {
         : activeCategoryButton?.textContent.trim() === "Tümü"
             ? "Tüm lezzetler"
             : activeCategoryButton?.textContent.trim() || "Tüm lezzetler";
+
+    if (document.body.classList.contains("motion-ready")) {
+        observeScrollReveals();
+    }
 }
 
 categoryList.addEventListener("click", (event) => {
@@ -381,3 +434,4 @@ applySavedAppearance();
 applySavedBusinessSettings();
 renderProducts();
 updateCategoryScrollHint();
+initializePageAnimations();
