@@ -3,6 +3,7 @@ import helmet from "helmet";
 import { resolve } from "node:path";
 import pageRoutes from "./routes/page.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import staffRoutes from "./routes/staff.routes.js";
 import { notFoundHandler } from "./middlewares/not-found.middleware.js";
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(express.static(resolve(process.cwd(), "public")));
 
 app.use(authRoutes);
+app.use(staffRoutes);
 app.use(pageRoutes);
 app.use(notFoundHandler);
 
