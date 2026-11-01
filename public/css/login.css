@@ -1,0 +1,56 @@
+:root{--login-ink:#29231e;--login-muted:#898178;--login-line:#eae4dc;--login-accent:#9b6845;--login-accent-dark:#795037}
+body{min-width:320px;background:#f7f5f0;color:var(--login-ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.login-page{display:grid;min-height:100vh;place-items:center;padding:34px 20px;background:radial-gradient(circle at 15% 10%,#eee5d9 0,transparent 32%),#f7f5f0}
+.login-shell{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(420px,1.1fr);width:min(100%,1020px);min-height:640px;overflow:hidden;border:1px solid #e9e2d8;border-radius:24px;background:#fff;box-shadow:0 24px 80px #3d302014}
+.login-brand-panel{position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;padding:42px;background:linear-gradient(145deg,#342920,#201a16);color:#fff}
+.login-brand-panel:after{position:absolute;right:-150px;bottom:45px;width:390px;height:390px;border:1px solid #ffffff1c;border-radius:50%;box-shadow:0 0 0 42px #ffffff08,0 0 0 84px #ffffff05;content:"";pointer-events:none}
+.login-brand{position:relative;z-index:1;display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none}
+.login-brand-icon{display:grid;width:43px;height:43px;place-items:center;border:1px solid #ffffff35;border-radius:13px;background:#ffffff12;color:#e9bd9b;font-size:20px}
+.login-brand strong,.login-brand small{display:block}
+.login-brand strong{font-family:Georgia,serif;font-size:21px;font-weight:700;letter-spacing:-.7px}
+.login-brand small{margin-top:3px;color:#c1b4a7;font-size:8px;font-weight:800;letter-spacing:1.6px}
+.login-brand-copy{position:relative;z-index:1;max-width:370px;margin:40px 0}
+.login-eyebrow{display:block;color:#b88b69;font-size:9px;font-weight:850;letter-spacing:1.5px}
+.login-brand-copy h1{margin:15px 0 13px;font-family:Georgia,serif;font-size:clamp(32px,4vw,45px);font-weight:600;letter-spacing:-1.5px;line-height:1.12}
+.login-brand-copy p{max-width:320px;margin:0;color:#d1c6bc;font-size:12px;line-height:1.8}
+.login-brand-bottom{position:relative;z-index:1;display:flex;align-items:center;gap:9px;color:#c6b9ad;font-size:10px}
+.login-brand-bottom i{color:#c99b78;font-size:14px}
+.login-form-panel{display:flex;flex-direction:column;justify-content:center;padding:54px clamp(28px,5vw,60px)}
+.login-heading{margin-bottom:24px}
+.login-heading h2{margin:9px 0 7px;font-size:23px;font-weight:800;letter-spacing:-.7px}
+.login-heading p{margin:0;color:var(--login-muted);font-size:11px;line-height:1.6}
+.role-grid{display:grid;gap:10px}
+.role-card{display:flex;align-items:center;gap:13px;width:100%;min-height:72px;padding:12px 14px;border:1px solid var(--login-line);border-radius:12px;background:#fff;color:var(--login-ink);text-align:left;transition:border-color .16s,background .16s,box-shadow .16s;cursor:pointer}
+.role-card:hover{border-color:#d4b69e;background:#fffdfb}
+.role-card.is-selected{border-color:#b9825d;background:#fcf7f2;box-shadow:0 0 0 2px #b9825d18}
+.role-icon{display:grid;width:43px;height:43px;flex:0 0 43px;place-items:center;border-radius:11px;font-size:18px}
+.role-icon-admin{background:#f3e8df;color:#8e5e3e}
+.role-icon-cashier{background:#e9f1e8;color:#56815c}
+.role-icon-waiter{background:#eeeaf5;color:#7965a0}
+.role-card-copy{display:grid;gap:4px;min-width:0;flex:1}
+.role-card-copy strong{font-size:12px;font-weight:800}
+.role-card-copy small{color:var(--login-muted);font-size:10px}
+.role-chevron{color:#a99f95;font-size:13px}
+.login-credentials{margin-top:20px;padding-top:18px;border-top:1px solid var(--login-line)}
+.login-credentials[hidden]{display:none}
+.selected-role-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.selected-role-row>div{display:grid;gap:4px}
+.selected-role-label{color:#9b8e82;font-size:8px;font-weight:850;letter-spacing:1.2px}
+.selected-role-row strong{font-size:13px}
+.change-role-button{padding:5px 0;border:0;background:transparent;color:var(--login-accent-dark);font-size:10px;font-weight:750}
+.login-field{display:grid;gap:7px;margin-bottom:14px}
+.login-field label{color:#51483f;font-size:10px;font-weight:750}
+.login-field .form-control{min-height:43px;padding:10px 12px;border-color:#e7e0d7;border-radius:8px;font-size:11px;box-shadow:none}
+.login-field .form-control:focus{border-color:#b9825d;box-shadow:0 0 0 3px #b9825d1c}
+.password-input-wrap{position:relative}
+.password-input-wrap .form-control{padding-right:43px}
+.password-toggle{position:absolute;top:50%;right:9px;display:grid;width:30px;height:30px;transform:translateY(-50%);place-items:center;border:0;border-radius:7px;background:transparent;color:#8e857c}
+.password-toggle:hover{background:#f5f1ec;color:var(--login-ink)}
+.login-submit{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:46px;margin-top:7px;border:0;border-radius:9px;background:#342920;color:#fff;font-size:11px;font-weight:800;transition:background .16s}
+.login-submit:hover{background:#4b392b}
+.login-error{display:flex;align-items:flex-start;gap:9px;margin:0 0 15px;padding:11px 12px;border:1px solid #f0d5d1;border-radius:9px;background:#fff5f3;color:#a9443b;font-size:10px;line-height:1.55}
+.login-error i{padding-top:1px;font-size:13px}
+.login-footnote{display:flex;align-items:center;justify-content:center;gap:7px;margin:22px 0 0;color:#9d958c;font-size:9px}
+.login-footnote i{font-size:10px}
+@media(max-width:760px){.login-page{padding:15px}.login-shell{grid-template-columns:1fr;max-width:520px;min-height:0;border-radius:18px}.login-brand-panel{min-height:230px;padding:25px 27px}.login-brand-copy{margin:29px 0 20px}.login-brand-copy h1{max-width:380px;margin:8px 0;font-size:30px}.login-brand-copy p{font-size:10px}.login-brand-bottom{display:none}.login-form-panel{padding:30px 27px 28px}.login-heading{margin-bottom:18px}.login-heading h2{font-size:20px}}
+@media(max-width:390px){.login-page{padding:9px}.login-form-panel{padding:25px 18px}.login-brand-panel{padding:23px 20px}.login-brand-copy h1{font-size:27px}}
