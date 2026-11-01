@@ -7,3 +7,5 @@ coverage/
 /src/generated/prisma/
 /public/uploads/products/*
 !/public/uploads/products/.gitkeep
+/public/uploads/appearance/*
+!/public/uploads/appearance/.gitkeep
