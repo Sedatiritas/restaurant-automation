@@ -154,8 +154,8 @@ document.addEventListener("DOMContentLoaded", function () {
               '<span><strong class="table-card-name">' + escapeHtml(table.name) + '</strong>' +
               '<span class="table-card-seats">' + seats + ' kişilik masa</span></span>' +
             '</span>' +
-            '<span class="table-state-pill' + (selected ? " is-active" : "") + '">' +
-              '<span class="status-dot"></span>' + (selected ? "Seçili" : "Masa hazır") +
+            '<span class="table-state-pill ' + (table.billStatus === "OPEN" ? "is-open" : "is-empty") + '">' +
+              '<span class="status-dot"></span>' + (table.billStatus === "OPEN" ? "Adisyon Açık" : "Boş") +
             '</span>' +
           '</span>' +
           '<span class="table-card-bottom">' +
