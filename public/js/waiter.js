@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
     byId("detailsTableMeta").textContent = (Number(table.seats) || 0) + " kişilik masa";
     byId("detailsTableStatus").textContent = "Masa seçildi";
     byId("detailsGrandTotal").textContent = "Henüz bağlı değil";
-    byId("detailsItemCount").textContent = state.products.length + " ürün";
+    byId("detailsItemCount").textContent = "0 adet";
     byId("detailsRoundCount").textContent = "Henüz bağlı değil";
     byId("historyCount").textContent = "Henüz yok";
     byId("orderHistory").innerHTML = "";
@@ -279,9 +279,6 @@ document.addEventListener("DOMContentLoaded", function () {
       empty.innerHTML = "";
     }
 
-    if (state.screen === "details") {
-      byId("detailsItemCount").textContent = state.products.length + " ürün";
-    }
   }
 
   function draftSummary() {
