@@ -63,6 +63,18 @@ model Product {
   @@map("products")
 }
 
+model DiningTable {
+  id        String   @id @default(uuid())
+  name      String   @unique @db.VarChar(60)
+  seats     Int      @default(4)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder, name])
+  @@map("restaurant_tables")
+}
+
 model MenuAppearance {
   id              String   @id @default("default")
   brandName       String   @default("roast & co.") @db.VarChar(60)

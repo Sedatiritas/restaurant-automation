@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const defaults = {
     products: [],
     categories: [],
-    tables: Array.from({length:12},function(_,index){return {id:index+1,name:"Masa "+(index+1),seats:[2,4,4,2,4,6,2,4,4,2,6,4][index]};}),
+    tables: [],
     staff: [],
     settings: {phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
     appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",isOpen:true,googleReviewUrl:""}
@@ -33,12 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let selectedProductImageFile = null;
   let selectedProductImageData = "";
 
-  function load(key) {
-    try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
-    catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
-  }
-  const state = { products:[], categories:[], tables:load("tables"), staff:[], settings:structuredClone(defaults.settings), settingsLoaded:false, settingsError:"", appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
-  function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); return true; } catch (e) { notify("Tarayıcı depolama alanı doldu. Daha küçük görseller seçin."); return false; } }
+  const state = { products:[], categories:[], tables:[], tablesLoaded:false, tablesError:"", staff:[], settings:structuredClone(defaults.settings), settingsLoaded:false, settingsError:"", appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
     toastMessage.textContent = message;
@@ -167,14 +162,21 @@ document.addEventListener("DOMContentLoaded", function () {
       }).join("") : '<div class="panel-card p-4 text-center"><strong>Henüz kategori yok</strong><p class="text-muted mb-0 mt-1">Ürün eklemeden önce ilk menü kategorinizi oluşturun.</p></div>') + '</div>';
   }
   function tablesView() {
+    if (!state.tablesLoaded) {
+      return pageHeading("OPERASYON","Masa Yönetimi","Kayıtlı masalar getiriliyor.") +
+        '<section class="panel-card p-4 text-muted small"><span class="spinner-border spinner-border-sm me-2" role="status"></span>Masalar yükleniyor...</section>';
+    }
+    if (state.tablesError) {
+      return pageHeading("OPERASYON","Masa Yönetimi","Masa listesi yüklenemedi.") +
+        '<section class="panel-card p-4"><p class="mb-3">' + escapeHtml(state.tablesError) + '</p><button class="btn btn-primary-soft" type="button" data-action="refresh-tables">Tekrar dene</button></section>';
+    }
     const rows = state.tables.map(function(table) {
-      const initials = table.name.trim().slice(0, 1).toLocaleUpperCase("tr");
-      return '<tr><td><div class="d-flex align-items-center gap-2"><span class="staff-avatar"><i class="bi bi-grid-1x2-fill"></i></span><strong class="text-dark">' + escapeHtml(table.name) + '</strong></div></td><td>' + Number(table.seats) + ' kişi</td><td><div class="table-actions"><button class="table-action" type="button" data-action="edit-table" data-id="' + table.id + '" aria-label="Masayı düzenle" title="Düzenle"><i class="bi bi-pencil"></i></button><button class="table-action danger" type="button" data-action="delete-table" data-id="' + table.id + '" aria-label="Masayı sil" title="Sil"><i class="bi bi-trash3"></i></button></div></td></tr>';
+      return '<tr><td><div class="d-flex align-items-center gap-2"><span class="staff-avatar"><i class="bi bi-grid-1x2-fill"></i></span><strong class="text-dark">' + escapeHtml(table.name) + '</strong></div></td><td>' + Number(table.seats) + ' kişi</td><td><div class="table-actions"><button class="table-action" type="button" data-action="edit-table" data-id="' + escapeHtml(table.id) + '" aria-label="Masayı düzenle" title="Düzenle"><i class="bi bi-pencil"></i></button><button class="table-action danger" type="button" data-action="delete-table" data-id="' + escapeHtml(table.id) + '" aria-label="Masayı sil" title="Sil"><i class="bi bi-trash3"></i></button></div></td></tr>';
     }).join("");
-    return pageHeading("OPERASYON","Masa Yönetimi","Garson panelinde görünecek masaları ve kişi kapasitelerini buradan tanımlayın.",'<button class="btn btn-primary-soft" type="button" data-action="add-table"><i class="bi bi-plus-lg me-2"></i>Masa ekle</button>') +
-      '<section class="panel-card"><div class="panel-heading"><div><h3>Kayıtlı masalar</h3><p>Masa adı ve kaç kişilik olduğu garson panelinde otomatik kullanılır.</p></div><span class="status-pill status-live">' + state.tables.length + ' masa</span></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>MASA</th><th>KİŞİ KAPASİTESİ</th><th class="text-end">İŞLEMLER</th></tr></thead><tbody>' +
-      (rows || '<tr><td colspan="3"><div class="empty-state"><i class="bi bi-grid-3x3-gap"></i><strong>Henüz masa yok</strong><p>Garson panelini kullanmak için bir masa ekleyin.</p></div></td></tr>') +
-      '</tbody></table></div></section><section class="panel-card mt-3"><div class="panel-heading"><div><h3>Not</h3><p>Silinen masaların sipariş geçmişi varsa masa silinmez; geçmiş kayıtlar kaybolmaz.</p></div></div></section>';
+    return pageHeading("OPERASYON","Masa Yönetimi","Garson ve kasa süreçlerinde kullanılacak masaları ve kişi kapasitelerini buradan tanımlayın.",'<button class="btn btn-primary-soft" type="button" data-action="add-table"><i class="bi bi-plus-lg me-2"></i>Masa ekle</button>') +
+      '<section class="panel-card"><div class="panel-heading"><div><h3>Kayıtlı masalar</h3><p>Eklediğiniz masalar PostgreSQL veritabanında saklanır.</p></div><span class="status-pill status-live">' + state.tables.length + ' masa</span></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>MASA</th><th>KİŞİ KAPASİTESİ</th><th class="text-end">İŞLEMLER</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="3"><div class="empty-state"><i class="bi bi-grid-3x3-gap"></i><strong>Henüz masa yok</strong><p>İlk masanızı ekleyerek başlayın.</p></div></td></tr>') +
+      '</tbody></table></div></section>';
   }
   function tableForm(table) {
     const t = table || {name:"",seats:4};
@@ -247,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<section class="panel-card"><div class="panel-heading"><div><h3>Personel hesapları</h3><p>Buradaki değişiklikler doğrudan PostgreSQL veritabanına kaydedilir.</p></div><span class="status-pill status-live">' + state.staff.length + ' hesap</span></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>KULLANICI ADI</th><th>ROL</th><th>DURUM</th><th>İŞLEMLER</th></tr></thead><tbody>' +
       (rows || '<tr><td colspan="4"><div class="empty-state"><i class="bi bi-people"></i><strong>Henüz personel hesabı yok</strong><p>İlk personel hesabınızı oluşturun.</p></div></td></tr>') +
       '</tbody></table></div></section>' +
-      '<section class="panel-card mt-3"><div class="panel-heading"><div><h3>Rol açıklamaları</h3><p>Her hesap yalnızca kendisine tanımlanan yetki alanına erişir.</p></div></div><div class="px-3 pb-3"><div class="setting-row"><span><strong>Yönetici</strong><small>Yönetim paneli, personel ve işletme ayarları.</small></span><i class="bi bi-shield-lock fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Garson</strong><small>Masa ve sipariş ekranı.</small></span><i class="bi bi-person fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Kasiyer</strong><small>Kasa ve ödeme ekranı.</small></span><i class="bi bi-cash-coin fs-5 text-secondary"></i></div></div></section>';
+      '<section class="panel-card mt-3"><div class="panel-heading"><div><h3>Rol açıklamaları</h3><p>Her hesap yalnızca kendisine tanımlanan yetki alanına erişir.</p></div></div><div class="px-3 pb-3"><div class="setting-row"><span><strong>Yönetici</strong><small>Yönetim paneli, personel ve işletme ayarları.</small></span><i class="bi bi-shield-lock fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Garson</strong><small>Menüdeki kategori ve ürünleri görüntüleme.</small></span><i class="bi bi-person fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Kasiyer</strong><small>Kasa ve ödeme ekranı.</small></span><i class="bi bi-cash-coin fs-5 text-secondary"></i></div></div></section>';
   }
   async function loadStaff() {
     const response = await fetch("/api/staff", { headers: { "Accept": "application/json" } });
@@ -374,6 +376,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if (["overview", "products", "categories"].includes(state.view) && viewRenderers[state.view]) {
       root.innerHTML = viewRenderers[state.view]();
     }
+    return result;
+  }
+  async function loadTables() {
+    const result = await staffRequest("/api/admin/tables");
+    state.tables = Array.isArray(result.tables) ? result.tables : [];
+    state.tablesLoaded = true;
+    state.tablesError = "";
+    if (state.view === "tables") root.innerHTML = tablesView();
     return result;
   }
   function settingsView() {
@@ -596,16 +606,29 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       return;
     }
+    if(action==="refresh-tables"){
+      state.tablesLoaded=false;
+      state.tablesError="";
+      render("tables",false);
+      loadTables().catch(function(error){
+        state.tablesError=error.message;
+        state.tablesLoaded=false;
+        if(state.view==="tables")render("tables",false);
+      });
+      return;
+    }
     if(action==="add-table"){tableForm();return;}
     if(action==="edit-table"){tableForm(state.tables.find(function(table){return String(table.id)===String(actionButton.dataset.id);}));return;}
     if(action==="delete-table"){
       const table=state.tables.find(function(item){return String(item.id)===String(actionButton.dataset.id);});
       if(!table)return;
-      if(state.tables.length<=1){notify("En az bir masa kayıtlı kalmalıdır.");return;}
-      let hasOrders=false;
-      try{const orders=JSON.parse(localStorage.getItem("roastWaiter_orders")||"[]");hasOrders=Array.isArray(orders)&&orders.some(function(order){return String(order.tableId)===String(table.id);});}catch(error){}
-      if(hasOrders){notify("Bu masanın sipariş geçmişi var. Geçmiş kayıtların kaybolmaması için masa silinemez.");return;}
-      if(window.confirm('"'+table.name+'" masasını silmek istiyor musunuz?')){state.tables=state.tables.filter(function(item){return String(item.id)!==String(table.id);});save("tables");render("tables",false);notify("Masa silindi.");}
+      if(window.confirm('"'+table.name+'" masasını silmek istiyor musunuz?')){
+        try{
+          await staffRequest("/api/admin/tables/"+encodeURIComponent(String(table.id)),{method:"DELETE"});
+          await loadTables();
+          notify("Masa silindi.");
+        }catch(error){notify(error.message);}
+      }
       return;
     }
     if(action==="add-staff"){staffForm();return;}
@@ -661,19 +684,26 @@ document.addEventListener("DOMContentLoaded", function () {
     if(form.id==="tableForm"){
       event.preventDefault();
       const data=formObject(form);
-      const id=data.id?Number(data.id):null;
-      const name=data.name.trim();
+      const id=String(data.id||"");
+      const name=String(data.name||"").trim();
       const seats=Number(data.seats);
       if(!name){notify("Masa adı veya numarası girin.");return;}
       if(!Number.isInteger(seats)||seats<1||seats>100){notify("Kişi kapasitesi 1 ile 100 arasında tam sayı olmalıdır.");return;}
-      if(state.tables.some(function(table){return String(table.id)!==String(id)&&table.name.toLocaleLowerCase("tr")===name.toLocaleLowerCase("tr");})){notify("Bu isimde bir masa zaten kayıtlı.");return;}
-      const table={id:id||Date.now(),name:name,seats:seats};
-      if(id){state.tables=state.tables.map(function(item){return String(item.id)===String(id)?table:item;});}
-      else{state.tables.push(table);}
-      if(!save("tables"))return;
-      if(modal)modal.hide();
-      render("tables",false);
-      notify(id?"Masa bilgileri güncellendi.":"Yeni masa eklendi.");
+      const saveButton=form.querySelector('[type="submit"]');
+      if(saveButton)saveButton.disabled=true;
+      try{
+        await staffRequest(id?"/api/admin/tables/"+encodeURIComponent(id):"/api/admin/tables",{
+          method:id?"PATCH":"POST",
+          body:JSON.stringify({name:name,seats:seats})
+        });
+        if(modal)modal.hide();
+        await loadTables();
+        notify(id?"Masa bilgileri güncellendi.":"Yeni masa eklendi.");
+      }catch(error){
+        notify(error.message);
+      }finally{
+        if(saveButton)saveButton.disabled=false;
+      }
       return;
     }
     if(form.id==="staffForm"){
@@ -821,6 +851,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const initial=window.location.hash.replace("#","")||"overview";
   render(viewRenderers[initial]?initial:"overview",false);
   loadCatalog().catch(function(error){console.error("Katalog yüklenemedi.",error);notify(error.message);});
+  loadTables().catch(function(error){
+    console.error("Masalar yüklenemedi.",error);
+    state.tablesError=error.message;
+    state.tablesLoaded=false;
+    if(state.view==="tables")render("tables",false);
+  });
   loadBusinessSettings().catch(function(error){
     console.error("İşletme ayarları yüklenemedi.",error);
     state.settingsError=error.message;

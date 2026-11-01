@@ -395,3 +395,6 @@ a{color:inherit}
   .order-summary-trigger{min-height:68px}
   .order-summary-copy strong{font-size:12px}
 }
+
+.product-stock-label{padding:4px 8px;border-radius:20px;background:#fff0df;color:#a9682e;font-size:9px;font-weight:800;white-space:nowrap}
+.product-card.is-out-of-stock{opacity:.78}
