@@ -1,5 +1,7 @@
 import { Router } from "express";
+import { requireRole } from "../middlewares/auth.middleware.js";
 import {
+  renderLogin,
   renderAdmin,
   renderCashier,
   renderMenu,
@@ -9,9 +11,10 @@ import {
 const router = Router();
 
 router.get("/", renderMenu);
-router.get("/admin", renderAdmin);
-router.get("/waiter", renderWaiter);
-router.get("/cashier", renderCashier);
+router.get("/login", renderLogin);
+router.get("/admin", requireRole("ADMIN"), renderAdmin);
+router.get("/waiter", requireRole("WAITER"), renderWaiter);
+router.get("/cashier", requireRole("CASHIER"), renderCashier);
 
 // Preserve the old page URLs as redirects for existing bookmarks.
 router.get("/index.html", (_req, res) => res.redirect(301, "/"));
