@@ -13,6 +13,12 @@ enum UserRole {
   CASHIER
 }
 
+enum ProductStatus {
+  ACTIVE
+  HIDDEN
+  OUT_OF_STOCK
+}
+
 model User {
   id           String   @id @default(uuid())
   username     String   @unique
@@ -23,4 +29,36 @@ model User {
   updatedAt    DateTime @updatedAt
 
   @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  icon        String    @default("bi-collection")
+  description String?   @db.VarChar(300)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([sortOrder, name])
+  @@map("categories")
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  name        String
+  description String?       @db.VarChar(300)
+  price       Decimal       @db.Decimal(10, 2)
+  imageUrl    String?
+  status      ProductStatus @default(ACTIVE)
+  sortOrder   Int           @default(0)
+  categoryId  String
+  category    Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([categoryId, status, sortOrder])
+  @@map("products")
 }
