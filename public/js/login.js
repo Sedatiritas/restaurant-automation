@@ -5,7 +5,7 @@
   const roleInput = document.getElementById("selectedRole");
   const roleName = document.getElementById("selectedRoleName");
   const changeRoleButton = document.getElementById("changeRoleButton");
-  const emailInput = document.getElementById("loginEmail");
+  const usernameInput = document.getElementById("loginUsername");
   const passwordInput = document.getElementById("loginPassword");
   const togglePassword = document.getElementById("togglePassword");
 
@@ -17,7 +17,7 @@
     WAITER: "Garson"
   };
 
-  function selectRole(role, focusEmail = true) {
+  function selectRole(role, focusUsername = true) {
     if (!roleLabels[role]) return;
 
     roleInput.value = role;
@@ -30,8 +30,8 @@
       button.setAttribute("aria-pressed", String(selected));
     });
 
-    if (focusEmail) {
-      emailInput?.focus();
+    if (focusUsername) {
+      usernameInput?.focus();
     }
   }
 
