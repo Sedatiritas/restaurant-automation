@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
   }
-  const state = { products:[], categories:[], tables:load("tables"), staff:[], settings:load("settings"), appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
+  const state = { products:[], categories:[], tables:load("tables"), staff:[], settings:structuredClone(defaults.settings), settingsLoaded:false, settingsError:"", appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
   function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); return true; } catch (e) { notify("Tarayıcı depolama alanı doldu. Daha küçük görseller seçin."); return false; } }
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
@@ -267,6 +267,46 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!response.ok) throw new Error(result.error || "Personel işlemi tamamlanamadı.");
     return result;
   }
+  async function loadBusinessSettings() {
+    const response = await fetch("/api/business-settings", { headers: { "Accept": "application/json" } });
+    let result;
+    try { result = await response.json(); }
+    catch (error) { throw new Error("İşletme ayarları okunamadı."); }
+    if (!response.ok) throw new Error(result.error || "İşletme ayarları yüklenemedi.");
+
+    let settings = result.settings;
+    if (!settings) {
+      let legacy = null;
+      try {
+        const saved = localStorage.getItem("roastAdmin_settings");
+        if (saved) legacy = JSON.parse(saved);
+      } catch (error) {
+        console.warn("Eski işletme ayarları okunamadı.");
+      }
+
+      const source = Object.assign({}, defaults.settings, legacy || {});
+      const migrated = await staffRequest("/api/admin/business-settings", {
+        method: "PUT",
+        body: JSON.stringify({
+          phone: String(source.phone || ""),
+          email: String(source.email || ""),
+          address: String(source.address || ""),
+          description: String(source.description || ""),
+          instagram: String(source.instagram || ""),
+          whatsapp: String(source.whatsapp || "")
+        })
+      });
+      settings = migrated.settings;
+    }
+
+    state.settings = Object.assign({}, defaults.settings, settings || {});
+    state.settingsLoaded = true;
+    state.settingsError = "";
+    try { localStorage.removeItem("roastAdmin_settings"); } catch (error) {}
+    if (state.view === "settings") render("settings", false);
+    return state.settings;
+  }
+
   async function loadAppearance() {
     const response = await fetch("/api/appearance", { headers: { "Accept": "application/json" } });
     let result;
@@ -337,6 +377,13 @@ document.addEventListener("DOMContentLoaded", function () {
     return result;
   }
   function settingsView() {
+    if (!state.settingsLoaded) {
+      const message = state.settingsError
+        ? '<p class="mb-3">' + escapeHtml(state.settingsError) + '</p><button class="btn btn-primary-soft" type="button" data-action="refresh-business-settings">Tekrar dene</button>'
+        : '<span class="spinner-border spinner-border-sm me-2" role="status"></span>İşletme ayarları yükleniyor...';
+      return pageHeading("İŞLETME","İşletme Ayarları","İşletme bilgileri yükleniyor.") +
+        '<section class="panel-card p-4 text-muted small">' + message + '</section>';
+    }
     const s=state.settings;
     return pageHeading("İŞLETME","İşletme Ayarları","Yalnızca müşteri menüsünün alt bölümünde (footer) gösterilecek iletişim bilgilerini yönetin.") +
       '<div class="settings-grid"><section class="panel-card"><div class="panel-heading"><div><h3>Footer bilgileri</h3><p>İşletme adı Menü Görünümü bölümünden yönetilir. Buradaki bilgiler menünün en altında gösterilir.</p></div></div><form id="settingsForm" class="p-3 pt-0"><div class="mb-3"><label class="form-label" for="businessPhone">Telefon</label><input class="form-control" id="businessPhone" name="phone" type="tel" value="'+escapeHtml(s.phone)+'" placeholder="05xx xxx xx xx"></div><div class="mb-3"><label class="form-label" for="businessEmail">E-posta</label><input class="form-control" id="businessEmail" name="email" type="email" value="'+escapeHtml(s.email)+'" placeholder="info@isletme.com"></div><div class="mb-3"><label class="form-label" for="businessAddress">Adres</label><textarea class="form-control" id="businessAddress" name="address" rows="2" placeholder="İşletme adresi">'+escapeHtml(s.address)+'</textarea></div><div class="mb-3"><label class="form-label" for="businessDescription">Footer açıklaması</label><textarea class="form-control" id="businessDescription" name="description" rows="2" maxlength="250" placeholder="Kısa işletme açıklaması">'+escapeHtml(s.description)+'</textarea></div><button class="btn btn-primary-soft" type="submit"><i class="bi bi-check2 me-2"></i>Footer bilgilerini kaydet</button></form></section>' +
@@ -486,6 +533,17 @@ document.addEventListener("DOMContentLoaded", function () {
     if(!actionButton)return;
     const action=actionButton.dataset.action, rawId=actionButton.dataset.id;
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
+    if(action==="refresh-business-settings"){
+      state.settingsLoaded=false;
+      state.settingsError="";
+      render("settings",false);
+      loadBusinessSettings().catch(function(error){
+        state.settingsError=error.message;
+        state.settingsLoaded=false;
+        if(state.view==="settings")render("settings",false);
+      });
+      return;
+    }
     if(action==="remove-product-image"){selectedProductImageFile=null;selectedProductImageData="";const input=document.querySelector('#productForm [name="removeImage"]');if(input)input.value="true";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
     if(action==="remove-logo"||action==="remove-cover"){
       const isLogo=action==="remove-logo";
@@ -693,7 +751,26 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if(form.id==="settingsForm"||form.id==="contactForm"){
-      event.preventDefault();const data=formObject(form);Object.keys(data).forEach(function(key){state.settings[key]=data[key].trim();});save("settings");notify("İşletme bilgileri kaydedildi.");return;
+      event.preventDefault();
+      const data=formObject(form);
+      const payload=Object.assign({},state.settings);
+      Object.keys(data).forEach(function(key){payload[key]=String(data[key]||"").trim();});
+      const saveButton=form.querySelector('[type="submit"]');
+      if(saveButton)saveButton.disabled=true;
+      try{
+        const result=await staffRequest("/api/admin/business-settings",{
+          method:"PUT",
+          body:JSON.stringify(payload)
+        });
+        state.settings=Object.assign({},defaults.settings,result.settings||{});
+        state.settingsLoaded=true;
+        notify("İşletme bilgileri kaydedildi.");
+      }catch(error){
+        notify(error.message);
+      }finally{
+        if(saveButton)saveButton.disabled=false;
+      }
+      return;
     }
   });
   document.addEventListener("change",async function(event){
@@ -744,6 +821,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const initial=window.location.hash.replace("#","")||"overview";
   render(viewRenderers[initial]?initial:"overview",false);
   loadCatalog().catch(function(error){console.error("Katalog yüklenemedi.",error);notify(error.message);});
+  loadBusinessSettings().catch(function(error){
+    console.error("İşletme ayarları yüklenemedi.",error);
+    state.settingsError=error.message;
+    state.settingsLoaded=false;
+    if(state.view==="settings")render("settings",false);
+  });
   loadAppearance().catch(function(error){
     console.error("Menü görünümü yüklenemedi.",error);
     state.appearanceLoaded=true;
