@@ -11,6 +11,7 @@ export function requireRole(...allowedRoles: AppRole[]): RequestHandler {
     const session = readSessionFromCookieHeader(req.headers.cookie);
 
     if (!session) {
+      clearSessionCookie(res);
       res.redirect("/login");
       return;
     }
