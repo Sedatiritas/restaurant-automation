@@ -383,6 +383,23 @@ body {
 
 .menu-footer { border-top: 1px solid var(--menu-border); color: var(--menu-muted); }
 
+.footer-contact-link,
+.footer-contact-link:visited {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--menu-muted);
+    font-size: 13px;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.footer-contact-link:hover,
+.footer-contact-link:focus-visible {
+    color: var(--menu-accent);
+    text-decoration: none;
+}
+
 .footer-brand {
     color: var(--menu-text);
     font-family: Georgia, serif;
