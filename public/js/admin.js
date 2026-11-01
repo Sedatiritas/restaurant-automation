@@ -306,12 +306,73 @@ document.addEventListener("DOMContentLoaded", function () {
     modalContent.innerHTML='<div class="modal-header"><h2 class="modal-title">'+titleText+'</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button></div><div class="modal-body">'+body+'</div><div class="modal-footer">'+(footer||'<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button>')+'</div>';
     if(modal) modal.show();
   }
+  async function submitProductForm(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const form = event.currentTarget;
+    const data = formObject(form);
+    const id = String(data.id || "");
+    const payload = {
+      name: String(data.name || "").trim(),
+      categoryId: String(data.categoryId || ""),
+      price: String(data.price || ""),
+      description: String(data.description || "").trim(),
+      status: String(data.status || "active")
+    };
+
+    const file = form.querySelector('[name="imageFile"]')?.files?.[0] || selectedProductImageFile;
+    if (file) {
+      try {
+        const imageData = selectedProductImageFile === file && selectedProductImageData
+          ? selectedProductImageData
+          : await imageFileToDataUrl(file, 900);
+        if (imageData.length > 1_400_000) {
+          notify("Görsel sıkıştırıldıktan sonra 1 MB sınırını aşıyor. Daha küçük bir görsel deneyin.");
+          return;
+        }
+        payload.imageData = imageData;
+      } catch (error) {
+        notify("Görsel okunamadı. PNG, JPEG veya WebP dosyası deneyin.");
+        return;
+      }
+    } else if (data.removeImage === "true") {
+      payload.removeImage = true;
+    }
+
+    if (!payload.name || !payload.categoryId) {
+      notify("Ürün adı ve kategori seçin.");
+      return;
+    }
+
+    const saveButton = document.querySelector('button[form="productForm"][type="submit"]');
+    if (saveButton) saveButton.disabled = true;
+    try {
+      await staffRequest(id ? "/api/catalog/products/" + encodeURIComponent(id) : "/api/catalog/products", {
+        method: id ? "PATCH" : "POST",
+        body: JSON.stringify(payload)
+      });
+      selectedProductImageFile = null;
+      selectedProductImageData = "";
+      if (modal) modal.hide();
+      await loadCatalog();
+      if (state.view !== "products") render("products", false);
+      notify(id ? "Ürün güncellendi." : "Yeni ürün oluşturuldu.");
+    } catch (error) {
+      notify(error.message);
+    } finally {
+      if (saveButton) saveButton.disabled = false;
+    }
+  }
+
   function productForm(product) {
     selectedProductImageFile = null;
     selectedProductImageData = "";
     const p=product||{name:"",categoryId:state.categories[0]?state.categories[0].id:"",price:"",description:"",status:"active",image:""};
     const productAction=product?"/api/catalog/products/"+encodeURIComponent(p.id):"/api/catalog/products";
     openModal(product?"Ürünü düzenle":"Yeni ürün ekle",'<form id="productForm" method="post" action="'+productAction+'"><input type="hidden" name="id" value="'+(p.id||"")+'"><input type="hidden" name="removeImage" value="false"><div class="row g-3"><div class="col-md-7"><label class="form-label" for="productName">Ürün adı *</label><input class="form-control" id="productName" name="name" required maxlength="100" value="'+escapeHtml(p.name)+'"></div><div class="col-md-5"><label class="form-label" for="productPrice">Fiyat (TL) *</label><input class="form-control" id="productPrice" name="price" type="number" min="0" max="99999999.99" step="0.01" required value="'+escapeHtml(p.price)+'"></div><div class="col-md-6"><label class="form-label" for="productCategory">Kategori *</label><select class="form-select" id="productCategory" name="categoryId" required>'+categoryOptions(p.categoryId)+'</select></div><div class="col-md-6"><label class="form-label" for="productStatus">Yayın durumu</label><select class="form-select" id="productStatus" name="status"><option value="active" '+(p.status==="active"?"selected":"")+'>Yayında</option><option value="out" '+(p.status==="out"?"selected":"")+'>Tükendi</option><option value="hidden" '+(p.status==="hidden"?"selected":"")+'>Taslak / gizli</option></select></div><div class="col-12"><label class="form-label" for="productDescription">Açıklama</label><textarea class="form-control" id="productDescription" name="description" rows="3" maxlength="300">'+escapeHtml(p.description)+'</textarea></div><div class="col-12"><label class="form-label" for="productImageFile">Ürün görseli</label><input class="form-control" id="productImageFile" name="imageFile" type="file" accept="image/png,image/jpeg,image/webp"><div class="form-text">Görseller WebP biçiminde küçültülerek sunucuda saklanır. En fazla 1 MB.</div><div class="image-upload-preview mt-2" id="productImagePreview">'+(p.image?'<img src="'+escapeHtml(p.image)+'" alt="Mevcut ürün görseli">':'<span>Henüz görsel seçilmedi</span>')+'</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-product-image">Görseli kaldır</button></div></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="productForm">Kaydet</button>');
+    const productFormElement = document.getElementById("productForm");
+    if (productFormElement) productFormElement.addEventListener("submit", submitProductForm);
   }
   const categoryIconOptions = [
     ["bi-cup-hot","Sıcak kahve"],["bi-cup-straw","Soğuk içecek"],["bi-cup","Çay / fincan"],["bi-cake2","Pasta ve tatlı"],
@@ -443,42 +504,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   document.addEventListener("submit",async function(event){
     const form=event.target;
-    if(form.id==="productForm"){
-      event.preventDefault();
-      const data=formObject(form);
-      const id=String(data.id||"");
-      const payload={
-        name:String(data.name||"").trim(),
-        categoryId:String(data.categoryId||""),
-        price:String(data.price||""),
-        description:String(data.description||"").trim(),
-        status:String(data.status||"active")
-      };
-      const file=form.querySelector('[name="imageFile"]')?.files?.[0] || selectedProductImageFile;
-      if(file){
-        try{
-          const imageData=selectedProductImageFile===file && selectedProductImageData
-            ? selectedProductImageData
-            : await imageFileToDataUrl(file,900);
-          if(imageData.length>1_400_000){notify("Görsel sıkıştırıldıktan sonra 1 MB sınırını aşıyor. Daha küçük bir görsel deneyin.");return;}
-          payload.imageData=imageData;
-        }catch(error){notify("Görsel okunamadı. PNG, JPEG veya WebP dosyası deneyin.");return;}
-      }else if(data.removeImage==="true"){
-        payload.removeImage=true;
-      }
-      if(!payload.name||!payload.categoryId){notify("Ürün adı ve kategori seçin.");return;}
-      try{
-        await staffRequest(id?"/api/catalog/products/"+encodeURIComponent(id):"/api/catalog/products",{
-          method:id?"PATCH":"POST",
-          body:JSON.stringify(payload)
-        });
-        if(modal)modal.hide();
-        await loadCatalog();
-        if(state.view!=="products")render("products",false);
-        notify(id?"Ürün güncellendi.":"Yeni ürün oluşturuldu.");
-      }catch(error){notify(error.message);}
-      return;
-    }
     if(form.id==="categoryForm"){
       event.preventDefault();
       const data=formObject(form);
