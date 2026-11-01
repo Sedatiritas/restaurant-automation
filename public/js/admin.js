@@ -33,11 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
       {id:8,name:"Kahvaltı",icon:"bi-egg",description:"Kahvaltı seçenekleri"}
     ],
     tables: Array.from({length:12},function(_,index){return {id:index+1,name:"Masa "+(index+1),seats:[2,4,4,2,4,6,2,4,4,2,6,4][index]};}),
-    staff: [
-      {id:1,name:"Ayşe Yılmaz",email:"ayse@example.com",role:"Garson",status:"active"},
-      {id:2,name:"Mehmet Demir",email:"mehmet@example.com",role:"Kasiyer",status:"active"},
-      {id:3,name:"Zeynep Kaya",email:"zeynep@example.com",role:"Garson",status:"inactive"}
-    ],
+    staff: [],
     settings: {phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
     appearance: {brandName:"roast & co.",tagline:"COFFEE · DESSERT · MOMENTS",eyebrow:"HER FİNCANDA MUTLULUK",headline:"Kendine güzel bir mola ver.",logo:"",cover:"https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=80",accent:"#b96e43",isOpen:true,googleReviewUrl:""}
   };
