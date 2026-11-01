@@ -48,6 +48,18 @@ document.addEventListener("DOMContentLoaded", function () {
     toast.show();
   }
 
+  function formatActivityTime(value) {
+    if (!value) return "Henüz yok";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Henüz yok";
+
+    return new Intl.DateTimeFormat("tr-TR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date);
+  }
+
   async function requestJson(path) {
     const response = await fetch(path, {
       method: "GET",
@@ -157,8 +169,14 @@ document.addEventListener("DOMContentLoaded", function () {
     grid.innerHTML = tables.map(function (table) {
       const selected = String(table.id) === String(state.selectedTableId);
       const seats = Number(table.seats) || 0;
+      const hasOpenBill = table.billStatus === "OPEN";
+      const billTotal = money(table.currentBillTotal);
+      const lastActivity = formatActivityTime(table.lastActivityAt);
+      const sentOrderCount = Number(table.sentOrderCount) || 0;
+
       return (
-        '<button class="table-card' + (selected ? " is-active" : "") + '" type="button" data-table-id="' +
+        '<button class="table-card' + (selected ? " is-active" : "") +
+          (hasOpenBill ? " has-open-bill" : "") + '" type="button" data-table-id="' +
           escapeHtml(table.id) + '" aria-pressed="' + (selected ? "true" : "false") + '">' +
           '<span class="table-card-top">' +
             '<span class="table-card-title">' +
@@ -166,15 +184,17 @@ document.addEventListener("DOMContentLoaded", function () {
               '<span><strong class="table-card-name">' + escapeHtml(table.name) + '</strong>' +
               '<span class="table-card-seats">' + seats + ' kişilik masa</span></span>' +
             '</span>' +
-            '<span class="table-state-pill ' + (table.billStatus === "OPEN" ? "is-open" : "is-empty") + '">' +
-              '<span class="status-dot"></span>' + (table.billStatus === "OPEN" ? "Adisyon Açık" : "Boş") +
+            '<span class="table-state-pill ' + (hasOpenBill ? "is-open" : "is-empty") + '">' +
+              '<span class="status-dot"></span>' + (hasOpenBill ? "Adisyon açık" : "Boş") +
             '</span>' +
           '</span>' +
           '<span class="table-card-bottom">' +
-            '<span class="table-card-total"><span>Kişi kapasitesi</span><strong>' + seats + ' kişi</strong></span>' +
-            '<span class="table-card-last"><span>İşlem</span><strong>' +
-              (selected ? "Seçili masa" : "Menüyü görüntüle") +
-            '</strong></span>' +
+            '<span class="table-card-total"><span>' +
+              (hasOpenBill ? "Mevcut hesap" : "Hesap toplamı") +
+            '</span><strong>' + escapeHtml(billTotal) + '</strong></span>' +
+            '<span class="table-card-last"><span>Son hareket</span><strong>' +
+              escapeHtml(lastActivity) + '</strong><small>' + sentOrderCount +
+              ' gönderilmiş sipariş</small></span>' +
           '</span>' +
         '</button>'
       );
