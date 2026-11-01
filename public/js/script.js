@@ -55,82 +55,94 @@ function applySavedBusinessSettings() {
     }
 }
 
-function applySavedAppearance() {
-    try {
-        const appearance = JSON.parse(localStorage.getItem("roastAdmin_appearance") || "null");
-        if (!appearance) return;
+function applyMenuAppearance(appearance) {
+    if (!appearance) return;
 
-        const logo = document.querySelector(".brand-logo img");
-        if (logo) { logo.parentElement.style.display = appearance.logo ? "block" : "none"; if (appearance.logo) logo.src = appearance.logo; }
+    const logo = document.querySelector(".brand-logo img");
+    if (logo) {
+        logo.parentElement.style.display = appearance.logo ? "block" : "none";
+        if (appearance.logo) logo.src = appearance.logo;
+    }
 
-        const brandName = document.querySelector(".brand-name");
-        if (brandName && appearance.brandName) brandName.textContent = appearance.brandName;
+    const brandName = document.querySelector(".brand-name");
+    if (brandName && appearance.brandName) brandName.textContent = appearance.brandName;
 
-        const subtitle = document.querySelector(".brand-subtitle");
-        if (subtitle && appearance.tagline) subtitle.textContent = appearance.tagline;
+    const subtitle = document.querySelector(".brand-subtitle");
+    if (subtitle && appearance.tagline) subtitle.textContent = appearance.tagline;
 
-        const status = document.querySelector(".open-status");
-        if (status) {
-            const isOpen = appearance.isOpen !== false;
-            status.classList.toggle("is-closed", !isOpen);
-            status.setAttribute("aria-label", isOpen ? "İşletme açık" : "İşletme kapalı");
-            status.textContent = "";
-            const dot = document.createElement("span");
-            dot.className = "status-dot";
-            status.append(dot, document.createTextNode(isOpen ? "Açığız" : "Kapalıyız"));
-        }
+    const status = document.querySelector(".open-status");
+    if (status) {
+        const isOpen = appearance.isOpen !== false;
+        status.classList.toggle("is-closed", !isOpen);
+        status.setAttribute("aria-label", isOpen ? "İşletme açık" : "İşletme kapalı");
+        status.textContent = "";
+        const dot = document.createElement("span");
+        dot.className = "status-dot";
+        status.append(dot, document.createTextNode(isOpen ? "Açığız" : "Kapalıyız"));
+    }
 
-        const heroImage = document.querySelector(".hero-image");
-        if (heroImage) { heroImage.style.display = appearance.cover ? "block" : "none"; if (appearance.cover) heroImage.src = appearance.cover; }
+    const heroImage = document.querySelector(".hero-image");
+    if (heroImage) {
+        heroImage.style.display = appearance.cover ? "block" : "none";
+        if (appearance.cover) heroImage.src = appearance.cover;
+    }
 
-        const heroLabel = document.querySelector(".hero-label");
-        if (heroLabel && appearance.eyebrow) {
-            heroLabel.textContent = "";
-            const icon = document.createElement("i");
-            icon.className = "bi bi-stars me-1";
-            heroLabel.append(icon, document.createTextNode(appearance.eyebrow));
-        }
+    const heroLabel = document.querySelector(".hero-label");
+    if (heroLabel && appearance.eyebrow) {
+        heroLabel.textContent = "";
+        const icon = document.createElement("i");
+        icon.className = "bi bi-stars me-1";
+        heroLabel.append(icon, document.createTextNode(appearance.eyebrow));
+    }
 
-        const heroHeading = document.querySelector(".hero-content h1");
-        if (heroHeading && appearance.headline) {
-            heroHeading.textContent = "";
-            appearance.headline.split("\n").forEach((line, index) => {
-                if (index) heroHeading.append(document.createElement("br"));
-                heroHeading.append(document.createTextNode(line));
-            });
-        }
+    const heroHeading = document.querySelector(".hero-content h1");
+    if (heroHeading && appearance.headline) {
+        heroHeading.textContent = "";
+        appearance.headline.split("\n").forEach((line, index) => {
+            if (index) heroHeading.append(document.createElement("br"));
+            heroHeading.append(document.createTextNode(line));
+        });
+    }
 
-        const reviewLink = document.getElementById("googleReviewLink");
-        const googleReviewUrl = (appearance.googleReviewUrl || "").trim();
-        if (reviewLink) {
-            try {
-                const parsedReviewUrl = new URL(googleReviewUrl);
-                if (["http:", "https:"].includes(parsedReviewUrl.protocol)) {
-                    reviewLink.href = parsedReviewUrl.href;
-                    reviewLink.removeAttribute("aria-disabled");
-                    reviewLink.removeAttribute("tabindex");
-                } else {
-                    reviewLink.removeAttribute("href");
-                    reviewLink.setAttribute("aria-disabled", "true");
-                    reviewLink.setAttribute("tabindex", "-1");
-                }
-            } catch (error) {
+    const reviewLink = document.getElementById("googleReviewLink");
+    const googleReviewUrl = (appearance.googleReviewUrl || "").trim();
+    if (reviewLink) {
+        try {
+            const parsedReviewUrl = new URL(googleReviewUrl);
+            if (["http:", "https:"].includes(parsedReviewUrl.protocol)) {
+                reviewLink.href = parsedReviewUrl.href;
+                reviewLink.removeAttribute("aria-disabled");
+                reviewLink.removeAttribute("tabindex");
+            } else {
                 reviewLink.removeAttribute("href");
                 reviewLink.setAttribute("aria-disabled", "true");
                 reviewLink.setAttribute("tabindex", "-1");
             }
+        } catch (error) {
+            reviewLink.removeAttribute("href");
+            reviewLink.setAttribute("aria-disabled", "true");
+            reviewLink.setAttribute("tabindex", "-1");
         }
+    }
 
-        if (appearance.accent) document.documentElement.style.setProperty("--menu-accent", appearance.accent);
-        const footerBrand = document.querySelector(".footer-brand");
-        if (footerBrand && appearance.brandName) {
-            footerBrand.textContent = "";
-            const icon = document.createElement("i");
-            icon.className = "bi bi-cup-hot-fill me-1";
-            footerBrand.append(icon, document.createTextNode(appearance.brandName));
-        }
+    if (appearance.accent) document.documentElement.style.setProperty("--menu-accent", appearance.accent);
+    const footerBrand = document.querySelector(".footer-brand");
+    if (footerBrand && appearance.brandName) {
+        footerBrand.textContent = "";
+        const icon = document.createElement("i");
+        icon.className = "bi bi-cup-hot-fill me-1";
+        footerBrand.append(icon, document.createTextNode(appearance.brandName));
+    }
+}
+
+async function loadMenuAppearance() {
+    try {
+        const response = await fetch("/api/appearance", { headers: { "Accept": "application/json" } });
+        if (!response.ok) throw new Error("Menü görünümü şu anda yüklenemiyor.");
+        const result = await response.json();
+        applyMenuAppearance(result.appearance);
     } catch (error) {
-        console.warn("Menü görünüm ayarları okunamadı.", error);
+        console.error("Menü görünümü yüklenemedi.", error);
     }
 }
 
@@ -350,7 +362,7 @@ function updateCategoryScrollHint() {
 categoryList.addEventListener("scroll", updateCategoryScrollHint, { passive: true });
 window.addEventListener("resize", updateCategoryScrollHint);
 
-applySavedAppearance();
+loadMenuAppearance();
 applySavedBusinessSettings();
 renderCategories();
 renderProducts();
