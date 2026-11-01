@@ -1,6 +1,6 @@
 <%- include("../partials/head.ejs", {
   title: "Garson Paneli | Roast & Co.",
-  description: "Roast & Co. garson masa ve menü görüntüleme paneli",
+  description: "Roast & Co. garson masa ve menü yönetimi",
   themeColor: "#f7f5f0",
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
   cssFile: "waiter.css"
@@ -37,7 +37,7 @@
     <section id="tablesView" class="view-screen" aria-label="Masa listesi">
       <div class="list-toolbar">
         <div class="filter-pills" role="group" aria-label="Masa listesi">
-          <button class="filter-pill active" type="button">Tüm masalar <span id="allTableCount">0</span></button>
+          <button class="filter-pill active" type="button" data-table-filter="all">Tüm masalar <span id="allTableCount">0</span></button>
         </div>
         <label class="table-search">
           <i class="bi bi-search" aria-hidden="true"></i>
@@ -49,30 +49,80 @@
       </div>
       <div class="page-footnote">
         <i class="bi bi-info-circle"></i>
-        <span>Menüyü görüntülemek için çalışacağınız masayı seçin. Sipariş oluşturma ve kasaya gönderme şu an devre dışıdır.</span>
+        <span>Masayı seçerek o masanın güncel menüsünü görüntüleyebilirsiniz. Sipariş kaydetme ve gönderme bu aşamada kapalıdır.</span>
       </div>
     </section>
 
-    <section id="tableDetailsView" class="view-screen" hidden aria-label="Seçilen masa ve menü">
+    <section id="tableDetailsView" class="view-screen" hidden aria-label="Seçilen masa">
       <button class="back-link" id="backToTablesButton" type="button"><i class="bi bi-arrow-left"></i> Masalara dön</button>
       <div class="table-detail-hero surface-card">
         <div class="table-detail-title">
           <span class="table-hero-icon"><i class="bi bi-grid-1x2-fill"></i></span>
           <div>
-            <span class="eyebrow">SEÇİLİ MASA</span>
+            <span class="eyebrow">MASA DETAYI</span>
             <h2 id="detailsTableName">Masa</h2>
             <p id="detailsTableMeta">Kişi kapasitesi</p>
           </div>
         </div>
         <span class="table-open-badge"><span class="status-dot"></span><span id="detailsTableStatus">Masa seçildi</span></span>
+        <div class="table-summary-grid">
+          <div class="summary-stat"><span>Adisyon sistemi</span><strong id="detailsGrandTotal">Henüz bağlı değil</strong></div>
+          <div class="summary-stat"><span>Menüdeki ürün</span><strong id="detailsItemCount">0 ürün</strong></div>
+          <div class="summary-stat"><span>Sipariş geçmişi</span><strong id="detailsRoundCount">Henüz bağlı değil</strong></div>
+        </div>
+        <div class="table-detail-actions">
+          <button class="btn-primary-action" id="startNewOrderButton" type="button"><i class="bi bi-eye"></i> Menüyü görüntüle</button>
+        </div>
       </div>
 
-      <section class="catalog-section mt-4" aria-label="Menü ürünleri">
+      <section class="history-section">
+        <div class="history-title-row">
+          <div>
+            <span class="eyebrow">ADİSYON KAYDI</span>
+            <h2>Sipariş geçmişi</h2>
+            <p>Sipariş ve adisyon backend'i henüz etkinleştirilmedi.</p>
+          </div>
+          <span class="history-count" id="historyCount">Henüz yok</span>
+        </div>
+        <div class="history-list" id="orderHistory" aria-live="polite"></div>
+        <div id="historyEmpty" class="empty-history">
+          <span class="empty-history-icon"><i class="bi bi-receipt"></i></span>
+          <strong>Henüz bağlı bir sipariş kaydı yok</strong>
+          <span>Bu aşamada masa ve menü bilgileri görüntülenebilir. Sipariş geçmişi sonraki backend aşamasında eklenecek.</span>
+        </div>
+      </section>
+    </section>
+
+    <section id="newOrderView" class="view-screen" hidden aria-label="Menü ve ürünler">
+      <button class="back-link" id="backToDetailsButton" type="button"><i class="bi bi-arrow-left"></i> <span id="newOrderBackLabel">Masa detayına dön</span></button>
+      <div class="new-order-heading">
+        <div>
+          <span class="eyebrow">MENÜ</span>
+          <h2 id="newOrderTableName">Masa</h2>
+          <p>Ürünleri inceleyebilir ve geçici önizleme listesine ekleyebilirsiniz. Sipariş kaydı henüz açık değildir.</p>
+        </div>
+        <span class="round-chip" id="newOrderRoundLabel">Önizleme</span>
+      </div>
+
+      <details class="order-summary-accordion surface-card" id="draftSummaryAccordion" open>
+        <summary class="order-summary-trigger">
+          <span class="order-summary-icon"><i class="bi bi-basket2"></i></span>
+          <span class="order-summary-copy"><strong>Seçilen ürünler</strong><small id="draftItemCount">Henüz ürün seçilmedi</small></span>
+          <strong class="order-summary-amount" id="draftTotal">₺0,00</strong>
+          <span class="order-summary-chevron"><i class="bi bi-chevron-down"></i></span>
+        </summary>
+        <div class="order-summary-content">
+          <div id="draftOrderItems" class="draft-order-items"></div>
+          <div id="draftOrderEmpty" class="draft-order-empty"><i class="bi bi-basket2"></i><span>Menüden ürün ekledikçe burada geçici olarak görünecek.</span></div>
+        </div>
+      </details>
+
+      <section class="catalog-section">
         <div class="catalog-heading">
           <div>
-            <span class="eyebrow">MENÜ</span>
-            <h2>Ürün ve Kategoriler</h2>
-            <p>Yönetici tarafından eklenen güncel ürünleri ve fiyatları görüntüleyin.</p>
+            <span class="eyebrow">MENÜ KATALOĞU</span>
+            <h2>Kategoriler ve ürünler</h2>
+            <p>Yönetim panelinde kayıtlı güncel ürünler ve fiyatlar.</p>
           </div>
           <label class="product-search">
             <i class="bi bi-search" aria-hidden="true"></i>
@@ -80,13 +130,17 @@
           </label>
         </div>
         <nav class="category-tabs" id="categoryTabs" aria-label="Ürün kategorileri"></nav>
-        <div class="catalog-meta">
-          <span id="productsResultCount">Menü yükleniyor...</span>
-          <span>Fiyatlar TL</span>
-        </div>
+        <div class="catalog-meta"><span id="productsResultCount">Menü yükleniyor...</span><span>Fiyatlar TL</span></div>
         <div class="product-grid" id="productGrid" aria-live="polite"></div>
         <div class="catalog-empty" id="catalogEmpty" hidden></div>
       </section>
+
+      <div class="send-order-bar">
+        <div class="send-order-summary"><span id="sendOrderCount">0 ürün</span><strong id="sendOrderTotal">₺0,00</strong></div>
+        <button class="send-order-button" id="sendOrderButton" type="button" disabled title="Sipariş kaydetme ve gönderme sonraki aşamada etkinleştirilecek.">
+          <i class="bi bi-lock-fill"></i> Sipariş gönderimi kapalı
+        </button>
+      </div>
     </section>
   </main>
 </div>
