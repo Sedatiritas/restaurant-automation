@@ -67,6 +67,9 @@ function applyMenuAppearance(appearance) {
     const brandName = document.querySelector(".brand-name");
     if (brandName && appearance.brandName) brandName.textContent = appearance.brandName;
 
+    const menuEyebrow = document.querySelector(".menu-heading .section-eyebrow");
+    if (menuEyebrow) menuEyebrow.textContent = (appearance.brandName || "").trim() + " MENÜ";
+
     const subtitle = document.querySelector(".brand-subtitle");
     if (subtitle) subtitle.textContent = appearance.tagline || "";
 
