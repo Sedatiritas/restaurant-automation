@@ -8,6 +8,7 @@ import catalogRoutes from "./routes/catalog.routes.js";
 import appearanceRoutes from "./routes/appearance.routes.js";
 import businessSettingsRoutes from "./routes/business-settings.routes.js";
 import tablesRoutes from "./routes/tables.routes.js";
+import ordersRoutes from "./routes/orders.routes.js";
 import { notFoundHandler } from "./middlewares/not-found.middleware.js";
 
 const app = express();
@@ -44,6 +45,7 @@ app.use(catalogRoutes);
 app.use(appearanceRoutes);
 app.use(businessSettingsRoutes);
 app.use(tablesRoutes);
+app.use(ordersRoutes);
 app.use(pageRoutes);
 app.use(notFoundHandler);
 
