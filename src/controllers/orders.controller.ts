@@ -323,7 +323,8 @@ export const collectCashierPayment: RequestHandler = async (req, res, next) => {
           allocations: { select: { unitIndex: true } }
         }
       });
-      const itemMap = new Map(orderItems.map((item) => [item.id, item]));
+      const itemMap = new Map<string, typeof orderItems[number]>();
+      orderItems.forEach((item) => itemMap.set(item.id, item));
       let total = 0;
       const allocations: Array<{ orderItemId: string; unitIndex: number; amount: number }> = [];
 
