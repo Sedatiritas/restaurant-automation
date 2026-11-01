@@ -1,19 +1,70 @@
 # Roast & Co. — QR Menü
 
-Restoranlar için hazırlanmış web tabanlı QR menü ve sipariş yönetimi arayüzü.
+Restoranlar için geliştirilen web tabanlı QR menü ve sipariş yönetimi uygulaması.
 
-Projede müşterilerin ürünleri ve fiyatları görüntüleyebildiği bir dijital menü; ürün, kategori ve masa yönetimi için bir yönetim paneli; siparişleri düzenlemek için garson ekranı ve adisyonları ürün bazında ayırmaya yardımcı olan bir kasa ekranı bulunur.
+Uygulamada müşteri menüsü, restoran yönetim paneli, garson ekranı ve kasa ekranı bulunur. Sayfalar Express üzerinden EJS şablonlarıyla sunulur; mevcut HTML arayüzleri korunarak sunucu taraflı sayfa yapısına taşınmıştır.
 
-## Kullanılan Teknolojiler
+## Teknolojiler
 
-- HTML
-- CSS
-- JavaScript
-- Bootstrap
+- Node.js 24
+- Express 5
+- TypeScript
+- EJS
+- PostgreSQL
+- Prisma 7
+- HTML, CSS, Vanilla JavaScript
+- Bootstrap 5.3.8
 
-## Ekranlar
+## Proje yapısı
 
-- **Dijital Menü:** Ürünleri, fiyatları ve kategorileri görüntüleme.
-- **Yönetim Paneli:** Ürün, kategori ve masa yönetimi.
-- **Garson Paneli:** Masaları görüntüleme ve sipariş oluşturma.
-- **Kasa Paneli:** Adisyonları görüntüleme, ürünleri kişi bazında seçme ve seçilen ürünlerin toplamını hesaplama.
+```text
+public/
+  css/          # Tarayıcıya sunulan CSS dosyaları
+  js/           # Tarayıcıya sunulan JavaScript dosyaları
+
+views/
+  menu/         # Müşteri QR menüsü
+  admin/        # Restoran yönetim paneli
+  waiter/       # Garson ekranı
+  cashier/      # Kasa ekranı
+  partials/     # Ortak EJS head ve script şablonları
+
+src/
+  controllers/  # Sayfa controller'ları
+  middlewares/  # Express middleware'leri
+  routes/       # Express route tanımları
+  app.ts        # Express uygulama yapılandırması
+  server.ts     # Yerel geliştirme sunucusu
+
+prisma/         # Prisma şeması ve migration dosyaları (sonraki aşama)
+```
+
+## Yerel geliştirme
+
+1. Node.js 24 kurulu olmalı.
+2. Proje klasöründe bağımlılıkları yükle:
+
+   ```powershell
+   npm install
+   ```
+
+3. Gerekli ortam değişkenleri için örnek dosyayı kopyala:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+4. Geliştirme sunucusunu başlat:
+
+   ```powershell
+   npm run dev
+   ```
+
+5. Tarayıcıdan ekranları aç:
+
+   - Müşteri menüsü: http://localhost:3000/
+   - Yönetim paneli: http://localhost:3000/admin
+   - Garson: http://localhost:3000/waiter
+   - Kasa: http://localhost:3000/cashier
+
+> PostgreSQL ve Prisma bağlantısı henüz yapılandırılmadı. Bu aşamada EJS sayfaları Express üzerinden sunulur; veritabanı entegrasyonu sonraki geliştirme adımıdır.
