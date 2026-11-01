@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     screen: "tables",
     tableError: "",
     menuError: "",
+    sendingOrder: false,
     draftItems: []
   };
 
@@ -327,11 +328,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const summary = draftSummary();
 
     byId("draftItemCount").textContent = summary.quantity
-      ? summary.quantity + " adet ürün · geçici önizleme"
+      ? summary.quantity + " adet ürün"
       : "Henüz ürün seçilmedi";
     byId("draftTotal").textContent = money(summary.total);
     byId("sendOrderCount").textContent = summary.quantity + " ürün";
     byId("sendOrderTotal").textContent = money(summary.total);
+    byId("sendOrderButton").disabled = summary.quantity === 0 || state.sendingOrder;
 
     empty.hidden = summary.quantity > 0;
     list.innerHTML = state.draftItems.map(function (item) {
@@ -381,7 +383,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     renderDraft();
-    showToast(product.name + " geçici önizlemeye eklendi.");
+    showToast(product.name + " siparişe eklendi.");
   }
 
   function updateDraftItem(productId, action) {
@@ -399,6 +401,58 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     renderDraft();
+  }
+
+  async function sendOrder() {
+    const table = selectedTable();
+    if (!table) {
+      showScreen("tables");
+      return;
+    }
+    if (!state.draftItems.length || state.sendingOrder) return;
+
+    state.sendingOrder = true;
+    renderDraft();
+    const button = byId("sendOrderButton");
+    const originalMarkup = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-arrow-repeat"></i> Gönderiliyor...';
+
+    try {
+      const response = await fetch("/api/waiter/tables/" + encodeURIComponent(table.id) + "/orders", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          items: state.draftItems.map(function (item) {
+            return { productId: item.id, quantity: item.quantity };
+          })
+        })
+      });
+      const payload = await response.json().catch(function () { return null; });
+      if (!response.ok) {
+        throw new Error(payload && (payload.message || payload.error)
+          ? (payload.message || payload.error)
+          : "Sipariş kaydedilemedi.");
+      }
+
+      state.draftItems = [];
+      if (payload.order && payload.order.roundNumber) {
+        byId("newOrderRoundLabel").textContent = "Tur #" + payload.order.roundNumber;
+      }
+      renderDraft();
+      await loadTables(table.id);
+      showToast(table.name + " için sipariş mutfağa gönderildi.");
+    } catch (error) {
+      showToast(error.message || "Sipariş gönderilirken hata oluştu.");
+    } finally {
+      state.sendingOrder = false;
+      button.innerHTML = originalMarkup;
+      renderDraft();
+    }
   }
 
   async function loadTables() {
@@ -561,6 +615,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!button) return;
     updateDraftItem(button.dataset.productId, button.dataset.draftAction);
   });
+
+  byId("sendOrderButton").addEventListener("click", sendOrder);
 
   byId("catalogEmpty").addEventListener("click", function (event) {
     const button = event.target.closest("#retryMenuButton");
