@@ -63,45 +63,23 @@
             </div>
           </div>
           <div class="bill-table-list" id="billTableList" aria-live="polite">
-            <button type="button" class="bill-table-card demo-table-card" data-demo-table-id="1" data-demo-open="true">
-              <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>Masa 01</strong><small>2 kişilik masa · Adisyon açık</small></span></span>
-              <span class="bill-table-end"><strong>₺320,00</strong><small class="demo-open-label">Adisyon açık</small></span>
-            </button>
-            <button type="button" class="bill-table-card demo-table-card active" data-demo-table-id="2" data-demo-open="true" aria-pressed="true">
-              <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>Masa 02</strong><small>4 kişilik masa · Adisyon açık</small></span></span>
-              <span class="bill-table-end"><strong>₺545,00</strong><small class="demo-open-label">Seçili masa</small></span>
-            </button>
-            <button type="button" class="bill-table-card demo-table-card" data-demo-table-id="3" data-demo-open="true">
-              <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2-fill"></i></span><span class="bill-table-info"><strong>Masa 03</strong><small>4 kişilik masa · Adisyon açık</small></span></span>
-              <span class="bill-table-end"><strong>₺760,00</strong><small class="demo-open-label">Adisyon açık</small></span>
-            </button>
-            <button type="button" class="bill-table-card demo-table-card" data-demo-table-id="4" data-demo-open="false" disabled hidden>
-              <span class="bill-table-card-main"><span class="bill-table-icon"><i class="bi bi-grid-1x2"></i></span><span class="bill-table-info"><strong>Masa 04</strong><small>2 kişilik masa · Boş</small></span></span>
-              <span class="bill-table-end"><strong>—</strong><small>Boş masa</small></span>
-            </button>
+            <div class="list-placeholder"><span class="placeholder-icon"><i class="bi bi-arrow-repeat"></i></span><strong>Adisyonlar yükleniyor</strong><span>Garsonlardan gelen siparişler sunucudan alınıyor.</span></div>
           </div>
         </section>
 
         <section class="panel bill-detail-panel" aria-label="Seçili masa hesabı">
           <div class="panel-heading detail-panel-heading">
-            <div><span class="eyebrow">SEÇİLİ MASA</span><h2 id="selectedTableName">Masa 02</h2><p id="selectedTableMeta">4 kişilik masa · 1 sipariş turu</p></div>
-            <span class="bill-status is-open" id="selectedBillStatus">Adisyon açık</span>
+            <div><span class="eyebrow">SEÇİLİ MASA</span><h2 id="selectedTableName">Masa seçilmedi</h2><p id="selectedTableMeta">Açık adisyonu olan bir masa seç.</p></div>
+            <span class="bill-status" id="selectedBillStatus">Bekliyor</span>
           </div>
           <div class="bill-detail-body" id="billDetailBody">
-            <article class="order-round">
-              <div class="order-round-head"><strong>Sipariş turu #1</strong><span>14:26</span></div>
-              <label class="order-round-item is-selected" for="demo-latte-1"><input class="bill-item-checkbox" id="demo-latte-1" type="checkbox" checked data-line-total="130"><span class="order-product-details"><strong>Latte</strong><small>1 / 2 adet · ₺130,00</small></span><strong class="order-line-total">₺130,00</strong></label>
-              <label class="order-round-item is-selected" for="demo-latte-2"><input class="bill-item-checkbox" id="demo-latte-2" type="checkbox" checked data-line-total="130"><span class="order-product-details"><strong>Latte</strong><small>2 / 2 adet · ₺130,00</small></span><strong class="order-line-total">₺130,00</strong></label>
-              <label class="order-round-item is-selected" for="demo-americano-1"><input class="bill-item-checkbox" id="demo-americano-1" type="checkbox" checked data-line-total="100"><span class="order-product-details"><strong>Americano</strong><small>1 adet · ₺100,00</small></span><strong class="order-line-total">₺100,00</strong></label>
-              <label class="order-round-item is-selected" for="demo-san-1"><input class="bill-item-checkbox" id="demo-san-1" type="checkbox" checked data-line-total="185"><span class="order-product-details"><strong>San Sebastian</strong><small>1 adet · ₺185,00</small></span><strong class="order-line-total">₺185,00</strong></label>
-              <div class="order-round-total"><span>Seçili ürünler</span><strong>₺545,00</strong></div>
-            </article>
+            <div class="detail-placeholder"><span class="placeholder-icon"><i class="bi bi-receipt"></i></span><strong>Adisyon bekleniyor</strong><span>Garson yeni sipariş gönderdiğinde ürünler burada listelenecek.</span></div>
           </div>
           <div class="bill-total-panel">
             <div class="bill-payment-summary">
-              <div><span>Adisyon toplamı</span><strong id="billGrandTotal">₺545,00</strong></div>
+              <div><span>Adisyon toplamı</span><strong id="billGrandTotal">₺0,00</strong></div>
               <div><span>Tahsil edilen</span><strong id="paidTotal">₺0,00</strong></div>
-              <div><span>Kalan tutar</span><strong id="remainingTotal">₺545,00</strong></div>
+              <div><span>Kalan tutar</span><strong id="remainingTotal">₺0,00</strong></div>
             </div>
             <div class="bill-total-row"><span>Seçilenlerin tahsilat tutarı</span><strong id="billTotal">₺0,00</strong></div>
             <p class="close-bill-note" id="closeBillNote">Ödenmemiş ürünleri seçerek tahsilat oluştur. Adisyonu ayrıca kapatacaksın.</p>
