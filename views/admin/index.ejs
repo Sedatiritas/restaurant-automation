@@ -33,10 +33,10 @@
         <div class="sidebar-bottom">
           <div class="sidebar-user-wrap">
             <button class="sidebar-user" id="profileMenuButton" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <span class="user-avatar">RC</span><span><strong>İşletme Yöneticisi</strong><small>Yönetici hesabı</small></span><i class="bi bi-three-dots ms-auto"></i>
+              <span class="user-avatar">RC</span><span><strong><%= authUser.fullName %></strong><small>Yönetici hesabı</small></span><i class="bi bi-three-dots ms-auto"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end profile-dropdown" aria-labelledby="profileMenuButton">
-              <li><button class="dropdown-item text-danger" type="button" data-action="logout"><i class="bi bi-box-arrow-right me-2"></i>Çıkış yap</button></li>
+              <li><form action="/auth/logout" method="post"><button class="dropdown-item text-danger w-100 text-start" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Çıkış yap</button></form></li>
             </ul>
           </div>
         </div>
