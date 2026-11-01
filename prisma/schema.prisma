@@ -62,3 +62,20 @@ model Product {
   @@index([categoryId, status, sortOrder])
   @@map("products")
 }
+
+model MenuAppearance {
+  id              String   @id @default("default")
+  brandName       String   @default("roast & co.") @db.VarChar(60)
+  tagline         String   @default("COFFEE · DESSERT · MOMENTS") @db.VarChar(100)
+  eyebrow         String   @default("HER FİNCANDA MUTLULUK") @db.VarChar(80)
+  headline        String   @default("Kendine güzel bir mola ver.") @db.VarChar(140)
+  logoUrl         String?
+  coverUrl        String?
+  accent          String   @default("#b96e43") @db.VarChar(7)
+  isOpen          Boolean  @default(true)
+  googleReviewUrl String?  @db.VarChar(1000)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("menu_appearance")
+}
