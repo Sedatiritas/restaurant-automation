@@ -317,7 +317,7 @@ export const getWaiterCatalog: RequestHandler = async (_req, res, next) => {
   }
 };
 
-export const createCategory: RequestHandlerexport const createCategory: RequestHandler = async (req, res, next) => {
+export const createCategory: RequestHandler = async (req, res, next) => {
   const parsed = createCategorySchema.safeParse(req.body);
 
   if (!parsed.success) {
