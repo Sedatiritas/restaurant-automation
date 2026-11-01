@@ -297,7 +297,6 @@ document.addEventListener("DOMContentLoaded", function () {
     title.textContent = viewTitles[state.view];
     crumb.textContent = viewTitles[state.view].toLocaleUpperCase("tr");
     document.querySelectorAll(".admin-nav-link").forEach(function(link){link.classList.toggle("active",link.dataset.view===state.view);});
-    document.getElementById("navProductCount").textContent = state.products.length;
     if (updateHash !== false && window.location.hash !== "#"+state.view) history.replaceState(null,"","#"+state.view);
     const sidebar=document.getElementById("adminSidebar");
     if (sidebar && window.bootstrap && sidebar.classList.contains("show")) bootstrap.Offcanvas.getOrCreateInstance(sidebar).hide();
