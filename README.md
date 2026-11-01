@@ -84,3 +84,12 @@ prisma/         # Prisma şeması ve migration dosyaları
    - Kasa: http://localhost:3000/cashier
 
 > Yönetim, kasiyer ve garson ekranları giriş gerektirir. Girişte rol seçilir; rol, kullanıcı adı ve parola veritabanındaki kullanıcı hesabıyla doğrulanır. İlk yönetici hesabı `npm run db:create-admin` komutuyla kullanıcı adı ve parola kullanılarak oluşturulur. Parolalar Argon2 ile doğrulanır, oturum çerezi HttpOnly ve SameSite=Strict olarak ayarlanır. Oturum süresi 8 saattir.
+
+## Personel ve roller
+
+- İlk yönetici hesabı yalnızca ilk kurulumda `npm run db:create-admin` komutuyla oluşturulur.
+- Sonraki yönetici, garson ve kasiyer hesapları Yönetim Paneli > Personel ve Yetkiler bölümünden eklenir.
+- Bu bölümde kullanıcı adı, rol ve parola belirlenebilir; mevcut hesapların kullanıcı adı/rolü güncellenebilir, parola sıfırlanabilir, hesap etkinleştirilebilir/pasifleştirilebilir veya silinebilir.
+- Parolalar Argon2id ile hash'lenir; parola hash'i API yanıtlarında asla gönderilmez.
+- Sistem en az bir aktif yönetici hesabı bulunmasını zorunlu tutar. Oturumu açık bir hesabın rolü veya etkinlik durumu değişirse sonraki istekte mevcut oturum geçersiz kılınır.
+- Personel yönetimi API'si yalnızca yönetici rolüne açıktır (`/api/staff`).
