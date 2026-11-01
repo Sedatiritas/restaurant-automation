@@ -22,10 +22,32 @@
   <main class="waiter-main">
     <section class="page-intro">
       <div class="intro-copy">
-        <span class="eyebrow">MENÜ GÖRÜNTÜLEME</span>
-        <h1>Ürün ve Kategoriler</h1>
-        <p>Yönetici tarafından menüye eklenen ürünleri ve kategorileri buradan görüntüleyebilirsiniz.</p>
+        <span class="eyebrow">SALON YÖNETİMİ</span>
+        <h1>Masa ve Menü</h1>
+        <p>Çalışacağınız masayı seçin; ardından menü kategorilerini ve ürünlerini görüntüleyin.</p>
       </div>
+      <div class="shift-summary">
+        <span class="shift-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+        <span><strong id="tableCountSummary">Masalar yükleniyor</strong><small id="tableSelectionSummary">Henüz masa seçilmedi</small></span>
+      </div>
+    </section>
+
+    <section class="view-screen mb-4" aria-label="Garson masaları">
+      <div class="catalog-heading">
+        <div>
+          <span class="eyebrow">SALON</span>
+          <h2>Masalar</h2>
+          <p>Masayı seçerek aktif çalışma alanını belirleyin.</p>
+        </div>
+        <label class="table-search">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input type="search" id="tableSearch" placeholder="Masa ara..." autocomplete="off" aria-label="Masa ara">
+        </label>
+      </div>
+      <div class="table-grid" id="tablesGrid" aria-live="polite">
+        <div class="empty-history"><strong>Masalar yükleniyor</strong><span>Masa listesi sunucudan alınıyor.</span></div>
+      </div>
+      <div class="page-footnote"><i class="bi bi-info-circle"></i><span>Şimdilik masaları ve menü ürünlerini görüntüleyebilirsiniz. Sipariş oluşturma ve kasaya gönderme henüz etkin değil.</span></div>
     </section>
 
     <section class="catalog-section" aria-label="Menü ürünleri">
