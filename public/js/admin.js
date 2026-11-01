@@ -451,8 +451,11 @@ document.addEventListener("DOMContentLoaded", function () {
       };
       const file=form.querySelector('[name="imageFile"]')?.files?.[0];
       if(file){
-        try{payload.imageData=await imageFileToDataUrl(file,900);}
-        catch(error){notify("Görsel okunamadı. PNG, JPEG veya WebP dosyası deneyin.");return;}
+        try{
+          const imageData=await imageFileToDataUrl(file,900);
+          if(imageData.length>1_400_000){notify("Görsel sıkıştırıldıktan sonra 1 MB sınırını aşıyor. Daha küçük bir görsel deneyin.");return;}
+          payload.imageData=imageData;
+        }catch(error){notify("Görsel okunamadı. PNG, JPEG veya WebP dosyası deneyin.");return;}
       }else if(data.removeImage==="true"){
         payload.removeImage=true;
       }
