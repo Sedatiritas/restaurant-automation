@@ -79,3 +79,17 @@ model MenuAppearance {
 
   @@map("menu_appearance")
 }
+
+model BusinessSettings {
+  id          String   @id @default("default")
+  phone       String   @default("") @db.VarChar(40)
+  email       String?  @db.VarChar(254)
+  address     String?  @db.VarChar(500)
+  description String   @default("Kahve, tatlı ve güzel anlar.") @db.VarChar(250)
+  instagram   String?  @db.VarChar(1000)
+  whatsapp    String?  @db.VarChar(1000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("business_settings")
+}
