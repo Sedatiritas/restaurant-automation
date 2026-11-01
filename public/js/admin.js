@@ -162,13 +162,13 @@ document.addEventListener("DOMContentLoaded", function () {
       }).join("") : '<div class="panel-card p-4 text-center"><strong>Henüz kategori yok</strong><p class="text-muted mb-0 mt-1">Ürün eklemeden önce ilk menü kategorinizi oluşturun.</p></div>') + '</div>';
   }
   function tablesView() {
-    if (!state.tablesLoaded) {
-      return pageHeading("OPERASYON","Masa Yönetimi","Kayıtlı masalar getiriliyor.") +
-        '<section class="panel-card p-4 text-muted small"><span class="spinner-border spinner-border-sm me-2" role="status"></span>Masalar yükleniyor...</section>';
-    }
     if (state.tablesError) {
       return pageHeading("OPERASYON","Masa Yönetimi","Masa listesi yüklenemedi.") +
         '<section class="panel-card p-4"><p class="mb-3">' + escapeHtml(state.tablesError) + '</p><button class="btn btn-primary-soft" type="button" data-action="refresh-tables">Tekrar dene</button></section>';
+    }
+    if (!state.tablesLoaded) {
+      return pageHeading("OPERASYON","Masa Yönetimi","Kayıtlı masalar getiriliyor.") +
+        '<section class="panel-card p-4 text-muted small"><span class="spinner-border spinner-border-sm me-2" role="status"></span>Masalar yükleniyor...</section>';
     }
     const rows = state.tables.map(function(table) {
       return '<tr><td><div class="d-flex align-items-center gap-2"><span class="staff-avatar"><i class="bi bi-grid-1x2-fill"></i></span><strong class="text-dark">' + escapeHtml(table.name) + '</strong></div></td><td>' + Number(table.seats) + ' kişi</td><td><div class="table-actions"><button class="table-action" type="button" data-action="edit-table" data-id="' + escapeHtml(table.id) + '" aria-label="Masayı düzenle" title="Düzenle"><i class="bi bi-pencil"></i></button><button class="table-action danger" type="button" data-action="delete-table" data-id="' + escapeHtml(table.id) + '" aria-label="Masayı sil" title="Sil"><i class="bi bi-trash3"></i></button></div></td></tr>';
