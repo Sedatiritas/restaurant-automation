@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let selectedProductImageFile = null;
   let selectedProductImageData = "";
 
-  const state = { products:[], categories:[], tables:[], tablesLoaded:false, tablesError:"", staff:[], settings:structuredClone(defaults.settings), settingsLoaded:false, settingsError:"", appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
+  const state = { products:[], categories:[], tables:[], tablesLoaded:false, tablesError:"", staff:[], settings:structuredClone(defaults.settings), settingsLoaded:false, settingsError:"", appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()), revenueData:null, revenueLoading:false, revenueError:"", revenueRequestId:0 };
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
     toastMessage.textContent = message;
@@ -66,59 +66,94 @@ document.addEventListener("DOMContentLoaded", function () {
   function currentMonthValue(date) {
     return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
   }
-  function getCashierSales() {
-    try {
-      const saved = JSON.parse(localStorage.getItem("roastCashier_sales") || "[]");
-      return Array.isArray(saved) ? saved : [];
-    } catch (error) {
-      return [];
-    }
-  }
   function revenueView() {
-    const selectedMonth = /^\d{4}-\d{2}$/.test(state.revenueMonth) ? state.revenueMonth : currentMonthValue(new Date());
-    const dailyTotals = {};
-    const summary = { total: 0, cash: 0, card: 0, count: 0 };
-    getCashierSales().forEach(function (sale) {
-      if (!sale || !sale.date || String(sale.date).slice(0, 7) !== selectedMonth) return;
-      const amount = Number(sale.amount);
-      const method = sale.paymentMethod === "card" ? "card" : sale.paymentMethod === "cash" ? "cash" : "";
-      if (!method || !Number.isFinite(amount) || amount < 0) return;
-      const date = String(sale.date).slice(0, 10);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
-      summary.total += amount;
-      summary[method] += amount;
-      summary.count += 1;
-      if (!dailyTotals[date]) dailyTotals[date] = { date: date, total: 0, cash: 0, card: 0, count: 0 };
-      dailyTotals[date].total += amount;
-      dailyTotals[date][method] += amount;
-      dailyTotals[date].count += 1;
-    });
-    const cashPercent = summary.total > 0 ? summary.cash / summary.total * 100 : 0;
-    const cardPercent = summary.total > 0 ? summary.card / summary.total * 100 : 0;
-    const dailyRows = Object.keys(dailyTotals).sort().reverse().map(function (date) {
-      const day = dailyTotals[date];
-      const formattedDate = new Date(date + "T12:00:00").toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric", weekday: "short" });
-      return '<tr><td><strong class="revenue-date">' + escapeHtml(formattedDate) + '</strong></td><td>' + day.count + '</td><td class="price-cell">' + money(day.total) + '</td><td>' + money(day.cash) + '</td><td>' + money(day.card) + '</td></tr>';
+    const selectedMonth = /^\\d{4}-\\d{2}$/.test(state.revenueMonth) ? state.revenueMonth : currentMonthValue(new Date());
+    const report = state.revenueData && state.revenueData.month === selectedMonth ? state.revenueData : null;
+    const summary = report && report.summary ? report.summary : { total: 0, cash: 0, card: 0, count: 0 };
+    const days = report && Array.isArray(report.days) ? report.days : [];
+    const cashPercent = Number(summary.total) > 0 ? Number(summary.cash) / Number(summary.total) * 100 : 0;
+    const cardPercent = Number(summary.total) > 0 ? Number(summary.card) / Number(summary.total) * 100 : 0;
+    const dailyRows = days.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (day) {
+      const formattedDate = new Date(String(day.date) + "T12:00:00").toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric", weekday: "short" });
+      return '<tr><td><strong class="revenue-date">' + escapeHtml(formattedDate) + '</strong></td><td>' + Number(day.count || 0) + '</td><td class="price-cell">' + money(day.total) + '</td><td>' + money(day.cash) + '</td><td>' + money(day.card) + '</td></tr>';
     }).join("");
+
+    const reportNote = state.revenueError
+      ? '<div class="revenue-preview-note"><i class="bi bi-exclamation-circle"></i><span><strong>Ciro verileri alınamadı</strong> ' + escapeHtml(state.revenueError) + '</span><button class="btn btn-sm btn-outline-soft ms-auto" type="button" data-action="refresh-revenue">Tekrar dene</button></div>'
+      : state.revenueLoading
+        ? '<div class="revenue-preview-note"><i class="bi bi-arrow-repeat"></i><span><strong>Rapor güncelleniyor</strong> Veritabanındaki tahsilat kayıtları getiriliyor.</span></div>'
+        : '<div class="revenue-preview-note"><i class="bi bi-info-circle"></i><span><strong>Canlı veritabanı raporu</strong> Kasiyerin kaydettiği nakit ve kart tahsilatları, ödeme alındığı anda bu rapora yansır. Açık adisyonlar ve henüz tahsil edilmemiş tutarlar ciroya dahil edilmez.</span></div>';
+
+    const emptyMessage = state.revenueLoading
+      ? "Tahsilat kayıtları yükleniyor..."
+      : state.revenueError
+        ? "Ciro verileri alınamadı. Yeniden deneyin."
+        : "Bu ay henüz tahsilat kaydı bulunmuyor. Kasiyer ödeme aldığında kayıt burada görünecek.";
+
     return pageHeading("FİNANSAL RAPORLAMA", "Ciro Raporu", "Aylık toplam ciroyu, gün gün satışları ve ödeme türü dağılımını görüntüleyin.",
       '<div class="revenue-month-filter"><label for="revenueMonth">Rapor ayı</label><input class="form-control" id="revenueMonth" type="month" value="' + escapeHtml(selectedMonth) + '"></div>') +
-      '<div class="revenue-preview-note"><i class="bi bi-info-circle"></i><span><strong>Önizleme verisi</strong> Bu rapor, kasiyer ekranında örnek adisyon kapatılarak oluşturulan kayıtları gösterir. Kalıcı ve tüm cihazlarda ortak raporlama için backend/veritabanı bağlantısı gerekir.</span></div>' +
+      reportNote +
       '<section class="stats-grid revenue-stats">' +
-      statCard("Aylık ciro", money(summary.total), "bi-graph-up-arrow", "green", "Seçilen ayda kaydedilen tahsilatlar") +
-      statCard("Tahsilat işlemi", String(summary.count), "bi-receipt-cutoff", "", "Seçilen ay") +
+      statCard("Aylık ciro", money(summary.total), "bi-graph-up-arrow", "green", "Seçilen ayda tahsil edilen tutar") +
+      statCard("Tahsilat işlemi", String(Number(summary.count) || 0), "bi-receipt-cutoff", "", "Seçilen ay") +
       statCard("Nakit", money(summary.cash), "bi-cash-coin", "orange", cashPercent.toFixed(1) + "% of ciro") +
       statCard("Kart", money(summary.card), "bi-credit-card", "purple", cardPercent.toFixed(1) + "% of ciro") +
       '</section>' +
-      '<section class="panel-card revenue-payment-card"><div class="panel-heading"><div><h3>Ödeme türü dağılımı</h3><p>Aylık cironun nakit ve kart olarak yüzdesel dağılımı.</p></div><span class="status-pill status-live">' + (summary.total > 0 ? "100% dağılım" : "Henüz satış yok") + '</span></div>' +
+      '<section class="panel-card revenue-payment-card"><div class="panel-heading"><div><h3>Ödeme türü dağılımı</h3><p>Aylık tahsilatın nakit ve kart olarak yüzdesel dağılımı.</p></div><span class="status-pill status-live">' + (summary.total > 0 ? "100% dağılım" : "Henüz satış yok") + '</span></div>' +
       '<div class="revenue-payment-content"><div class="revenue-payment-bar" role="img" aria-label="Nakit yüzde ' + cashPercent.toFixed(1) + ', kart yüzde ' + cardPercent.toFixed(1) + '">' +
       '<span class="revenue-payment-cash" style="width:' + cashPercent.toFixed(2) + '%"></span><span class="revenue-payment-card-segment" style="width:' + cardPercent.toFixed(2) + '%"></span></div>' +
       '<div class="revenue-payment-legend"><div><span class="revenue-legend-dot cash"></span><span><strong>Nakit</strong><small>' + cashPercent.toFixed(1) + '%</small></span><b>' + money(summary.cash) + '</b></div>' +
       '<div><span class="revenue-legend-dot card"></span><span><strong>Kart</strong><small>' + cardPercent.toFixed(1) + '%</small></span><b>' + money(summary.card) + '</b></div></div></div></section>' +
-      '<section class="panel-card revenue-daily-card"><div class="panel-heading"><div><h3>Günlük ciro dökümü</h3><p>Seçtiğiniz ayda tahsilat yapılan günler, en yeniden eskiye sıralanır.</p></div><span class="count-pill">' + Object.keys(dailyTotals).length + ' gün</span></div>' +
+      '<section class="panel-card revenue-daily-card"><div class="panel-heading"><div><h3>Günlük ciro dökümü</h3><p>Seçtiğiniz ayda tahsilat yapılan günler, en yeniden eskiye sıralanır.</p></div><span class="count-pill">' + days.length + ' gün</span></div>' +
       '<div class="table-responsive"><table class="table data-table align-middle revenue-table"><thead><tr><th>GÜN</th><th>TAHSİLAT</th><th>TOPLAM CİRO</th><th>NAKİT</th><th>KART</th></tr></thead><tbody>' +
-      (dailyRows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-bar-chart-line"></i><strong>Bu ay için ciro kaydı yok</strong><p>Kasiyer ekranında örnek bir adisyonu nakit veya kart seçerek kapattığınızda burada günlük ve aylık dağılım görünür.</p></div></td></tr>') +
+      (dailyRows || '<tr><td colspan="5"><div class="empty-state"><i class="bi bi-bar-chart-line"></i><strong>' + (report ? "Bu ay için ciro kaydı yok" : "Ciro verileri bekleniyor") + '</strong><p>' + escapeHtml(emptyMessage) + '</p></div></td></tr>') +
       '</tbody></table></div></section>';
   }
+
+  async function loadRevenue() {
+    const month = state.revenueMonth;
+    const requestId = ++state.revenueRequestId;
+    state.revenueLoading = true;
+    state.revenueError = "";
+    if (state.view === "revenue") root.innerHTML = revenueView();
+
+    try {
+      const response = await fetch("/api/admin/revenue?month=" + encodeURIComponent(month), {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+      });
+      let result;
+      try { result = await response.json(); }
+      catch (_error) { throw new Error("Ciro raporu yanıtı okunamadı."); }
+      if (!response.ok) throw new Error(result.error || "Ciro raporu yüklenemedi.");
+      if (requestId !== state.revenueRequestId || month !== state.revenueMonth) return;
+      state.revenueData = result;
+    } catch (error) {
+      if (requestId !== state.revenueRequestId) return;
+      state.revenueError = error.message || "Ciro raporu yüklenirken bir hata oluştu.";
+    } finally {
+      if (requestId === state.revenueRequestId) {
+        state.revenueLoading = false;
+        if (state.view === "revenue") root.innerHTML = revenueView();
+      }
+    }
+  }
+
+  function connectRevenueEvents() {
+    if (typeof window.EventSource !== "function") return;
+    const events = new EventSource("/api/admin/revenue/events");
+    events.addEventListener("admin_revenue_update", function (event) {
+      let update;
+      try { update = JSON.parse(event.data); }
+      catch (_error) { return; }
+      if (update && update.type === "payment_recorded" && state.view === "revenue") {
+        loadRevenue();
+      }
+    });
+  }
+
   function productRows(products) {
     if (!products.length) return '<tr><td colspan="6"><div class="empty-state"><i class="bi bi-search"></i><strong>Ürün bulunamadı</strong><p>Arama veya filtre seçimini değiştirin.</p></div></td></tr>';
     return products.map(function (p) {
@@ -432,6 +467,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     } else {
       root.innerHTML = viewRenderers[state.view]();
+      if (state.view === "revenue") loadRevenue();
     }
     title.textContent = viewTitles[state.view];
     crumb.textContent = viewTitles[state.view].toLocaleUpperCase("tr");
@@ -616,6 +652,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if(!actionButton)return;
     const action=actionButton.dataset.action, rawId=actionButton.dataset.id;
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
+    if(action==="refresh-revenue"){loadRevenue();return;}
     if(action==="refresh-business-settings"){
       state.settingsLoaded=false;
       state.settingsError="";
@@ -902,11 +939,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if(event.target.id==="productCategoryFilter"){state.productCategory=event.target.value;render("products",false);}
     if(event.target.id==="productStatusFilter"){state.productStatus=event.target.value;render("products",false);}
-    if(event.target.id==="revenueMonth"){state.revenueMonth=event.target.value||currentMonthValue(new Date());render("revenue",false);}
+    if(event.target.id==="revenueMonth"){state.revenueMonth=event.target.value||currentMonthValue(new Date());state.revenueData=null;loadRevenue();}
   });
   document.getElementById("notificationButton").addEventListener("click",function(){notify("Şimdilik yeni bildiriminiz yok.");});
   window.addEventListener("hashchange",function(){const view=window.location.hash.replace("#","");if(viewRenderers[view]&&view!==state.view)render(view,false);});
-  window.addEventListener("storage",function(event){if(event.key==="roastCashier_sales"&&state.view==="revenue")render("revenue",false);});
+  connectRevenueEvents();
   const initial=window.location.hash.replace("#","")||"overview";
   render(viewRenderers[initial]?initial:"overview",false);
   loadCatalog().catch(function(error){console.error("Katalog yüklenemedi.",error);notify(error.message);});
