@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.js";
 
-const monthSchema = z.string().regex(/^\\d{4}-(0[1-9]|1[0-2])$/, "Rapor ayı YYYY-AA biçiminde olmalıdır.");
+const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Rapor ayı YYYY-AA biçiminde olmalıdır.");
 
 type DailyRevenue = {
   date: string;
