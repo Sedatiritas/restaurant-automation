@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
   }
-  const state = { products:[], categories:[], tables:load("tables"), staff:[], settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
+  const state = { products:[], categories:[], tables:load("tables"), staff:[], settings:load("settings"), appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
   function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); return true; } catch (e) { notify("Tarayıcı depolama alanı doldu. Daha küçük görseller seçin."); return false; } }
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
@@ -183,6 +183,10 @@ document.addEventListener("DOMContentLoaded", function () {
       '<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="tableForm">Kaydet</button>');
   }
   function appearanceView() {
+    if (!state.appearanceLoaded) {
+      return pageHeading("MENÜ TASARIMI","Menü Görünümü","Menü görünümü ayarları yükleniyor.") +
+        '<section class="panel-card p-4 text-muted small"><span class="spinner-border spinner-border-sm me-2" role="status"></span>Kaydedilmiş ayarlar getiriliyor...</section>';
+    }
     const a=state.appearance;
     const isOpen=a.isOpen!==false;
     return pageHeading("MENÜ TASARIMI","Menü Görünümü","Müşteri menünüzün üst bölümünü ve işletme bilgilerini kolayca özelleştirin.") +
@@ -190,6 +194,8 @@ document.addEventListener("DOMContentLoaded", function () {
         <form id="appearanceForm" class="appearance-form">
           <input type="hidden" name="currentLogo" value="${escapeHtml(a.logo||"")}">
           <input type="hidden" name="currentCover" value="${escapeHtml(a.cover||"")}">
+          <input type="hidden" name="removeLogo" value="false">
+          <input type="hidden" name="removeCover" value="false">
           <section class="appearance-section">
             <div class="appearance-section-heading"><span class="appearance-section-icon"><i class="bi bi-shop"></i></span><div><h3>İşletme durumu</h3><p>Menüde işletmenizin açık veya kapalı olduğunu gösterin.</p></div></div>
             <div class="business-status-control ${isOpen?"is-open":"is-closed"}">
@@ -261,6 +267,62 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!response.ok) throw new Error(result.error || "Personel işlemi tamamlanamadı.");
     return result;
   }
+  async function loadAppearance() {
+    const response = await fetch("/api/appearance", { headers: { "Accept": "application/json" } });
+    let result;
+    try { result = await response.json(); }
+    catch (error) { throw new Error("Menü görünümü ayarları okunamadı."); }
+    if (!response.ok) throw new Error(result.error || "Menü görünümü ayarları yüklenemedi.");
+
+    let appearance = result.appearance;
+    if (!appearance) {
+      let legacy = null;
+      try {
+        const saved = localStorage.getItem("roastAdmin_appearance");
+        if (saved) legacy = JSON.parse(saved);
+      } catch (error) {
+        console.warn("Eski menü görünümü ayarları okunamadı.");
+      }
+
+      const source = Object.assign({}, defaults.appearance, legacy || {});
+      const payload = {
+        brandName: String(source.brandName || defaults.appearance.brandName),
+        tagline: String(source.tagline || ""),
+        eyebrow: String(source.eyebrow || ""),
+        headline: String(source.headline || ""),
+        accent: /^#[0-9a-fA-F]{6}$/.test(source.accent || "") ? source.accent : defaults.appearance.accent,
+        isOpen: source.isOpen !== false,
+        googleReviewUrl: String(source.googleReviewUrl || ""),
+        logoUrl: "",
+        coverUrl: ""
+      };
+
+      if (typeof source.logo === "string" && source.logo.startsWith("data:image/")) {
+        payload.logoImageData = source.logo;
+      } else if (typeof source.logo === "string") {
+        payload.logoUrl = source.logo;
+      }
+
+      if (typeof source.cover === "string" && source.cover.startsWith("data:image/")) {
+        payload.coverImageData = source.cover;
+      } else if (typeof source.cover === "string") {
+        payload.coverUrl = source.cover;
+      }
+
+      const created = await staffRequest("/api/admin/appearance", {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+      appearance = created.appearance;
+    }
+
+    state.appearance = Object.assign({}, defaults.appearance, appearance || {});
+    state.appearanceLoaded = true;
+    try { localStorage.removeItem("roastAdmin_appearance"); } catch (error) {}
+    if (state.view === "appearance") render("appearance", false);
+    return state.appearance;
+  }
+
   async function loadCatalog() {
     const response = await fetch("/api/catalog", { headers: { "Accept": "application/json" } });
     let result;
@@ -425,7 +487,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const action=actionButton.dataset.action, rawId=actionButton.dataset.id;
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
     if(action==="remove-product-image"){selectedProductImageFile=null;selectedProductImageData="";const input=document.querySelector('#productForm [name="removeImage"]');if(input)input.value="true";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
-    if(action==="remove-logo"||action==="remove-cover"){const key=action==="remove-logo"?"currentLogo":"currentCover";const input=document.querySelector('#appearanceForm [name="'+key+'"]');if(input)input.value="";const preview=document.getElementById(action==="remove-logo"?"logoPreview":"coverPreview");if(preview)preview.innerHTML="<span>Görsel seçilmedi</span>";const file=document.getElementById(action==="remove-logo"?"logoFile":"coverFile");if(file)file.value="";return;}
+    if(action==="remove-logo"||action==="remove-cover"){
+      const isLogo=action==="remove-logo";
+      const key=isLogo?"currentLogo":"currentCover";
+      const removeKey=isLogo?"removeLogo":"removeCover";
+      const input=document.querySelector('#appearanceForm [name="'+key+'"]');
+      const removeInput=document.querySelector('#appearanceForm [name="'+removeKey+'"]');
+      if(input)input.value="";
+      if(removeInput)removeInput.value="true";
+      const preview=document.getElementById(isLogo?"logoPreview":"coverPreview");
+      if(preview)preview.innerHTML="<span>Görsel seçilmedi</span>";
+      const file=document.getElementById(isLogo?"logoFile":"coverFile");
+      if(file)file.value="";
+      return;
+    }
     if(action==="add-product"){if(!state.categories.length){notify("Önce en az bir kategori oluşturun.");setView("categories");return;}productForm();return;}
     if(action==="edit-product"){productForm(state.products.find(function(p){return p.id===rawId;}));return;}
     if(action==="toggle-product"){
@@ -564,17 +639,58 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if(form.id==="appearanceForm"){
-      event.preventDefault();const data=formObject(form);let logo=data.currentLogo||"",cover=data.currentCover||"";
-      try{const logoFile=form.querySelector('[name="logoFile"]')?.files?.[0];const coverFile=form.querySelector('[name="coverFile"]')?.files?.[0];if(logoFile)logo=await imageFileToDataUrl(logoFile,500);if(coverFile)cover=await imageFileToDataUrl(coverFile,1400);}catch(error){notify("Görsel işlenemedi. Daha küçük veya farklı bir görsel seçin.");return;}
-      const googleReviewUrl=(data.googleReviewUrl||"").trim();
-      if(googleReviewUrl){
+      event.preventDefault();
+      const data=formObject(form);
+      const payload={
+        brandName:String(data.brandName||"").trim(),
+        tagline:String(data.tagline||"").trim(),
+        eyebrow:String(data.eyebrow||"").trim(),
+        headline:String(data.headline||"").trim(),
+        logoUrl:String(data.currentLogo||""),
+        coverUrl:String(data.currentCover||""),
+        removeLogo:data.removeLogo==="true",
+        removeCover:data.removeCover==="true",
+        accent:String(data.accent||defaults.appearance.accent),
+        isOpen:form.querySelector("#isOpenToggle").checked,
+        googleReviewUrl:String(data.googleReviewUrl||"").trim()
+      };
+      if(payload.googleReviewUrl){
         try{
-          const parsedReviewUrl=new URL(googleReviewUrl);
+          const parsedReviewUrl=new URL(payload.googleReviewUrl);
           if(!["http:","https:"].includes(parsedReviewUrl.protocol)){notify("Google yorum bağlantısı http veya https ile başlamalıdır.");return;}
         }catch(error){notify("Geçerli bir Google yorum bağlantısı girin.");return;}
       }
-      state.appearance={brandName:data.brandName.trim(),tagline:data.tagline.trim(),eyebrow:data.eyebrow.trim(),headline:data.headline.trim(),cover:cover,logo:logo,accent:data.accent,isOpen:form.querySelector("#isOpenToggle").checked,googleReviewUrl:googleReviewUrl};
-      if(!save("appearance"))return;render("appearance",false);notify("Menü görünümü ve Google yorum bağlantısı kaydedildi.");return;
+      try{
+        const logoFile=form.querySelector('[name="logoFile"]')?.files?.[0];
+        const coverFile=form.querySelector('[name="coverFile"]')?.files?.[0];
+        if(logoFile)payload.logoImageData=await imageFileToDataUrl(logoFile,500);
+        if(coverFile)payload.coverImageData=await imageFileToDataUrl(coverFile,1400);
+        if((payload.logoImageData&&payload.logoImageData.length>1_400_000)||(payload.coverImageData&&payload.coverImageData.length>1_400_000)){
+          notify("Görsel boyutu sınırı aşıyor. Daha küçük bir görsel seçin.");
+          return;
+        }
+      }catch(error){
+        notify("Görsel işlenemedi. Daha küçük veya farklı bir görsel seçin.");
+        return;
+      }
+
+      const saveButton=form.querySelector('[type="submit"]');
+      if(saveButton)saveButton.disabled=true;
+      try{
+        const result=await staffRequest("/api/admin/appearance",{
+          method:"PUT",
+          body:JSON.stringify(payload)
+        });
+        state.appearance=Object.assign({},defaults.appearance,result.appearance||{});
+        state.appearanceLoaded=true;
+        render("appearance",false);
+        notify("Menü görünümü PostgreSQL veritabanına kaydedildi.");
+      }catch(error){
+        notify(error.message);
+      }finally{
+        if(saveButton)saveButton.disabled=false;
+      }
+      return;
     }
     if(form.id==="settingsForm"||form.id==="contactForm"){
       event.preventDefault();const data=formObject(form);Object.keys(data).forEach(function(key){state.settings[key]=data[key].trim();});save("settings");notify("İşletme bilgileri kaydedildi.");return;
@@ -583,6 +699,11 @@ document.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("change",async function(event){
     const fileInput=event.target.closest('input[type="file"]');if(!fileInput||!fileInput.files||!fileInput.files[0])return;
     const previewId=fileInput.id==="productImageFile"?"productImagePreview":fileInput.id==="logoFile"?"logoPreview":"coverPreview";const preview=document.getElementById(previewId);if(!preview)return;
+    if(fileInput.id==="logoFile"||fileInput.id==="coverFile"){
+      const removeName=fileInput.id==="logoFile"?"removeLogo":"removeCover";
+      const removeInput=document.querySelector('#appearanceForm [name="'+removeName+'"]');
+      if(removeInput)removeInput.value="false";
+    }
     if(fileInput.id==="productImageFile"){
       const file=fileInput.files[0];
       selectedProductImageFile=file;
@@ -623,4 +744,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const initial=window.location.hash.replace("#","")||"overview";
   render(viewRenderers[initial]?initial:"overview",false);
   loadCatalog().catch(function(error){console.error("Katalog yüklenemedi.",error);notify(error.message);});
+  loadAppearance().catch(function(error){
+    console.error("Menü görünümü yüklenemedi.",error);
+    state.appearanceLoaded=true;
+    if(state.view==="appearance")render("appearance",false);
+    notify(error.message);
+  });
 });
