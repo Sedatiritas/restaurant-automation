@@ -684,7 +684,7 @@ document.addEventListener("DOMContentLoaded", function () {
         state.appearance=Object.assign({},defaults.appearance,result.appearance||{});
         state.appearanceLoaded=true;
         render("appearance",false);
-        notify("Menü görünümü PostgreSQL veritabanına kaydedildi.");
+        notify("Menü görünümü kaydedildi.");
       }catch(error){
         notify(error.message);
       }finally{
