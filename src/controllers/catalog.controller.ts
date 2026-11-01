@@ -54,7 +54,7 @@ const updateProductSchema = z.object({
   categoryId: categoryIdSchema.optional(),
   status: z.enum(["active", "hidden", "out"]).optional(),
   imageData: imageDataSchema,
-  removeImage: z.boolean().optional()
+  removeImage: z.union([z.boolean(), z.enum(["true", "false"]).transform((value) => value === "true")]).optional()
 }).refine((data) => Object.values(data).some((value) => value !== undefined), {
   message: "En az bir alan güncellenmelidir."
 });
@@ -215,21 +215,22 @@ export const getCatalog: RequestHandler = async (_req, res, next) => {
 export const getPublicMenu: RequestHandler = async (_req, res, next) => {
   try {
     const categories = await prisma.category.findMany({
-      where: { products: { some: { status: "ACTIVE" } } },
+      where: { products: { some: { status: { in: ["ACTIVE", "OUT_OF_STOCK"] } } } },
       select: {
         id: true,
         name: true,
         icon: true,
         sortOrder: true,
         products: {
-          where: { status: "ACTIVE" },
+          where: { status: { in: ["ACTIVE", "OUT_OF_STOCK"] } },
           select: {
             id: true,
             name: true,
             description: true,
             price: true,
             imageUrl: true,
-            categoryId: true
+            categoryId: true,
+            status: true
           },
           orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
         }
@@ -251,7 +252,8 @@ export const getPublicMenu: RequestHandler = async (_req, res, next) => {
         price: product.price.toString(),
         image: product.imageUrl ?? "",
         categoryId: product.categoryId,
-        categoryName: category.name
+        categoryName: category.name,
+        isOutOfStock: product.status === "OUT_OF_STOCK"
       }))
     );
 
@@ -287,6 +289,7 @@ export const createCategory: RequestHandler = async (req, res, next) => {
       select: categorySelect
     });
 
+    if (req.is("application/x-www-form-urlencoded")) { res.redirect(303, "/admin#categories"); return; }
     res.status(201).json({ category });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -325,6 +328,7 @@ export const updateCategory: RequestHandler = async (req, res, next) => {
       data,
       select: categorySelect
     });
+    if (req.is("application/x-www-form-urlencoded")) { res.redirect(303, "/admin#categories"); return; }
     res.json({ category });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -396,6 +400,7 @@ export const createProduct: RequestHandler = async (req, res, next) => {
       include: productInclude
     });
 
+    if (req.is("application/x-www-form-urlencoded")) { res.redirect(303, "/admin#products"); return; }
     res.status(201).json({ product: serializeProduct(product) });
   } catch (error) {
     await removeProductImage(imageUrl);
@@ -462,6 +467,7 @@ export const updateProduct: RequestHandler = async (req, res, next) => {
       await removeProductImage(existing.imageUrl);
     }
 
+    if (req.is("application/x-www-form-urlencoded")) { res.redirect(303, "/admin#products"); return; }
     res.json({ product: serializeProduct(product) });
   } catch (error) {
     await removeProductImage(newImageUrl);
