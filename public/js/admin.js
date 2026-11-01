@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
   }
   function revenueView() {
-    const selectedMonth = /^\d{4}-\d{2}$/.test(state.revenueMonth) ? state.revenueMonth : currentMonthValue(new Date());
+    const selectedMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(state.revenueMonth) ? state.revenueMonth : currentMonthValue(new Date());
     const report = state.revenueData && state.revenueData.month === selectedMonth ? state.revenueData : null;
     const summary = report && report.summary ? report.summary : { total: 0, cash: 0, card: 0, count: 0 };
     const days = report && Array.isArray(report.days) ? report.days : [];
