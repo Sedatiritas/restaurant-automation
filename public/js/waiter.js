@@ -471,7 +471,10 @@ document.addEventListener("DOMContentLoaded", function () {
         byId("newOrderRoundLabel").textContent = "Tur #" + payload.order.roundNumber;
       }
       renderDraft();
-      await loadTables(table.id);
+      await loadTables();
+      state.selectedTableId = null;
+      showScreen("tables");
+      renderTables();
       showToast(table.name + " için sipariş mutfağa gönderildi.");
     } catch (error) {
       showToast(error.message || "Sipariş gönderilirken hata oluştu.");
