@@ -7,6 +7,6 @@ CREATE TABLE "business_settings" (
     "instagram" VARCHAR(1000),
     "whatsapp" VARCHAR(1000),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "business_settings_pkey" PRIMARY KEY ("id")
 );
