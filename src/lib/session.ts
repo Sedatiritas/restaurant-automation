@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Response } from "express";
 
 export type AppRole = "ADMIN" | "WAITER" | "CASHIER";
@@ -13,6 +13,10 @@ export interface AuthSession {
 export const SESSION_COOKIE_NAME = "qr_session";
 const SESSION_DURATION_SECONDS = 8 * 60 * 60;
 
+// Generated once per Node.js process. A restart changes this value, which
+// makes every cookie issued by the previous process fail signature validation.
+const SERVER_START_NONCE = randomBytes(32);
+
 function getSessionSecret(): string {
   const secret = process.env.SESSION_SECRET;
 
@@ -20,7 +24,7 @@ function getSessionSecret(): string {
     throw new Error("SESSION_SECRET .env dosyasında en az 32 karakterli, rastgele bir değer olmalı.");
   }
 
-  return secret;
+  return createHmac("sha256", secret).update(SERVER_START_NONCE).digest();
 }
 
 export function createSessionToken(
