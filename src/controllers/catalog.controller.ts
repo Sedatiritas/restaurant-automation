@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import argon2 from "argon2";
 import { z } from "zod";
 import type { RequestHandler } from "express";
 import { Prisma } from "../generated/prisma/client.js";
@@ -147,8 +146,8 @@ async function saveProductImage(dataUrl: string): Promise<string> {
     throw new CatalogInputError("Ürün görseli WebP, PNG veya JPEG biçiminde olmalıdır.");
   }
 
-  const format = match[1];
-  const bytes = Buffer.from(match[2], "base64");
+  const format = match[1]!;
+  const bytes = Buffer.from(match[2]!, "base64");
 
   if (bytes.length === 0 || bytes.length > MAX_IMAGE_BYTES) {
     throw new CatalogInputError("Ürün görseli en fazla 1 MB olmalıdır.");
