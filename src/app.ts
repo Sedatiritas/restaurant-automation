@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import staffRoutes from "./routes/staff.routes.js";
 import catalogRoutes from "./routes/catalog.routes.js";
 import appearanceRoutes from "./routes/appearance.routes.js";
+import businessSettingsRoutes from "./routes/business-settings.routes.js";
 import { notFoundHandler } from "./middlewares/not-found.middleware.js";
 
 const app = express();
@@ -40,6 +41,7 @@ app.use(authRoutes);
 app.use(staffRoutes);
 app.use(catalogRoutes);
 app.use(appearanceRoutes);
+app.use(businessSettingsRoutes);
 app.use(pageRoutes);
 app.use(notFoundHandler);
 
