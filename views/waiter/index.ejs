@@ -26,18 +26,19 @@
       <div class="intro-copy">
         <span class="eyebrow" id="viewEyebrow">SALON YÖNETİMİ</span>
         <h1 id="viewTitle">Masalarım</h1>
-        <p id="viewDescription">Çalışacağınız masayı seçin; menü kategorileri ve ürünleri görüntüleyin.</p>
+        <p id="viewDescription">Masa durumlarını, açık hesapları ve son siparişleri görüntüle.</p>
       </div>
       <div class="shift-summary">
-        <span class="shift-icon"><i class="bi bi-grid-1x2-fill"></i></span>
-        <span><strong id="activeTableCount">Masalar yükleniyor</strong><small>Toplam masa</small></span>
+        <span class="shift-icon"><i class="bi bi-receipt-cutoff"></i></span>
+        <span><strong id="activeTableCount">0 masa</strong><small>Aktif adisyon</small></span>
       </div>
     </section>
 
     <section id="tablesView" class="view-screen" aria-label="Masa listesi">
       <div class="list-toolbar">
-        <div class="filter-pills" role="group" aria-label="Masa listesi">
+        <div class="filter-pills" role="group" aria-label="Masa filtreleri">
           <button class="filter-pill active" type="button" data-table-filter="all">Tüm masalar <span id="allTableCount">0</span></button>
+          <button class="filter-pill" type="button" data-table-filter="active">Açık adisyonlar <span id="occupiedTableCount">0</span></button>
         </div>
         <label class="table-search">
           <i class="bi bi-search" aria-hidden="true"></i>
@@ -49,7 +50,7 @@
       </div>
       <div class="page-footnote">
         <i class="bi bi-info-circle"></i>
-        <span>Masayı seçerek o masanın güncel menüsünü görüntüleyebilirsiniz. Sipariş kaydetme ve gönderme bu aşamada kapalıdır.</span>
+        <span>Masayı seçerek önceki siparişleri gör, yeni sipariş ekle veya adisyonu kontrol et.</span>
       </div>
     </section>
 
