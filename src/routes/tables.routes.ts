@@ -9,6 +9,7 @@ import {
 
 const router = Router();
 
+router.get("/api/waiter/tables", requireRole("WAITER"), getTables);
 router.get("/api/admin/tables", requireRole("ADMIN"), getTables);
 router.post("/api/admin/tables", requireRole("ADMIN"), createTable);
 router.patch("/api/admin/tables/:id", requireRole("ADMIN"), updateTable);
