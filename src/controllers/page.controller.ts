@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 
 export const renderLogin: RequestHandler = (_req, res) => {
-  res.render("auth/login", { error: null, selectedRole: "", email: "" });
+  res.render("auth/login", { error: null, selectedRole: "", username: "" });
 };
 
 export const renderMenu: RequestHandler = (_req, res) => {
