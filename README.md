@@ -83,4 +83,4 @@ prisma/         # Prisma şeması ve migration dosyaları
    - Garson: http://localhost:3000/waiter
    - Kasa: http://localhost:3000/cashier
 
-> Yönetim, kasiyer ve garson ekranları giriş gerektirir. Girişte rol seçilir; rol, e-posta ve parola veritabanındaki kullanıcı hesabıyla doğrulanır. İlk kullanıcı hesabı henüz otomatik oluşturulmaz; migration sonrasında başlangıç yönetici hesabı eklenmelidir. Parolalar Argon2 ile doğrulanır, oturum çerezi HttpOnly ve SameSite=Strict olarak ayarlanır. Oturum süresi 8 saattir.
+> Yönetim, kasiyer ve garson ekranları giriş gerektirir. Girişte rol seçilir; rol, kullanıcı adı ve parola veritabanındaki kullanıcı hesabıyla doğrulanır. İlk yönetici hesabı `npm run db:create-admin` komutuyla kullanıcı adı ve parola kullanılarak oluşturulur. Parolalar Argon2 ile doğrulanır, oturum çerezi HttpOnly ve SameSite=Strict olarak ayarlanır. Oturum süresi 8 saattir.
