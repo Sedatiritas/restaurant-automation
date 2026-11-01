@@ -259,7 +259,10 @@ function renderProducts() {
                 <article class="product-card">
                     ${imageMarkup}
                     <div class="product-body">
-                        <span class="product-category">${escapeHtml(product.categoryName)}</span>
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <span class="product-category">${escapeHtml(product.categoryName)}</span>
+                            ${product.isOutOfStock ? '<span class="product-sold-out">Tükendi</span>' : ""}
+                        </div>
                         <h4 class="product-name">${escapeHtml(product.name)}</h4>
                         <p class="product-description">${escapeHtml(product.description || "")}</p>
                         <span class="product-price">${formatPrice(Number(product.price))}</span>
