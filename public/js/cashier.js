@@ -528,7 +528,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function handleCashierUpdate(eventData) {
-    const preferredTableId = state.selectedTableId;
+    // A newly arrived order should open that table immediately in the cashier detail panel.
+    const preferredTableId = eventData && eventData.type === "order_created"
+      ? eventData.tableId
+      : state.selectedTableId;
     await loadTables(preferredTableId);
 
     if (eventData && eventData.type === "order_created") {
