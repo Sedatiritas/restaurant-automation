@@ -1,19 +1,14 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7f5f0">
-  <meta name="description" content="Roast & Co. garson masa ve sipariş yönetimi">
-  <title>Garson Paneli | Roast &amp; Co.</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="css/waiter.css">
-</head>
-<body>
-  <div class="waiter-app">
+<%- include("../partials/head.ejs", {
+  title: "Garson Paneli | Roast & Co.",
+  description: "Roast & Co. garson masa ve sipariş yönetimi",
+  themeColor: "#f7f5f0",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+  cssFile: "waiter.css"
+}) %>
+
+<div class="waiter-app">
     <header class="waiter-topbar">
-      <a class="waiter-brand" href="waiter.html" aria-label="Masa listesine dön">
+      <a class="waiter-brand" href="/waiter" aria-label="Masa listesine dön">
         <span class="brand-mark"><i class="bi bi-cup-hot-fill"></i></span>
         <span><strong id="waiterBrandName">roast &amp; co.</strong><small>GARSON PANELİ</small></span>
       </a>
@@ -118,7 +113,7 @@
       <div class="d-flex"><div class="toast-body" id="waiterToastMessage"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button></div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/waiter.js"></script>
-</body>
-</html>
+  
+  
+
+<%- include("../partials/scripts.ejs", { pageScript: "waiter.js" }) %>

@@ -1,17 +1,12 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f5f0">
-  <meta name="description" content="Roast & Co. QR menü yönetim paneli">
-  <title>Yönetim Paneli | Roast &amp; Co.</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css">
-</head>
-<body>
-  <div class="admin-shell">
+<%- include("../partials/head.ejs", {
+  title: "Yönetim Paneli | Roast & Co.",
+  description: "Roast & Co. QR menü yönetim paneli",
+  themeColor: "#f7f5f0",
+  viewport: "width=device-width, initial-scale=1",
+  cssFile: "admin.css"
+}) %>
+
+<div class="admin-shell">
     <aside class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="adminSidebar" aria-label="Ana menü">
       <div class="sidebar-inner">
         <a class="admin-brand" href="#overview" data-view="overview">
@@ -25,9 +20,9 @@
           <a class="admin-nav-link" href="#products" data-view="products"><i class="bi bi-cup-straw"></i><span>Ürünler</span><span class="nav-count" id="navProductCount">0</span></a>
           <a class="admin-nav-link" href="#categories" data-view="categories"><i class="bi bi-collection"></i><span>Kategoriler</span></a>
           <div class="sidebar-label sidebar-label-spaced">OPERASYON</div>
-          <a class="admin-nav-link" href="waiter.html"><i class="bi bi-receipt-cutoff"></i><span>Garson Siparişi</span><i class="bi bi-arrow-up-right ms-auto" aria-hidden="true"></i></a>
+          <a class="admin-nav-link" href="/waiter"><i class="bi bi-receipt-cutoff"></i><span>Garson Siparişi</span><i class="bi bi-arrow-up-right ms-auto" aria-hidden="true"></i></a>
           <a class="admin-nav-link" href="#tables" data-view="tables"><i class="bi bi-grid-3x3-gap"></i><span>Masa Yönetimi</span></a>
-          <a class="admin-nav-link" href="cashier.html"><i class="bi bi-cash-stack"></i><span>Kasa</span><i class="bi bi-arrow-up-right ms-auto" aria-hidden="true"></i></a>
+          <a class="admin-nav-link" href="/cashier"><i class="bi bi-cash-stack"></i><span>Kasa</span><i class="bi bi-arrow-up-right ms-auto" aria-hidden="true"></i></a>
           <div class="sidebar-label sidebar-label-spaced">RAPORLAR</div>
           <a class="admin-nav-link" href="#revenue" data-view="revenue"><i class="bi bi-bar-chart-line"></i><span>Ciro Raporu</span></a>
           <div class="sidebar-label sidebar-label-spaced">İŞLETME</div>
@@ -55,7 +50,7 @@
           <div><div class="breadcrumb-label">YÖNETİM <span>/</span> <span id="breadcrumbCurrent">GENEL BAKIŞ</span></div><h1 id="pageTitle">Genel Bakış</h1></div>
         </div>
         <div class="topbar-actions">
-          <a class="btn preview-button" href="index.html" target="_blank" rel="noopener noreferrer"><i class="bi bi-eye me-2"></i>Menüyü önizle</a>
+          <a class="btn preview-button" href="/" target="_blank" rel="noopener noreferrer"><i class="bi bi-eye me-2"></i>Menüyü önizle</a>
           <button class="btn icon-button" id="notificationButton" type="button" aria-label="Bildirimler"><i class="bi bi-bell"></i></button>
         </div>
       </header>
@@ -70,7 +65,7 @@
     </div>
   </div>
   <div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content" id="modalContent"></div></div></div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/admin.js"></script>
-</body>
-</html>
+  
+  
+
+<%- include("../partials/scripts.ejs", { pageScript: "admin.js" }) %>
