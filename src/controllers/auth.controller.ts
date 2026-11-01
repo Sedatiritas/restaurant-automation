@@ -11,7 +11,7 @@ import {
 
 const loginSchema = z.object({
   role: z.enum(["ADMIN", "WAITER", "CASHIER"]),
-  email: z.string().trim().toLowerCase().email().max(254),
+  username: z.string().trim().min(3).max(32).regex(/^[a-zA-Z0-9._-]+$/).transform((value) => value.toLowerCase()),
   password: z.string().min(1).max(128)
 });
 
@@ -26,16 +26,16 @@ export const login: RequestHandler = async (req, res, next) => {
 
   if (!parsed.success) {
     res.status(400).render("auth/login", {
-      error: "Lütfen rol, e-posta ve parola bilgilerini kontrol edin.",
+      error: "Kullanıcı adı veya parola biçimini kontrol edin.",
       selectedRole: req.body?.role ?? "",
-      email: req.body?.email ?? ""
+      username: req.body?.username ?? ""
     });
     return;
   }
 
   try {
-    const { role, email, password } = parsed.data;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const { role, username, password } = parsed.data;
+    const user = await prisma.user.findUnique({ where: { username } });
 
     let passwordIsValid = false;
 
@@ -43,19 +43,18 @@ export const login: RequestHandler = async (req, res, next) => {
       passwordIsValid = await argon2.verify(user.passwordHash, password);
     }
 
-    // Keep the response the same for unknown email, wrong role and wrong password.
     if (!user || !user.isActive || user.role !== role || !passwordIsValid) {
       res.status(401).render("auth/login", {
-        error: "Giriş bilgileri hatalı. Rolünüzü, e-postanızı ve parolanızı kontrol edin.",
+        error: "Giriş bilgileri hatalı. Rolünüzü, kullanıcı adınızı ve parolanızı kontrol edin.",
         selectedRole: role,
-        email
+        username
       });
       return;
     }
 
     const token = createSessionToken({
       userId: user.id,
-      fullName: user.fullName,
+      username: user.username,
       role: user.role
     });
 
