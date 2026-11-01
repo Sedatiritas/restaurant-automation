@@ -118,9 +118,9 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    byId("viewEyebrow").textContent = "MENÜ KATALOĞU";
-    byId("viewTitle").textContent = table ? table.name + " · Menü" : "Menü";
-    byId("viewDescription").textContent = "Kategoriler ve ürünler yönetim panelindeki güncel verilerden yüklenir.";
+    byId("viewEyebrow").textContent = "YENİ SİPARİŞ";
+    byId("viewTitle").textContent = table ? table.name + " için sipariş" : "Yeni sipariş";
+    byId("viewDescription").textContent = "Ürünleri seç, kontrol et ve mutfağa gönder.";
   }
 
   function renderTableSummary() {
@@ -423,7 +423,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } else if (state.screen === "details") {
           renderTableDetails();
         } else {
-          byId("newOrderTableName").textContent = selectedTable().name;
+          byId("newOrderTableName").textContent = selectedTable().name + " için sipariş";
         }
       }
     } catch (error) {
@@ -525,7 +525,7 @@ document.addEventListener("DOMContentLoaded", function () {
       showScreen("tables");
       return;
     }
-    byId("newOrderTableName").textContent = table.name;
+    byId("newOrderTableName").textContent = table.name + " için sipariş";
     byId("newOrderBackLabel").textContent = "Masa detayına dön";
     showScreen("order");
     renderCategories();
