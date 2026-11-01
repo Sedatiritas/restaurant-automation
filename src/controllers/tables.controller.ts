@@ -59,7 +59,10 @@ export const getTables: RequestHandler = async (_req, res, next) => {
     // Adisyon altyapısı geldiğinde bu alan açık adisyon sorgusundan beslenecek.
     const tablesWithBillStatus = tables.map((table) => ({
       ...table,
-      billStatus: "EMPTY"
+      billStatus: "EMPTY",
+      currentBillTotal: "0.00",
+      lastActivityAt: null,
+      sentOrderCount: 0
     }));
 
     res.setHeader("Cache-Control", "no-store");
