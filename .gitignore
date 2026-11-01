@@ -4,3 +4,4 @@
 !.env.example
 dist/
 coverage/
+/src/generated/prisma/
