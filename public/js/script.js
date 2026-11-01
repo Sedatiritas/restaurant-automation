@@ -14,13 +14,13 @@ function applyBusinessSettings(settings) {
     }
 
     const description = document.querySelector("#footerDescription");
-    if (description && settings.description) description.textContent = settings.description;
+    if (description) description.textContent = settings.description || "";
 
     const phone = (settings.phone || "").trim();
     const phoneLink = document.querySelector("#footerPhone");
     if (phoneLink) {
         if (phone) {
-            phoneLink.href = "tel:" + phone.replace(/[^+\\d]/g, "");
+            phoneLink.href = "tel:" + phone.replace(/[^+\d]/g, "");
             phoneLink.querySelector("span").textContent = phone;
             phoneLink.classList.remove("d-none");
         } else {
