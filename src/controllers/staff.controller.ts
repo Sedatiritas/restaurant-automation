@@ -23,7 +23,7 @@ const updateStaffSchema = z.object({
   username: usernameSchema.optional(),
   role: roleSchema.optional(),
   isActive: z.boolean().optional(),
-  password: z.string().min(12).max(128).optional()
+  password: z.union([z.literal(""), z.string().min(12).max(128)]).optional().transform((value) => value === "" ? undefined : value)
 }).refine((data) => Object.values(data).some((value) => value !== undefined), {
   message: "En az bir alan güncellenmelidir."
 });
@@ -162,6 +162,11 @@ export const updateStaff: RequestHandler = async (req, res, next) => {
       data,
       select: publicUserSelect
     });
+
+    if (req.is("application/x-www-form-urlencoded")) {
+      res.redirect(303, "/admin#staff");
+      return;
+    }
 
     res.json({ user });
   } catch (error) {
