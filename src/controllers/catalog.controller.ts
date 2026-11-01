@@ -202,6 +202,7 @@ export const getCatalog: RequestHandler = async (_req, res, next) => {
       })
     ]);
 
+    res.setHeader("Cache-Control", "no-store");
     res.json({
       categories,
       products: products.map(serializeProduct)
