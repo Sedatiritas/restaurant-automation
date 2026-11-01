@@ -10,28 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const modalContent = document.getElementById("modalContent");
 
   const defaults = {
-    products: [
-      {id:1,name:"Cappuccino",category:"Kahveler",price:125,description:"Espresso, süt ve yumuşak süt köpüğü.",status:"active",image:"https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=120&q=75"},
-      {id:2,name:"Çilekli Cheesecake",category:"Tatlılar",price:165,description:"Kremamsı cheesecake ve çilek sosu.",status:"active",image:"https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=120&q=75"},
-      {id:3,name:"Iced Latte",category:"Soğuk içecekler",price:140,description:"Soğuk süt, espresso ve buz.",status:"out",image:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=120&q=75"},
-      {id:4,name:"Flat White",category:"Kahveler",price:130,description:"Yoğun espresso ve ince süt köpüğü.",status:"active",image:""},
-      {id:5,name:"Americano",category:"Kahveler",price:100,description:"Espresso ve sıcak su.",status:"active",image:""},
-      {id:6,name:"Limonlu Cheesecake",category:"Tatlılar",price:155,description:"Limon aromalı hafif cheesecake.",status:"hidden",image:""},
-      {id:7,name:"Matcha Latte",category:"Soğuk içecekler",price:150,description:"Matcha ve süt ile hazırlanır.",status:"active",image:""},
-      {id:8,name:"Filtre Kahve",category:"Kahveler",price:95,description:"Günün seçili çekirdekleriyle.",status:"active",image:""},
-      {id:9,name:"San Sebastian",category:"Tatlılar",price:170,description:"Dışı karamelize, içi yumuşak.",status:"active",image:""},
-      {id:10,name:"Çay",category:"Çaylar",price:45,description:"Demlikte taze siyah çay.",status:"active",image:""}
-    ],
-    categories: [
-      {id:1,name:"Kahveler",icon:"bi-cup-hot",description:"Sıcak kahve çeşitleri"},
-      {id:2,name:"Soğuk içecekler",icon:"bi-cup-straw",description:"Soğuk kahve ve içecekler"},
-      {id:3,name:"Tatlılar",icon:"bi-cake2",description:"Günlük tatlı çeşitleri"},
-      {id:4,name:"Çaylar",icon:"bi-cup",description:"Sıcak çaylar"},
-      {id:5,name:"Atıştırmalıklar",icon:"bi-egg-fried",description:"Hafif atıştırmalıklar"},
-      {id:6,name:"Smoothie",icon:"bi-droplet",description:"Meyveli smoothie çeşitleri"},
-      {id:7,name:"Fresh içecekler",icon:"bi-sun",description:"Taze meyve içecekleri"},
-      {id:8,name:"Kahvaltı",icon:"bi-egg",description:"Kahvaltı seçenekleri"}
-    ],
+    products: [],
+    categories: [],
     tables: Array.from({length:12},function(_,index){return {id:index+1,name:"Masa "+(index+1),seats:[2,4,4,2,4,6,2,4,4,2,6,4][index]};}),
     staff: [],
     settings: {phone:"",email:"",address:"",instagram:"",whatsapp:"",description:"Kahve, tatlı ve güzel anlar."},
@@ -54,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
   }
-  const state = { products:load("products"), categories:load("categories"), tables:load("tables"), staff:[], settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
+  const state = { products:[], categories:[], tables:load("tables"), staff:[], settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
   function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); return true; } catch (e) { notify("Tarayıcı depolama alanı doldu. Daha küçük görseller seçin."); return false; } }
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
@@ -67,8 +47,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
   function money(value) { return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:2}).format(Number(value)||0); }
-  function categoryOptions(selected) {
-    return state.categories.map(function (cat) { return '<option value="' + escapeHtml(cat.name) + '" ' + (cat.name===selected?"selected":"") + '>' + escapeHtml(cat.name) + '</option>'; }).join("");
+  function categoryOptions(selectedId) {
+    return state.categories.map(function (cat) { return '<option value="' + escapeHtml(cat.id) + '" ' + (cat.id===selectedId?"selected":"") + '>' + escapeHtml(cat.name) + '</option>'; }).join("");
   }
   function statusLabel(status) {
     if (status==="active") return '<span class="status-pill status-live">Yayında</span>';
@@ -171,17 +151,17 @@ document.addEventListener("DOMContentLoaded", function () {
   function productsView() {
     const filtered = state.products.filter(function(p) {
       const matchesSearch = (p.name + " " + p.description).toLocaleLowerCase("tr").includes(state.productSearch.toLocaleLowerCase("tr"));
-      return matchesSearch && (state.productCategory==="all" || p.category===state.productCategory) && (state.productStatus==="all" || p.status===state.productStatus);
+      return matchesSearch && (state.productCategory==="all" || p.categoryId===state.productCategory) && (state.productStatus==="all" || p.status===state.productStatus);
     });
     return pageHeading("MENÜ İÇERİĞİ","Ürünler","Ürün ekleyin, fiyatları güncelleyin ve ürünlerin müşterilere görünürlüğünü yönetin.",'<button class="btn btn-primary-soft" data-action="add-product"><i class="bi bi-plus-lg me-2"></i>Yeni ürün</button>') +
-      '<section class="panel-card"><div class="toolbar"><div class="toolbar-start"><label class="search-control"><i class="bi bi-search"></i><input id="productSearch" class="form-control" type="search" placeholder="Ürün ara..." value="' + escapeHtml(state.productSearch) + '" aria-label="Ürün ara"></label><select id="productCategoryFilter" class="form-select" aria-label="Kategori filtresi"><option value="all">Tüm kategoriler</option>' + state.categories.map(function(c){return '<option value="' + escapeHtml(c.name) + '" ' + (state.productCategory===c.name?"selected":"") + '>' + escapeHtml(c.name) + '</option>';}).join("") + '</select><select id="productStatusFilter" class="form-select" aria-label="Durum filtresi"><option value="all">Tüm durumlar</option><option value="active" ' + (state.productStatus==="active"?"selected":"") + '>Yayında</option><option value="out" ' + (state.productStatus==="out"?"selected":"") + '>Tükendi</option><option value="hidden" ' + (state.productStatus==="hidden"?"selected":"") + '>Taslak / gizli</option></select></div><div class="toolbar-end"><span class="text-muted small">' + filtered.length + ' ürün</span></div></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>ÜRÜN</th><th>KATEGORİ</th><th>FİYAT</th><th>DURUM</th><th>DÜZENLE</th><th>İŞLEMLER</th></tr></thead><tbody>' + productRows(filtered) + '</tbody></table></div></section>';
+      '<section class="panel-card"><div class="toolbar"><div class="toolbar-start"><label class="search-control"><i class="bi bi-search"></i><input id="productSearch" class="form-control" type="search" placeholder="Ürün ara..." value="' + escapeHtml(state.productSearch) + '" aria-label="Ürün ara"></label><select id="productCategoryFilter" class="form-select" aria-label="Kategori filtresi"><option value="all">Tüm kategoriler</option>' + state.categories.map(function(c){return '<option value="' + escapeHtml(c.id) + '" ' + (state.productCategory===c.id?"selected":"") + '>' + escapeHtml(c.name) + '</option>';}).join("") + '</select><select id="productStatusFilter" class="form-select" aria-label="Durum filtresi"><option value="all">Tüm durumlar</option><option value="active" ' + (state.productStatus==="active"?"selected":"") + '>Yayında</option><option value="out" ' + (state.productStatus==="out"?"selected":"") + '>Tükendi</option><option value="hidden" ' + (state.productStatus==="hidden"?"selected":"") + '>Taslak / gizli</option></select></div><div class="toolbar-end"><span class="text-muted small">' + filtered.length + ' ürün</span></div></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>ÜRÜN</th><th>KATEGORİ</th><th>FİYAT</th><th>DURUM</th><th>DÜZENLE</th><th>İŞLEMLER</th></tr></thead><tbody>' + productRows(filtered) + '</tbody></table></div></section>';
   }
   function categoriesView() {
     return pageHeading("MENÜ İÇERİĞİ","Kategoriler","Müşteri menüsündeki ürün gruplarını oluşturun ve düzenleyin.",'<button class="btn btn-primary-soft" data-action="add-category"><i class="bi bi-plus-lg me-2"></i>Kategori ekle</button>') +
-      '<div class="category-grid">' + state.categories.map(function(c){
-        const count=state.products.filter(function(p){return p.category===c.name;}).length;
+      '<div class="category-grid">' + (state.categories.length ? state.categories.map(function(c){
+        const count=state.products.filter(function(p){return p.categoryId===c.id;}).length;
         return '<article class="category-card"><span class="category-symbol"><i class="bi ' + escapeHtml(c.icon||"bi-collection") + '"></i></span><div class="category-info"><strong>' + escapeHtml(c.name) + '</strong><small>' + count + ' ürün · ' + escapeHtml(c.description||"Açıklama yok") + '</small></div><div class="category-actions"><button class="table-action" data-action="edit-category" data-id="' + c.id + '" aria-label="Kategoriyi düzenle"><i class="bi bi-pencil"></i></button><button class="table-action danger" data-action="delete-category" data-id="' + c.id + '" aria-label="Kategoriyi sil"><i class="bi bi-trash3"></i></button></div></article>';
-      }).join("") + '</div>';
+      }).join("") : '<div class="panel-card p-4 text-center"><strong>Henüz kategori yok</strong><p class="text-muted mb-0 mt-1">Ürün eklemeden önce ilk menü kategorinizi oluşturun.</p></div>') + '</div>';
   }
   function tablesView() {
     const rows = state.tables.map(function(table) {
@@ -278,6 +258,19 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!response.ok) throw new Error(result.error || "Personel işlemi tamamlanamadı.");
     return result;
   }
+  async function loadCatalog() {
+    const response = await fetch("/api/catalog", { headers: { "Accept": "application/json" } });
+    let result;
+    try { result = await response.json(); }
+    catch (error) { throw new Error("Katalog verileri okunamadı. Oturumunuzu kontrol edin."); }
+    if (!response.ok) throw new Error(result.error || "Ürün ve kategori bilgileri yüklenemedi.");
+    state.categories = Array.isArray(result.categories) ? result.categories : [];
+    state.products = Array.isArray(result.products) ? result.products : [];
+    if (["overview", "products", "categories"].includes(state.view) && viewRenderers[state.view]) {
+      root.innerHTML = viewRenderers[state.view]();
+    }
+    return result;
+  }
   function settingsView() {
     const s=state.settings;
     return pageHeading("İŞLETME","İşletme Ayarları","Yalnızca müşteri menüsünün alt bölümünde (footer) gösterilecek iletişim bilgilerini yönetin.") +
@@ -311,8 +304,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if(modal) modal.show();
   }
   function productForm(product) {
-    const p=product||{name:"",category:state.categories[0]?state.categories[0].name:"",price:"",description:"",status:"active",image:""};
-    openModal(product?"Ürünü düzenle":"Yeni ürün ekle",'<form id="productForm"><input type="hidden" name="id" value="'+(p.id||"")+'"><input type="hidden" name="currentImage" value="'+escapeHtml(p.image||"")+'"><div class="row g-3"><div class="col-md-7"><label class="form-label" for="productName">Ürün adı *</label><input class="form-control" id="productName" name="name" required maxlength="100" value="'+escapeHtml(p.name)+'"></div><div class="col-md-5"><label class="form-label" for="productPrice">Fiyat (TL) *</label><input class="form-control" id="productPrice" name="price" type="number" min="0" step="0.01" required value="'+escapeHtml(p.price)+'"></div><div class="col-md-6"><label class="form-label" for="productCategory">Kategori *</label><select class="form-select" id="productCategory" name="category" required>'+categoryOptions(p.category)+'</select></div><div class="col-md-6"><label class="form-label" for="productStatus">Yayın durumu</label><select class="form-select" id="productStatus" name="status"><option value="active" '+(p.status==="active"?"selected":"")+'>Yayında</option><option value="out" '+(p.status==="out"?"selected":"")+'>Tükendi</option><option value="hidden" '+(p.status==="hidden"?"selected":"")+'>Taslak / gizli</option></select></div><div class="col-12"><label class="form-label" for="productDescription">Açıklama</label><textarea class="form-control" id="productDescription" name="description" rows="3" maxlength="300">'+escapeHtml(p.description)+'</textarea></div><div class="col-12"><label class="form-label" for="productImageFile">Ürün görseli</label><input class="form-control" id="productImageFile" name="imageFile" type="file" accept="image/*"><div class="form-text">Bilgisayarınızdan görsel seçin; görsel boyutu otomatik küçültülür.</div><div class="image-upload-preview mt-2" id="productImagePreview">'+(p.image?'<img src="'+escapeHtml(p.image)+'" alt="Mevcut ürün görseli">':'<span>Henüz görsel seçilmedi</span>')+'</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-product-image">Görseli kaldır</button></div></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="productForm">Kaydet</button>');
+    const p=product||{name:"",categoryId:state.categories[0]?state.categories[0].id:"",price:"",description:"",status:"active",image:""};
+    openModal(product?"Ürünü düzenle":"Yeni ürün ekle",'<form id="productForm"><input type="hidden" name="id" value="'+(p.id||"")+'"><input type="hidden" name="removeImage" value="false"><div class="row g-3"><div class="col-md-7"><label class="form-label" for="productName">Ürün adı *</label><input class="form-control" id="productName" name="name" required maxlength="100" value="'+escapeHtml(p.name)+'"></div><div class="col-md-5"><label class="form-label" for="productPrice">Fiyat (TL) *</label><input class="form-control" id="productPrice" name="price" type="number" min="0" max="99999999.99" step="0.01" required value="'+escapeHtml(p.price)+'"></div><div class="col-md-6"><label class="form-label" for="productCategory">Kategori *</label><select class="form-select" id="productCategory" name="categoryId" required>'+categoryOptions(p.categoryId)+'</select></div><div class="col-md-6"><label class="form-label" for="productStatus">Yayın durumu</label><select class="form-select" id="productStatus" name="status"><option value="active" '+(p.status==="active"?"selected":"")+'>Yayında</option><option value="out" '+(p.status==="out"?"selected":"")+'>Tükendi</option><option value="hidden" '+(p.status==="hidden"?"selected":"")+'>Taslak / gizli</option></select></div><div class="col-12"><label class="form-label" for="productDescription">Açıklama</label><textarea class="form-control" id="productDescription" name="description" rows="3" maxlength="300">'+escapeHtml(p.description)+'</textarea></div><div class="col-12"><label class="form-label" for="productImageFile">Ürün görseli</label><input class="form-control" id="productImageFile" name="imageFile" type="file" accept="image/png,image/jpeg,image/webp"><div class="form-text">Görseller WebP biçiminde küçültülerek sunucuda saklanır. En fazla 1 MB.</div><div class="image-upload-preview mt-2" id="productImagePreview">'+(p.image?'<img src="'+escapeHtml(p.image)+'" alt="Mevcut ürün görseli">':'<span>Henüz görsel seçilmedi</span>')+'</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-product-image">Görseli kaldır</button></div></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="productForm">Kaydet</button>');
   }
   const categoryIconOptions = [
     ["bi-cup-hot","Sıcak kahve"],["bi-cup-straw","Soğuk içecek"],["bi-cup","Çay / fincan"],["bi-cake2","Pasta ve tatlı"],
@@ -364,15 +357,45 @@ document.addEventListener("DOMContentLoaded", function () {
     if(!actionButton)return;
     const action=actionButton.dataset.action, id=Number(actionButton.dataset.id), rawId=actionButton.dataset.id;
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
-    if(action==="remove-product-image"){const input=document.querySelector('#productForm [name="currentImage"]');if(input)input.value="";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
+    if(action==="remove-product-image"){const input=document.querySelector('#productForm [name="removeImage"]');if(input)input.value="true";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
     if(action==="remove-logo"||action==="remove-cover"){const key=action==="remove-logo"?"currentLogo":"currentCover";const input=document.querySelector('#appearanceForm [name="'+key+'"]');if(input)input.value="";const preview=document.getElementById(action==="remove-logo"?"logoPreview":"coverPreview");if(preview)preview.innerHTML="<span>Görsel seçilmedi</span>";const file=document.getElementById(action==="remove-logo"?"logoFile":"coverFile");if(file)file.value="";return;}
     if(action==="add-product"){if(!state.categories.length){notify("Önce en az bir kategori oluşturun.");setView("categories");return;}productForm();return;}
-    if(action==="edit-product"){productForm(state.products.find(function(p){return p.id===id;}));return;}
-    if(action==="toggle-product"){const p=state.products.find(function(x){return x.id===id;});if(p){p.status=p.status==="active"?"hidden":"active";save("products");render("products",false);notify("Ürün durumu güncellendi.");}return;}
-    if(action==="delete-product"){const p=state.products.find(function(x){return x.id===id;});if(p&&window.confirm('"'+p.name+'" ürününü silmek istiyor musunuz?')){state.products=state.products.filter(function(x){return x.id!==id;});save("products");render(state.view,false);notify("Ürün silindi.");}return;}
+    if(action==="edit-product"){productForm(state.products.find(function(p){return p.id===rawId;}));return;}
+    if(action==="toggle-product"){
+      const product=state.products.find(function(item){return item.id===rawId;});
+      if(!product)return;
+      const nextStatus=product.status==="active"?"hidden":"active";
+      try{
+        await staffRequest("/api/catalog/products/"+encodeURIComponent(rawId),{method:"PATCH",body:JSON.stringify({status:nextStatus})});
+        await loadCatalog();
+        notify("Ürün durumu güncellendi.");
+      }catch(error){notify(error.message);}
+      return;
+    }
+    if(action==="delete-product"){
+      const product=state.products.find(function(item){return item.id===rawId;});
+      if(product&&window.confirm('"'+product.name+'" ürününü silmek istiyor musunuz?')){
+        try{
+          await staffRequest("/api/catalog/products/"+encodeURIComponent(rawId),{method:"DELETE"});
+          await loadCatalog();
+          notify("Ürün silindi.");
+        }catch(error){notify(error.message);}
+      }
+      return;
+    }
     if(action==="add-category"){categoryForm();return;}
-    if(action==="edit-category"){categoryForm(state.categories.find(function(c){return c.id===id;}));return;}
-    if(action==="delete-category"){const c=state.categories.find(function(x){return x.id===id;});if(!c)return;const used=state.products.some(function(p){return p.category===c.name;});if(used){notify("Bu kategoride ürün var. Silmeden önce ürünleri başka kategoriye taşıyın.");return;}if(window.confirm('"'+c.name+'" kategorisini silmek istiyor musunuz?')){state.categories=state.categories.filter(function(x){return x.id!==id;});save("categories");render("categories",false);notify("Kategori silindi.");}return;}
+    if(action==="edit-category"){categoryForm(state.categories.find(function(category){return category.id===rawId;}));return;}
+    if(action==="delete-category"){
+      const category=state.categories.find(function(item){return item.id===rawId;});
+      if(category&&window.confirm('"'+category.name+'" kategorisini silmek istiyor musunuz?')){
+        try{
+          await staffRequest("/api/catalog/categories/"+encodeURIComponent(rawId),{method:"DELETE"});
+          await loadCatalog();
+          notify("Kategori silindi.");
+        }catch(error){notify(error.message);}
+      }
+      return;
+    }
     if(action==="add-table"){tableForm();return;}
     if(action==="edit-table"){tableForm(state.tables.find(function(table){return String(table.id)===String(actionButton.dataset.id);}));return;}
     if(action==="delete-table"){
@@ -414,19 +437,57 @@ document.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("submit",async function(event){
     const form=event.target;
     if(form.id==="productForm"){
-      event.preventDefault();const data=formObject(form);const id=Number(data.id);let image=data.currentImage||"";const file=form.querySelector('[name="imageFile"]')?.files?.[0];if(file){try{image=await imageFileToDataUrl(file,900);}catch(error){notify("Görsel okunamadı. Başka bir dosya deneyin.");return;}}
-      const product={id:id||Date.now(),name:data.name.trim(),category:data.category,price:Number(data.price),description:data.description.trim(),status:data.status,image:image};
-      if(!product.name||!Number.isFinite(product.price)||product.price<0){notify("Ürün adı ve geçerli bir fiyat girin.");return;}
-      if(id){state.products=state.products.map(function(p){return p.id===id?product:p;});}else{state.products.unshift(product);}
-      if(!save("products"))return;if(modal)modal.hide();render("products",false);notify(id?"Ürün güncellendi.":"Yeni ürün eklendi.");return;
+      event.preventDefault();
+      const data=formObject(form);
+      const id=String(data.id||"");
+      const payload={
+        name:String(data.name||"").trim(),
+        categoryId:String(data.categoryId||""),
+        price:String(data.price||""),
+        description:String(data.description||"").trim(),
+        status:String(data.status||"active")
+      };
+      const file=form.querySelector('[name="imageFile"]')?.files?.[0];
+      if(file){
+        try{payload.imageData=await imageFileToDataUrl(file,900);}
+        catch(error){notify("Görsel okunamadı. PNG, JPEG veya WebP dosyası deneyin.");return;}
+      }else if(data.removeImage==="true"){
+        payload.removeImage=true;
+      }
+      if(!payload.name||!payload.categoryId){notify("Ürün adı ve kategori seçin.");return;}
+      try{
+        await staffRequest(id?"/api/catalog/products/"+encodeURIComponent(id):"/api/catalog/products",{
+          method:id?"PATCH":"POST",
+          body:JSON.stringify(payload)
+        });
+        if(modal)modal.hide();
+        await loadCatalog();
+        if(state.view!=="products")render("products",false);
+        notify(id?"Ürün güncellendi.":"Yeni ürün oluşturuldu.");
+      }catch(error){notify(error.message);}
+      return;
     }
     if(form.id==="categoryForm"){
-      event.preventDefault();const data=formObject(form);const id=Number(data.id);const name=data.name.trim();
-      if(!name){notify("Kategori adı girin.");return;}
-      if(state.categories.some(function(c){return c.name.toLocaleLowerCase("tr")===name.toLocaleLowerCase("tr")&&c.id!==id;})){notify("Bu isimde bir kategori zaten var.");return;}
-      const category={id:id||Date.now(),name:name,icon:data.icon.trim()||"bi-collection",description:data.description.trim()};
-      if(id){const old=state.categories.find(function(c){return c.id===id;});state.categories=state.categories.map(function(c){return c.id===id?category:c;});if(old&&old.name!==name){state.products.forEach(function(p){if(p.category===old.name)p.category=name;});save("products");}}else{state.categories.push(category);}
-      save("categories");if(modal)modal.hide();render("categories",false);notify(id?"Kategori güncellendi.":"Kategori oluşturuldu.");return;
+      event.preventDefault();
+      const data=formObject(form);
+      const id=String(data.id||"");
+      const payload={
+        name:String(data.name||"").trim(),
+        icon:String(data.icon||"bi-collection"),
+        description:String(data.description||"").trim()
+      };
+      if(!payload.name){notify("Kategori adı girin.");return;}
+      try{
+        await staffRequest(id?"/api/catalog/categories/"+encodeURIComponent(id):"/api/catalog/categories",{
+          method:id?"PATCH":"POST",
+          body:JSON.stringify(payload)
+        });
+        if(modal)modal.hide();
+        await loadCatalog();
+        if(state.view!=="categories")render("categories",false);
+        notify(id?"Kategori güncellendi.":"Yeni kategori oluşturuldu.");
+      }catch(error){notify(error.message);}
+      return;
     }
     if(form.id==="tableForm"){
       event.preventDefault();
@@ -510,4 +571,5 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("storage",function(event){if(event.key==="roastCashier_sales"&&state.view==="revenue")render("revenue",false);});
   const initial=window.location.hash.replace("#","")||"overview";
   render(viewRenderers[initial]?initial:"overview",false);
+  loadCatalog().catch(function(error){console.error("Katalog yüklenemedi.",error);notify(error.message);});
 });
