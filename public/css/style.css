@@ -523,3 +523,11 @@ body.motion-ready .hero-content > *:nth-child(2) {
     color: #9a8672;
     font-size: 2rem;
 }
+
+.product-sold-out {
+    color: #a34b3f;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    white-space: nowrap;
+}
