@@ -102,8 +102,7 @@ body {
     padding: 28px;
 }
 
-.hero-label,
-.section-eyebrow {
+.hero-label {
     color: var(--menu-accent);
     font-size: 10px;
     font-weight: 800;
