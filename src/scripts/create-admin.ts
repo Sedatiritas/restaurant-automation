@@ -75,17 +75,12 @@ async function main(): Promise<void> {
 
   console.log("\nİlk yönetici hesabı oluşturuluyor.\n");
 
-  const fullName = await askLine("Ad soyad: ");
-  const email = (await askLine("E-posta: ")).toLowerCase();
+  const username = (await askLine("Yönetici kullanıcı adı: ")).toLowerCase();
   const password = await askHidden("Parola (en az 12 karakter): ");
   const passwordConfirmation = await askHidden("Parolayı tekrar girin: ");
 
-  if (fullName.length < 2 || fullName.length > 100) {
-    throw new Error("Ad soyad 2 ile 100 karakter arasında olmalı.");
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
-    throw new Error("Geçerli bir e-posta adresi girin.");
+  if (!/^[a-zA-Z0-9._-]{3,32}$/.test(username)) {
+    throw new Error("Kullanıcı adı 3-32 karakter olmalı; yalnızca harf, rakam, nokta, tire ve alt çizgi kullanılabilir.");
   }
 
   if (password.length < 12 || password.length > 128) {
@@ -96,10 +91,10 @@ async function main(): Promise<void> {
     throw new Error("Parolalar eşleşmiyor.");
   }
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
+  const existingUser = await prisma.user.findUnique({ where: { username } });
 
   if (existingUser) {
-    throw new Error("Bu e-posta adresi zaten kullanımda.");
+    throw new Error("Bu kullanıcı adı zaten kullanımda.");
   }
 
   const passwordHash = await argon2.hash(password, {
@@ -108,22 +103,19 @@ async function main(): Promise<void> {
 
   const admin = await prisma.user.create({
     data: {
-      fullName,
-      email,
+      username,
       passwordHash,
       role: "ADMIN"
     },
     select: {
       id: true,
-      fullName: true,
-      email: true,
+      username: true,
       role: true
     }
   });
 
   console.log("\nİlk yönetici hesabı başarıyla oluşturuldu.");
-  console.log(`Ad soyad: ${admin.fullName}`);
-  console.log(`E-posta: ${admin.email}`);
+  console.log(`Kullanıcı adı: ${admin.username}`);
   console.log(`Rol: ${admin.role}`);
   console.log("Artık /login sayfasından Yönetici rolüyle giriş yapabilirsiniz.");
 }
