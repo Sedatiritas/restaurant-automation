@@ -357,7 +357,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if(viewLink){event.preventDefault();setView(viewLink.dataset.view);return;}
     const actionButton=event.target.closest("[data-action]");
     if(!actionButton)return;
-    const action=actionButton.dataset.action, id=Number(actionButton.dataset.id), rawId=actionButton.dataset.id;
+    const action=actionButton.dataset.action, rawId=actionButton.dataset.id;
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
     if(action==="remove-product-image"){const input=document.querySelector('#productForm [name="removeImage"]');if(input)input.value="true";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
     if(action==="remove-logo"||action==="remove-cover"){const key=action==="remove-logo"?"currentLogo":"currentCover";const input=document.querySelector('#appearanceForm [name="'+key+'"]');if(input)input.value="";const preview=document.getElementById(action==="remove-logo"?"logoPreview":"coverPreview");if(preview)preview.innerHTML="<span>Görsel seçilmedi</span>";const file=document.getElementById(action==="remove-logo"?"logoFile":"coverFile");if(file)file.value="";return;}
