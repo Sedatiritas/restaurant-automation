@@ -302,7 +302,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ? '<span class="product-stock-label">Tükendi</span>'
         : '<button class="add-product-button" type="button" data-add-product-id="' +
           escapeHtml(product.id) + '" aria-label="' + escapeHtml(product.name) +
-          ' ürününü önizlemeye ekle"><i class="bi bi-plus-lg"></i></button>';
+          ' ürününü siparişe ekle"><i class="bi bi-plus-lg"></i></button>';
 
       return (
         '<article class="product-card' + (outOfStock ? " is-out-of-stock" : "") + '">' +
