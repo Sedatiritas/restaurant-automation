@@ -151,6 +151,34 @@ export const streamCashierEvents: RequestHandler = (_req, res) => {
   });
 };
 
+export const streamWaiterEvents: RequestHandler = (_req, res) => {
+  res.status(200);
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  res.write("retry: 3000\\n\\n");
+
+  const unsubscribe = subscribeCashierUpdates((event) => {
+    if (res.destroyed || res.writableEnded) return;
+    res.write("event: waiter_update\\n");
+    res.write("data: " + JSON.stringify(event) + "\\n\\n");
+  });
+
+  const heartbeat = setInterval(() => {
+    if (!res.destroyed && !res.writableEnded) {
+      res.write(": keep-alive\\n\\n");
+    }
+  }, 20000);
+
+  res.on("close", () => {
+    clearInterval(heartbeat);
+    unsubscribe();
+  });
+};
+
 export const getWaiterTables: RequestHandler = async (_req, res, next) => {
   try {
     const tables = await fetchTableSnapshots();
