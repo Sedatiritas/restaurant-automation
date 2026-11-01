@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function () {
     renderProducts();
   });
 
-  $("#productGrid").addEventListener("click", function (event) {
+  $("#catalogEmpty").addEventListener("click", function (event) {
     const button = event.target.closest("#retryMenuButton");
     if (button) {
       button.disabled = true;
