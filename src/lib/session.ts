@@ -17,7 +17,7 @@ const SESSION_DURATION_SECONDS = 8 * 60 * 60;
 // makes every cookie issued by the previous process fail signature validation.
 const SERVER_START_NONCE = randomBytes(32);
 
-function getSessionSecret(): string {
+function getSessionSecret(): Buffer {
   const secret = process.env.SESSION_SECRET;
 
   if (!secret || secret.length < 32 || secret.includes("CHANGE_THIS")) {
