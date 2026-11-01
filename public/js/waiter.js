@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
   const $ = function (selector) { return document.querySelector(selector); };
   const state = {
+    tables: [],
+    selectedTableId: null,
+    tableQuery: "",
+    tableError: "",
     categories: [],
     products: [],
     selectedCategory: "all",
@@ -19,6 +23,78 @@ document.addEventListener("DOMContentLoaded", function () {
       currency: "TRY",
       maximumFractionDigits: 2
     }).format(Number(value) || 0);
+  }
+
+  function renderTableSummary() {
+    const selectedTable = state.tables.find(function (table) {
+      return String(table.id) === String(state.selectedTableId);
+    });
+    $("#tableCountSummary").textContent = selectedTable ? selectedTable.name : state.tables.length + " masa";
+    $("#tableSelectionSummary").textContent = selectedTable
+      ? Number(selectedTable.seats) + " kişilik masa seçildi"
+      : "Henüz masa seçilmedi";
+  }
+
+  function renderTables() {
+    const grid = $("#tablesGrid");
+    if (state.tableError) {
+      grid.innerHTML =
+        '<div class="empty-history"><strong>Masalar yüklenemedi</strong><span>' + escapeHtml(state.tableError) +
+        '</span><button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="retryTablesButton">Tekrar dene</button></div>';
+      renderTableSummary();
+      return;
+    }
+
+    const query = state.tableQuery.trim().toLocaleLowerCase("tr-TR");
+    const tables = state.tables.filter(function (table) {
+      return !query || String(table.name).toLocaleLowerCase("tr-TR").includes(query);
+    });
+
+    if (!tables.length) {
+      grid.innerHTML = state.tables.length
+        ? '<div class="empty-history"><strong>Masa bulunamadı</strong><span>Arama kelimesini değiştirin.</span></div>'
+        : '<div class="empty-history"><strong>Henüz masa eklenmemiş</strong><span>Yönetici Masa Yönetimi bölümünden masa eklediğinde burada görünecek.</span></div>';
+      renderTableSummary();
+      return;
+    }
+
+    grid.innerHTML = tables.map(function (table) {
+      const selected = String(table.id) === String(state.selectedTableId);
+      return '<button class="table-card' + (selected ? ' is-active' : '') + '" type="button" data-table-id="' + escapeHtml(table.id) + '" aria-pressed="' + (selected ? 'true' : 'false') + '">' +
+        '<span class="table-card-top">' +
+          '<span class="table-card-title"><span class="table-card-icon"><i class="bi bi-grid-1x2-fill"></i></span>' +
+            '<span><strong class="table-card-name">' + escapeHtml(table.name) + '</strong><span class="table-card-seats">' + Number(table.seats) + ' kişilik masa</span></span></span>' +
+          (selected ? '<span class="table-state-pill is-active"><span class="status-dot"></span>Seçili</span>' : '') +
+        '</span>' +
+        '<span class="table-card-bottom"><span class="table-card-total"><span>Kapasite</span><strong>' + Number(table.seats) + ' kişi</strong></span>' +
+          '<span class="table-card-last"><span>Seçim</span><strong>' + (selected ? 'Bu masa seçildi' : 'Seçmek için dokun') + '</strong></span></span>' +
+      '</button>';
+    }).join("");
+
+    renderTableSummary();
+  }
+
+  async function loadTables() {
+    const response = await fetch("/api/waiter/tables", {
+      headers: { "Accept": "application/json" },
+      cache: "no-store"
+    });
+    let result;
+    try {
+      result = await response.json();
+    } catch (error) {
+      throw new Error("Sunucudan geçerli bir masa yanıtı alınamadı.");
+    }
+    if (!response.ok) throw new Error(result.error || "Masa listesi yüklenemedi.");
+
+    state.tables = Array.isArray(result.tables) ? result.tables : [];
+    if (!state.tables.some(function (table) {
+      return String(table.id) === String(state.selectedTableId);
+    })) {
+      state.selectedTableId = null;
+    }
+    state.tableError = "";
+    renderTables();
   }
 
   function renderCategories() {
@@ -118,6 +194,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  $("#tablesGrid").addEventListener("click", async function (event) {
+    const retryButton = event.target.closest("#retryTablesButton");
+    if (retryButton) {
+      retryButton.disabled = true;
+      try {
+        await loadTables();
+      } catch (error) {
+        state.tableError = error.message;
+        renderTables();
+      }
+      return;
+    }
+
+    const tableButton = event.target.closest("[data-table-id]");
+    if (!tableButton) return;
+    state.selectedTableId = tableButton.dataset.tableId;
+    renderTables();
+  });
+
+  $("#tableSearch").addEventListener("input", function (event) {
+    state.tableQuery = event.target.value;
+    renderTables();
+  });
+
   $("#categoryTabs").addEventListener("click", function (event) {
     const button = event.target.closest("[data-category]");
     if (!button) return;
@@ -142,6 +242,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  loadTables().catch(function (error) {
+    state.tableError = error.message;
+    renderTables();
+  });
   loadMenu().catch(showLoadError);
   loadAppearance();
 });
