@@ -159,17 +159,17 @@ export const streamWaiterEvents: RequestHandler = (_req, res) => {
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
-  res.write("retry: 3000\\n\\n");
+  res.write("retry: 3000\n\n");
 
   const unsubscribe = subscribeCashierUpdates((event) => {
     if (res.destroyed || res.writableEnded) return;
-    res.write("event: waiter_update\\n");
-    res.write("data: " + JSON.stringify(event) + "\\n\\n");
+    res.write("event: waiter_update\n");
+    res.write("data: " + JSON.stringify(event) + "\n\n");
   });
 
   const heartbeat = setInterval(() => {
     if (!res.destroyed && !res.writableEnded) {
-      res.write(": keep-alive\\n\\n");
+      res.write(": keep-alive\n\n");
     }
   }, 20000);
 
