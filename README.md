@@ -69,13 +69,19 @@ prisma/         # Prisma şeması ve migration dosyaları
    npm run db:migrate -- --name init
    ```
 
-6. Geliştirme sunucusunu başlat:
+6. İlk yönetici hesabını yalnızca bir kez oluştur:
+
+   ```powershell
+   npm run db:create-admin
+   ```
+
+7. Geliştirme sunucusunu başlat:
 
    ```powershell
    npm run dev
    ```
 
-7. Tarayıcıdan ekranları aç:
+8. Tarayıcıdan ekranları aç:
 
    - Müşteri menüsü: http://localhost:3000/
    - Personel girişi: http://localhost:3000/login
