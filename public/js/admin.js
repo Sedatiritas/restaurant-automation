@@ -30,6 +30,9 @@ document.addEventListener("DOMContentLoaded", function () {
       };reader.readAsDataURL(file);
     });
   }
+  let selectedProductImageFile = null;
+  let selectedProductImageData = "";
+
   function load(key) {
     try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
@@ -304,6 +307,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if(modal) modal.show();
   }
   function productForm(product) {
+    selectedProductImageFile = null;
+    selectedProductImageData = "";
     const p=product||{name:"",categoryId:state.categories[0]?state.categories[0].id:"",price:"",description:"",status:"active",image:""};
     const productAction=product?"/api/catalog/products/"+encodeURIComponent(p.id):"/api/catalog/products";
     openModal(product?"Ürünü düzenle":"Yeni ürün ekle",'<form id="productForm" method="post" action="'+productAction+'"><input type="hidden" name="id" value="'+(p.id||"")+'"><input type="hidden" name="removeImage" value="false"><div class="row g-3"><div class="col-md-7"><label class="form-label" for="productName">Ürün adı *</label><input class="form-control" id="productName" name="name" required maxlength="100" value="'+escapeHtml(p.name)+'"></div><div class="col-md-5"><label class="form-label" for="productPrice">Fiyat (TL) *</label><input class="form-control" id="productPrice" name="price" type="number" min="0" max="99999999.99" step="0.01" required value="'+escapeHtml(p.price)+'"></div><div class="col-md-6"><label class="form-label" for="productCategory">Kategori *</label><select class="form-select" id="productCategory" name="categoryId" required>'+categoryOptions(p.categoryId)+'</select></div><div class="col-md-6"><label class="form-label" for="productStatus">Yayın durumu</label><select class="form-select" id="productStatus" name="status"><option value="active" '+(p.status==="active"?"selected":"")+'>Yayında</option><option value="out" '+(p.status==="out"?"selected":"")+'>Tükendi</option><option value="hidden" '+(p.status==="hidden"?"selected":"")+'>Taslak / gizli</option></select></div><div class="col-12"><label class="form-label" for="productDescription">Açıklama</label><textarea class="form-control" id="productDescription" name="description" rows="3" maxlength="300">'+escapeHtml(p.description)+'</textarea></div><div class="col-12"><label class="form-label" for="productImageFile">Ürün görseli</label><input class="form-control" id="productImageFile" name="imageFile" type="file" accept="image/png,image/jpeg,image/webp"><div class="form-text">Görseller WebP biçiminde küçültülerek sunucuda saklanır. En fazla 1 MB.</div><div class="image-upload-preview mt-2" id="productImagePreview">'+(p.image?'<img src="'+escapeHtml(p.image)+'" alt="Mevcut ürün görseli">':'<span>Henüz görsel seçilmedi</span>')+'</div><button class="btn btn-sm btn-outline-soft mt-2" type="button" data-action="remove-product-image">Görseli kaldır</button></div></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="productForm">Kaydet</button>');
@@ -359,7 +364,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if(!actionButton)return;
     const action=actionButton.dataset.action, rawId=actionButton.dataset.id;
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
-    if(action==="remove-product-image"){const input=document.querySelector('#productForm [name="removeImage"]');if(input)input.value="true";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
+    if(action==="remove-product-image"){selectedProductImageFile=null;selectedProductImageData="";const input=document.querySelector('#productForm [name="removeImage"]');if(input)input.value="true";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
     if(action==="remove-logo"||action==="remove-cover"){const key=action==="remove-logo"?"currentLogo":"currentCover";const input=document.querySelector('#appearanceForm [name="'+key+'"]');if(input)input.value="";const preview=document.getElementById(action==="remove-logo"?"logoPreview":"coverPreview");if(preview)preview.innerHTML="<span>Görsel seçilmedi</span>";const file=document.getElementById(action==="remove-logo"?"logoFile":"coverFile");if(file)file.value="";return;}
     if(action==="add-product"){if(!state.categories.length){notify("Önce en az bir kategori oluşturun.");setView("categories");return;}productForm();return;}
     if(action==="edit-product"){productForm(state.products.find(function(p){return p.id===rawId;}));return;}
@@ -449,10 +454,12 @@ document.addEventListener("DOMContentLoaded", function () {
         description:String(data.description||"").trim(),
         status:String(data.status||"active")
       };
-      const file=form.querySelector('[name="imageFile"]')?.files?.[0];
+      const file=form.querySelector('[name="imageFile"]')?.files?.[0] || selectedProductImageFile;
       if(file){
         try{
-          const imageData=await imageFileToDataUrl(file,900);
+          const imageData=selectedProductImageFile===file && selectedProductImageData
+            ? selectedProductImageData
+            : await imageFileToDataUrl(file,900);
           if(imageData.length>1_400_000){notify("Görsel sıkıştırıldıktan sonra 1 MB sınırını aşıyor. Daha küçük bir görsel deneyin.");return;}
           payload.imageData=imageData;
         }catch(error){notify("Görsel okunamadı. PNG, JPEG veya WebP dosyası deneyin.");return;}
@@ -549,9 +556,24 @@ document.addEventListener("DOMContentLoaded", function () {
       event.preventDefault();const data=formObject(form);Object.keys(data).forEach(function(key){state.settings[key]=data[key].trim();});save("settings");notify("İşletme bilgileri kaydedildi.");return;
     }
   });
-  document.addEventListener("change",function(event){
+  document.addEventListener("change",async function(event){
     const fileInput=event.target.closest('input[type="file"]');if(!fileInput||!fileInput.files||!fileInput.files[0])return;
     const previewId=fileInput.id==="productImageFile"?"productImagePreview":fileInput.id==="logoFile"?"logoPreview":"coverPreview";const preview=document.getElementById(previewId);if(!preview)return;
+    if(fileInput.id==="productImageFile"){
+      const file=fileInput.files[0];
+      selectedProductImageFile=file;
+      selectedProductImageData="";
+      try{
+        const imageData=await imageFileToDataUrl(file,900);
+        if(document.getElementById("productImageFile")!==fileInput||fileInput.files[0]!==file)return;
+        if(imageData.length>1_400_000){preview.innerHTML="<span>Görsel 1 MB sınırını aşıyor. Daha küçük bir görsel seçin.</span>";notify("Görsel sıkıştırıldıktan sonra 1 MB sınırını aşıyor. Daha küçük bir görsel deneyin.");return;}
+        selectedProductImageData=imageData;
+        preview.innerHTML='<img alt="Görsel önizlemesi" src="'+imageData+'">';
+      }catch(error){
+        if(document.getElementById("productImageFile")===fileInput){selectedProductImageData="";preview.innerHTML="<span>Görsel okunamadı.</span>";notify("Görsel okunamadı. PNG, JPEG veya WebP dosyası deneyin.");}
+      }
+      return;
+    }
     const reader=new FileReader();reader.onload=function(){preview.innerHTML='<img alt="Görsel önizlemesi" src="'+reader.result+'">';};reader.readAsDataURL(fileInput.files[0]);
   });
   document.addEventListener("input",function(event){
