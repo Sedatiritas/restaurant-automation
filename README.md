@@ -27,16 +27,18 @@ views/
   admin/        # Restoran yönetim paneli
   waiter/       # Garson ekranı
   cashier/      # Kasa ekranı
+  auth/         # Personel rol seçimi ve giriş ekranı
   partials/     # Ortak EJS head ve script şablonları
 
 src/
-  controllers/  # Sayfa controller'ları
-  middlewares/  # Express middleware'leri
-  routes/       # Express route tanımları
+  controllers/  # Sayfa ve kimlik doğrulama controller'ları
+  middlewares/  # Rol ve oturum kontrolü
+  routes/       # Sayfa ve kimlik doğrulama route'ları
+  lib/          # Prisma istemcisi ve imzalı oturum yardımcıları
   app.ts        # Express uygulama yapılandırması
   server.ts     # Yerel geliştirme sunucusu
 
-prisma/         # Prisma şeması ve migration dosyaları (sonraki aşama)
+prisma/         # Prisma şeması ve migration dosyaları
 ```
 
 ## Yerel geliştirme
@@ -54,17 +56,31 @@ prisma/         # Prisma şeması ve migration dosyaları (sonraki aşama)
    Copy-Item .env.example .env
    ```
 
-4. Geliştirme sunucusunu başlat:
+4. `.env` dosyasında PostgreSQL bağlantısını ve en az 32 karakterli rastgele `SESSION_SECRET` değerini ayarla. PowerShell'de secret üretmek için:
+
+   ```powershell
+   [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
+   ```
+
+5. Prisma Client'ı oluştur ve veritabanı tablolarını uygula:
+
+   ```powershell
+   npm run db:generate
+   npm run db:migrate -- --name init
+   ```
+
+6. Geliştirme sunucusunu başlat:
 
    ```powershell
    npm run dev
    ```
 
-5. Tarayıcıdan ekranları aç:
+7. Tarayıcıdan ekranları aç:
 
    - Müşteri menüsü: http://localhost:3000/
+   - Personel girişi: http://localhost:3000/login
    - Yönetim paneli: http://localhost:3000/admin
    - Garson: http://localhost:3000/waiter
    - Kasa: http://localhost:3000/cashier
 
-> PostgreSQL ve Prisma bağlantısı henüz yapılandırılmadı. Bu aşamada EJS sayfaları Express üzerinden sunulur; veritabanı entegrasyonu sonraki geliştirme adımıdır.
+> Yönetim, kasiyer ve garson ekranları giriş gerektirir. Girişte rol seçilir; rol, e-posta ve parola veritabanındaki kullanıcı hesabıyla doğrulanır. İlk kullanıcı hesabı henüz otomatik oluşturulmaz; migration sonrasında başlangıç yönetici hesabı eklenmelidir. Parolalar Argon2 ile doğrulanır, oturum çerezi HttpOnly ve SameSite=Strict olarak ayarlanır. Oturum süresi 8 saattir.
