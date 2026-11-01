@@ -562,6 +562,26 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function connectRealtimeUpdates() {
+    if (typeof window.EventSource !== "function") return;
+
+    const events = new EventSource("/api/waiter/events");
+    events.addEventListener("waiter_update", function (event) {
+      let update;
+      try {
+        update = JSON.parse(event.data);
+      } catch (_error) {
+        return;
+      }
+
+      if (!update || (update.type !== "bill_closed" && update.type !== "payment_recorded")) {
+        return;
+      }
+
+      loadTables();
+    });
+  }
+
   byId("tablesGrid").addEventListener("click", function (event) {
     const retryButton = event.target.closest("#retryTablesButton");
     if (retryButton) {
@@ -659,5 +679,6 @@ document.addEventListener("DOMContentLoaded", function () {
   showScreen("tables");
   renderTables();
   renderDraft();
+  connectRealtimeUpdates();
   Promise.all([loadTables(), loadMenu(), loadAppearance()]);
 });
