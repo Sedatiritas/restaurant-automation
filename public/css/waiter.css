@@ -398,3 +398,17 @@ a{color:inherit}
 
 .product-stock-label{padding:4px 8px;border-radius:20px;background:#fff0df;color:#a9682e;font-size:9px;font-weight:800;white-space:nowrap}
 .product-card.is-out-of-stock{opacity:.78}
+
+
+/* Masa kartı adisyon durum rozetleri */
+.table-state-pill.is-empty{background:#edf5eb;color:#4e7c49}
+.table-state-pill.is-empty .status-dot{background:#579755}
+.table-state-pill.is-open{background:#fff0e1;color:#9b6438}
+.table-state-pill.is-open .status-dot{background:#c58b55}
+@media(max-width:760px){
+  .table-card{position:relative}
+  .table-card-top{flex-direction:row;align-items:flex-start}
+  .table-state-pill{position:absolute;top:9px;right:9px;min-height:25px;padding:4px 7px;font-size:9px}
+  .table-card-title{width:100%;padding-right:2px}
+  .table-card-title>span:last-child{padding-right:60px}
+}
