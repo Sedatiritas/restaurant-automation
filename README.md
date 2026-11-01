@@ -31,9 +31,9 @@ views/
   partials/     # Ortak EJS head ve script şablonları
 
 src/
-  controllers/  # Sayfa ve kimlik doğrulama controller'ları
+  controllers/  # Sayfa, kimlik doğrulama ve personel controller'ları
   middlewares/  # Rol ve oturum kontrolü
-  routes/       # Sayfa ve kimlik doğrulama route'ları
+  routes/       # Sayfa, kimlik doğrulama ve personel API route'ları
   lib/          # Prisma istemcisi ve imzalı oturum yardımcıları
   app.ts        # Express uygulama yapılandırması
   server.ts     # Yerel geliştirme sunucusu
