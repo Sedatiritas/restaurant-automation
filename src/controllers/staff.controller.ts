@@ -88,6 +88,12 @@ export const createStaff: RequestHandler = async (req, res, next) => {
       select: publicUserSelect
     });
 
+    // Safe native-form fallback: never allow password fields to be submitted in a GET URL.
+    if (req.is("application/x-www-form-urlencoded")) {
+      res.redirect(303, "/admin#staff");
+      return;
+    }
+
     res.status(201).json({ user });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
