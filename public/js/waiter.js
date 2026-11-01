@@ -211,15 +211,42 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    const orders = Array.isArray(table.sentOrders) ? table.sentOrders : [];
+    const isOpen = table.billStatus === "OPEN";
+
     byId("detailsTableName").textContent = table.name;
     byId("detailsTableMeta").textContent = (Number(table.seats) || 0) + " kişilik masa";
-    byId("detailsTableStatus").textContent = "Masa seçildi";
-    byId("detailsGrandTotal").textContent = "Henüz bağlı değil";
-    byId("detailsItemCount").textContent = "0 adet";
-    byId("detailsRoundCount").textContent = "Henüz bağlı değil";
-    byId("historyCount").textContent = "Henüz yok";
-    byId("orderHistory").innerHTML = "";
-    byId("historyEmpty").hidden = false;
+    byId("detailsTableStatus").textContent = isOpen ? "Adisyon açık" : "Boş";
+    byId("detailsGrandTotal").textContent = money(table.currentBillTotal || 0);
+    byId("detailsItemCount").textContent = (Number(table.itemCount) || 0) + " adet";
+    byId("detailsRoundCount").textContent = orders.length ? orders.length + " tur" : "Henüz yok";
+    byId("historyCount").textContent = orders.length ? orders.length + " tur" : "Henüz yok";
+    byId("tableDetailsView").querySelector(".table-open-badge").classList.toggle("is-active", isOpen);
+
+    byId("orderHistory").innerHTML = orders.map(function (order) {
+      const sentAt = order.sentAt
+        ? new Date(order.sentAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+        : "";
+      const items = Array.isArray(order.items) ? order.items : [];
+      const total = items.reduce(function (sum, item) {
+        return sum + (Number(item.unitPrice) || 0) * (Number(item.quantity) || 0);
+      }, 0);
+      return '<article class="history-card">' +
+        '<div class="history-card-head"><div><h3>Sipariş turu #' + escapeHtml(order.roundNumber) +
+        '</h3><p>Mutfağa gönderildi</p></div><span class="history-card-time">' + escapeHtml(sentAt) +
+        '</span></div><div class="history-item-list">' +
+        items.map(function (item) {
+          const quantity = Number(item.quantity) || 0;
+          const price = Number(item.unitPrice) || 0;
+          return '<div class="history-item"><div class="history-item-info"><strong>' +
+            escapeHtml(item.name) + '</strong><span>' + quantity + ' adet · ' +
+            escapeHtml(money(price)) + '</span></div><strong class="history-item-price">' +
+            escapeHtml(money(price * quantity)) + '</strong></div>';
+        }).join("") +
+        '</div><div class="history-card-total"><span>Sipariş toplamı</span><strong>' +
+        escapeHtml(money(total)) + '</strong></div></article>';
+    }).join("");
+    byId("historyEmpty").hidden = orders.length > 0;
     showScreen("details");
   }
 
