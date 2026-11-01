@@ -44,6 +44,17 @@ export const login: RequestHandler = async (req, res, next) => {
     }
 
     if (!user || !user.isActive || user.role !== role || !passwordIsValid) {
+      const reason = !user
+        ? "username not found"
+        : !user.isActive
+          ? "account inactive"
+          : user.role !== role
+            ? `selected role mismatch (account role: ${user.role}, selected role: ${role})`
+            : "password mismatch";
+
+      // Log the failure category only. Never log the submitted password.
+      console.warn(`[auth] Login rejected for "${username}": ${reason}`);
+
       res.status(401).render("auth/login", {
         error: "Giriş bilgileri hatalı. Rolünüzü, kullanıcı adınızı ve parolanızı kontrol edin.",
         selectedRole: role,
