@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const t = table || {name:"",seats:4};
     openModal(table ? "Masayı düzenle" : "Yeni masa ekle",
       '<form id="tableForm"><input type="hidden" name="id" value="' + (table ? table.id : "") + '"><div class="mb-3"><label class="form-label" for="tableName">Masa adı / numarası *</label><input class="form-control" id="tableName" name="name" required maxlength="60" value="' + escapeHtml(t.name) + '" placeholder="Örn. Masa 13 veya Bahçe 1"></div><div class="mb-3"><label class="form-label" for="tableSeats">Kişi kapasitesi *</label><input class="form-control" id="tableSeats" name="seats" type="number" min="1" max="100" step="1" required value="' + escapeHtml(t.seats) + '"><div class="form-text">Bu masa için aynı anda kaç kişilik yer olduğunu belirtin.</div></div></form>',
-      '<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="tableForm">Kaydet</button>');
+      '<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="button" data-action="save-table">Kaydet</button>');
   }
   function appearanceView() {
     if (!state.appearanceLoaded) {
@@ -263,10 +263,30 @@ document.addEventListener("DOMContentLoaded", function () {
     const response = await fetch(url, Object.assign({
       headers: { "Content-Type": "application/json", "Accept": "application/json" }
     }, options || {}));
+
+    if (response.redirected && new URL(response.url, window.location.origin).pathname === "/login") {
+      throw new Error("Oturumunuz sona ermiş. Lütfen yeniden giriş yapıp işlemi tekrarlayın.");
+    }
     if (response.status === 204) return null;
+
+    const contentType = response.headers.get("content-type") || "";
     let result;
-    try { result = await response.json(); } catch (error) { throw new Error("Sunucudan geçerli bir yanıt alınamadı."); }
-    if (!response.ok) throw new Error(result.error || "Personel işlemi tamamlanamadı.");
+    if (contentType.includes("application/json")) {
+      try {
+        result = await response.json();
+      } catch (error) {
+        throw new Error("Sunucu yanıtı okunamadı. Sayfayı yenileyip tekrar deneyin.");
+      }
+    } else {
+      const responseText = await response.text();
+      if (!response.ok) {
+        const detail = responseText.replace(/<[^>]*>/g, " ").replace(/\\s+/g, " ").trim().slice(0, 180);
+        throw new Error(detail || "Sunucu isteği tamamlayamadı (HTTP " + response.status + ").");
+      }
+      throw new Error("Sunucu JSON yerine beklenmeyen bir yanıt döndürdü. Oturumu ve sunucu kayıtlarını kontrol edin.");
+    }
+
+    if (!response.ok) throw new Error(result.error || "İşlem tamamlanamadı.");
     return result;
   }
   async function loadBusinessSettings() {
@@ -526,6 +546,59 @@ document.addEventListener("DOMContentLoaded", function () {
     openModal(person ? "Personel hesabını düzenle" : "Yeni personel hesabı", '<form id="staffForm" method="post" action="' + staffAction + '"><input type="hidden" name="id" value="' + (s.id || "") + '"><div class="mb-3"><label class="form-label" for="staffUsername">Kullanıcı adı *</label><input class="form-control" id="staffUsername" name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]+" autocomplete="off" value="' + escapeHtml(s.username) + '" placeholder="ornek.garson"></div>' + roleField + '<div class="mb-2"><label class="form-label" for="staffPassword">' + (person ? "Yeni parola (isteğe bağlı)" : "Parola *") + '</label><input class="form-control" id="staffPassword" name="password" type="password" ' + (person ? "" : "required") + ' minlength="12" maxlength="128" autocomplete="new-password" placeholder="' + (person ? "Değiştirmek istemiyorsanız boş bırakın" : "En az 12 karakter") + '"></div><div class="form-text">Parola en az 12 karakter olmalıdır. Hesap bilgileri veritabanında güvenli biçimde saklanır.</div></form>', '<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="staffForm">Kaydet</button>');
   }
   function formObject(form) { return Object.fromEntries(new FormData(form).entries()); }
+  async function saveTableForm(form, saveButton) {
+    const data = formObject(form);
+    const id = String(data.id || "");
+    const name = String(data.name || "").trim();
+    const seats = Number(data.seats);
+
+    if (!name) {
+      notify("Masa adı veya numarası girin.");
+      return;
+    }
+    if (!Number.isInteger(seats) || seats < 1 || seats > 100) {
+      notify("Kişi kapasitesi 1 ile 100 arasında tam sayı olmalıdır.");
+      return;
+    }
+
+    if (saveButton) saveButton.disabled = true;
+    try {
+      const result = await staffRequest(
+        id ? "/api/admin/tables/" + encodeURIComponent(id) : "/api/admin/tables",
+        {
+          method: id ? "PATCH" : "POST",
+          body: JSON.stringify({ name: name, seats: seats })
+        }
+      );
+
+      if (!result || !result.table) {
+        throw new Error("Sunucu masa kaydını doğrulayan bir yanıt göndermedi.");
+      }
+
+      const savedTable = result.table;
+      if (id) {
+        const index = state.tables.findIndex(function (table) { return String(table.id) === id; });
+        if (index >= 0) state.tables[index] = savedTable;
+        else state.tables.push(savedTable);
+      } else {
+        state.tables.push(savedTable);
+      }
+
+      state.tables.sort(function (a, b) {
+        return Number(a.sortOrder) - Number(b.sortOrder) || String(a.name).localeCompare(String(b.name), "tr");
+      });
+      state.tablesLoaded = true;
+      state.tablesError = "";
+
+      if (modal) modal.hide();
+      if (state.view === "tables") root.innerHTML = tablesView();
+      notify(id ? "Masa bilgileri güncellendi." : "Yeni masa eklendi.");
+    } catch (error) {
+      notify(error.message || "Masa kaydedilemedi.");
+    } finally {
+      if (saveButton) saveButton.disabled = false;
+    }
+  }
   function setView(view) { render(view); }
   document.addEventListener("click",async function(event){
     const iconChoice=event.target.closest("[data-icon-choice]");
@@ -617,6 +690,12 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       return;
     }
+    if(action==="save-table"){
+      const form=document.getElementById("tableForm");
+      if(!form||!form.reportValidity())return;
+      await saveTableForm(form,actionButton);
+      return;
+    }
     if(action==="add-table"){tableForm();return;}
     if(action==="edit-table"){tableForm(state.tables.find(function(table){return String(table.id)===String(actionButton.dataset.id);}));return;}
     if(action==="delete-table"){
@@ -683,27 +762,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     if(form.id==="tableForm"){
       event.preventDefault();
-      const data=formObject(form);
-      const id=String(data.id||"");
-      const name=String(data.name||"").trim();
-      const seats=Number(data.seats);
-      if(!name){notify("Masa adı veya numarası girin.");return;}
-      if(!Number.isInteger(seats)||seats<1||seats>100){notify("Kişi kapasitesi 1 ile 100 arasında tam sayı olmalıdır.");return;}
-      const saveButton=form.querySelector('[type="submit"]');
-      if(saveButton)saveButton.disabled=true;
-      try{
-        await staffRequest(id?"/api/admin/tables/"+encodeURIComponent(id):"/api/admin/tables",{
-          method:id?"PATCH":"POST",
-          body:JSON.stringify({name:name,seats:seats})
-        });
-        if(modal)modal.hide();
-        await loadTables();
-        notify(id?"Masa bilgileri güncellendi.":"Yeni masa eklendi.");
-      }catch(error){
-        notify(error.message);
-      }finally{
-        if(saveButton)saveButton.disabled=false;
-      }
+      await saveTableForm(form, document.querySelector('[data-action="save-table"]'));
       return;
     }
     if(form.id==="staffForm"){

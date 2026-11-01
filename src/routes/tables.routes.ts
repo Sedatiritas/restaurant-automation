@@ -9,10 +9,9 @@ import {
 
 const router = Router();
 
-router.use("/api/admin/tables", requireRole("ADMIN"));
-router.get("/api/admin/tables", getTables);
-router.post("/api/admin/tables", createTable);
-router.patch("/api/admin/tables/:id", updateTable);
-router.delete("/api/admin/tables/:id", deleteTable);
+router.get("/api/admin/tables", requireRole("ADMIN"), getTables);
+router.post("/api/admin/tables", requireRole("ADMIN"), createTable);
+router.patch("/api/admin/tables/:id", requireRole("ADMIN"), updateTable);
+router.delete("/api/admin/tables/:id", requireRole("ADMIN"), deleteTable);
 
 export default router;

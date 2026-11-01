@@ -27,6 +27,17 @@ function sendError(res: Parameters<RequestHandler>[1], status: number, message: 
   res.status(status).json({ error: message });
 }
 
+function sendTableServerError(res: Parameters<RequestHandler>[1], error: unknown): void {
+  console.error("Masa yönetimi sırasında hata oluştu:", error);
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+    sendError(res, 503, "Masa tablosu veritabanında bulunamadı. Veritabanı migration işlemi uygulanmamış görünüyor.");
+    return;
+  }
+
+  sendError(res, 500, "Masa işlemi veritabanında tamamlanamadı. Sunucu terminalindeki hata kaydını kontrol edin.");
+}
+
 async function hasDuplicateName(name: string, excludeId?: string): Promise<boolean> {
   const existing = await prisma.diningTable.findFirst({
     where: {
@@ -47,7 +58,7 @@ export const getTables: RequestHandler = async (_req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
     res.json({ tables });
   } catch (error) {
-    next(error);
+    sendTableServerError(res, error);
   }
 };
 
@@ -79,7 +90,7 @@ export const createTable: RequestHandler = async (req, res, next) => {
       sendError(res, 409, "Bu isimde bir masa zaten kayıtlı.");
       return;
     }
-    next(error);
+    sendTableServerError(res, error);
   }
 };
 
@@ -116,7 +127,7 @@ export const updateTable: RequestHandler = async (req, res, next) => {
       sendError(res, 404, "Masa bulunamadı.");
       return;
     }
-    next(error);
+    sendTableServerError(res, error);
   }
 };
 
@@ -141,6 +152,6 @@ export const deleteTable: RequestHandler = async (req, res, next) => {
       sendError(res, 404, "Masa bulunamadı.");
       return;
     }
-    next(error);
+    sendTableServerError(res, error);
   }
 };
