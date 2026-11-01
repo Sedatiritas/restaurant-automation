@@ -35,7 +35,8 @@ export const getAdminRevenueReport: RequestHandler = async (req, res, next) => {
   }
 
   try {
-    const [year, month] = parsedMonth.data.split("-").map(Number);
+    const year = Number(parsedMonth.data.slice(0, 4));
+    const month = Number(parsedMonth.data.slice(5, 7));
 
     // Report boundaries follow Turkey's local calendar (UTC+3).
     const startAt = new Date(Date.UTC(year, month - 1, 1) - 3 * 60 * 60 * 1000);
