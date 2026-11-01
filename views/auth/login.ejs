@@ -1,0 +1,81 @@
+<%- include("../partials/head.ejs", {
+  title: "Personel Girişi | Roast & Co.",
+  description: "Yönetici, kasiyer ve garson personel girişi",
+  themeColor: "#f7f5f0",
+  viewport: "width=device-width, initial-scale=1",
+  cssFile: "login.css"
+}) %>
+
+<main class="login-page" data-selected-role="<%= selectedRole || '' %>">
+  <section class="login-shell" aria-labelledby="loginTitle">
+    <div class="login-brand-panel">
+      <a class="login-brand" href="/">
+        <span class="login-brand-icon"><i class="bi bi-cup-hot-fill"></i></span>
+        <span><strong>roast &amp; co.</strong><small>RESTAURANT SYSTEM</small></span>
+      </a>
+      <div class="login-brand-copy">
+        <span class="login-eyebrow">PERSONEL ALANI</span>
+        <h1>İşletmenizin kontrolü, tek bir yerde.</h1>
+        <p>Görevinizi seçin ve size tanımlanan hesap bilgileriyle güvenli şekilde giriş yapın.</p>
+      </div>
+      <div class="login-brand-bottom"><i class="bi bi-shield-lock"></i><span>Yetkili personel erişimi</span></div>
+    </div>
+
+    <div class="login-form-panel">
+      <div class="login-heading">
+        <span class="login-eyebrow">HOŞ GELDİNİZ</span>
+        <h2 id="loginTitle">Giriş yapmak için rolünüzü seçin</h2>
+        <p>Devam etmek için aşağıdaki görevlerden birine dokunun.</p>
+      </div>
+
+      <% if (error) { %>
+        <div class="login-error" role="alert"><i class="bi bi-exclamation-circle"></i><span><%= error %></span></div>
+      <% } %>
+
+      <div class="role-grid" role="group" aria-label="Personel rolü seçimi">
+        <button class="role-card" type="button" data-role-select="ADMIN" aria-pressed="false">
+          <span class="role-icon role-icon-admin"><i class="bi bi-grid-1x2-fill"></i></span>
+          <span class="role-card-copy"><strong>Yönetici</strong><small>Yönetim paneli</small></span>
+          <i class="bi bi-chevron-right role-chevron"></i>
+        </button>
+        <button class="role-card" type="button" data-role-select="CASHIER" aria-pressed="false">
+          <span class="role-icon role-icon-cashier"><i class="bi bi-cash-stack"></i></span>
+          <span class="role-card-copy"><strong>Kasiyer</strong><small>Kasa ve ödemeler</small></span>
+          <i class="bi bi-chevron-right role-chevron"></i>
+        </button>
+        <button class="role-card" type="button" data-role-select="WAITER" aria-pressed="false">
+          <span class="role-icon role-icon-waiter"><i class="bi bi-receipt-cutoff"></i></span>
+          <span class="role-card-copy"><strong>Garson</strong><small>Masa ve siparişler</small></span>
+          <i class="bi bi-chevron-right role-chevron"></i>
+        </button>
+      </div>
+
+      <form class="login-credentials" id="loginForm" action="/auth/login" method="post" hidden>
+        <div class="selected-role-row">
+          <div><span class="selected-role-label">SEÇİLEN GÖREV</span><strong id="selectedRoleName">Yönetici</strong></div>
+          <button type="button" class="change-role-button" id="changeRoleButton">Rolü değiştir</button>
+        </div>
+        <input type="hidden" name="role" id="selectedRole" value="<%= selectedRole || '' %>">
+
+        <div class="login-field">
+          <label for="loginEmail">E-posta adresi</label>
+          <input class="form-control" type="email" name="email" id="loginEmail" value="<%= email || '' %>" placeholder="ornek@isletme.com" autocomplete="username" maxlength="254" required>
+        </div>
+
+        <div class="login-field">
+          <label for="loginPassword">Parola</label>
+          <div class="password-input-wrap">
+            <input class="form-control" type="password" name="password" id="loginPassword" placeholder="Parolanızı girin" autocomplete="current-password" maxlength="128" required>
+            <button class="password-toggle" type="button" id="togglePassword" aria-label="Parolayı göster"><i class="bi bi-eye"></i></button>
+          </div>
+        </div>
+
+        <button class="login-submit" type="submit"><span>Giriş yap</span><i class="bi bi-arrow-right"></i></button>
+      </form>
+
+      <p class="login-footnote"><i class="bi bi-lock-fill"></i> Hesap bilgilerinizi yalnızca işletme yöneticinizden alın.</p>
+    </div>
+  </section>
+</main>
+
+<%- include("../partials/scripts.ejs", { pageScript: "login.js" }) %>
