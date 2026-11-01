@@ -607,6 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     byId("newOrderTableName").textContent = table.name + " için sipariş";
+    byId("newOrderRoundLabel").textContent = "Tur #" + (Number(table.sentOrderCount) + 1);
     byId("newOrderBackLabel").textContent = "Masa detayına dön";
     showScreen("order");
     renderCategories();
