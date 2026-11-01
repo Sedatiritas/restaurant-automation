@@ -204,7 +204,7 @@ const formatPrice = (price) =>
     new Intl.NumberFormat("tr-TR", {
         style: "currency",
         currency: "TRY",
-        maximumFractionDigits: 0
+        maximumFractionDigits: 2
     }).format(price);
 
 function escapeHtml(value) {
