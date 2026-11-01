@@ -134,125 +134,8 @@ function applySavedAppearance() {
     }
 }
 
-const products = [
-    {
-        id: 1,
-        name: "Cappuccino",
-        category: "coffee",
-        categoryName: "Kahveler",
-        description: "Espresso, sıcak süt ve ipeksi süt köpüğü.",
-        price: 125,
-        image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 2,
-        name: "Flat White",
-        category: "coffee",
-        categoryName: "Kahveler",
-        description: "Yoğun espresso ve ince dokulu süt.",
-        price: 135,
-        image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 3,
-        name: "Americano",
-        category: "coffee",
-        categoryName: "Kahveler",
-        description: "Sade, dengeli ve güçlü kahve lezzeti.",
-        price: 110,
-        image: "https://images.unsplash.com/photo-1551030173-122aabc4489c?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 4,
-        name: "Iced Latte",
-        category: "cold",
-        categoryName: "Soğuk içecekler",
-        description: "Buz gibi süt ve espresso ile ferahlatıcı bir mola.",
-        price: 140,
-        image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 5,
-        name: "Cold Brew",
-        category: "cold",
-        categoryName: "Soğuk içecekler",
-        description: "Uzun süre soğuk demlenmiş yumuşak içimli kahve.",
-        price: 130,
-        image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 6,
-        name: "Çilekli Cheesecake",
-        category: "dessert",
-        categoryName: "Tatlılar",
-        description: "Kremamsı peynir dolgusu ve taze çilek dokunuşu.",
-        price: 165,
-        image: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 7,
-        name: "Brownie",
-        category: "dessert",
-        categoryName: "Tatlılar",
-        description: "Yoğun çikolatalı, yumuşak dokulu brownie.",
-        price: 145,
-        image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 8,
-        name: "San Sebastian",
-        category: "dessert",
-        categoryName: "Tatlılar",
-        description: "Dışı karamelize, içi yumuşacık cheesecake.",
-        price: 175,
-        image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 9,
-        name: "Demleme Çay",
-        category: "tea",
-        categoryName: "Çaylar",
-        description: "Taze demlenmiş, klasik siyah çay.",
-        price: 45,
-        image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 10,
-        name: "Fıstıklı Kruvasan",
-        category: "food",
-        categoryName: "Atıştırmalıklar",
-        description: "Kat kat çıtır hamur ve fıstık kreması.",
-        price: 115,
-        image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 11,
-        name: "Çilekli Smoothie",
-        category: "smoothie",
-        categoryName: "Smoothie",
-        description: "Çilek ve muzla hazırlanan meyveli karışım.",
-        price: 145,
-        image: "https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 12,
-        name: "Taze Portakal Suyu",
-        category: "fresh",
-        categoryName: "Fresh içecekler",
-        description: "Taze sıkılmış, katkısız portakal suyu.",
-        price: 120,
-        image: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        id: 13,
-        name: "Kahvaltı Tabağı",
-        category: "breakfast",
-        categoryName: "Kahvaltı",
-        description: "Peynir, zeytin, yumurta ve günlük taze ürünler.",
-        price: 245,
-        image: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80"
-    }
-];
+let products = [];
+let categories = [];
 
 const productList = document.querySelector("#productList");
 const categoryList = document.querySelector("#categoryList");
@@ -324,42 +207,84 @@ const formatPrice = (price) =>
         maximumFractionDigits: 0
     }).format(price);
 
+function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+}
+
+function safeProductImage(value) {
+    const image = String(value || "");
+    if (/^\/uploads\/products\/[a-f0-9-]{36}\.(?:webp|png|jpg)$/i.test(image)) return image;
+    if (/^https:\/\/[a-z0-9.-]+\//i.test(image)) return image;
+    return "";
+}
+
+function renderCategories() {
+    if (!categories.some((category) => category.id === selectedCategory)) {
+        selectedCategory = "all";
+    }
+
+    categoryList.innerHTML = [
+        '<button type="button" class="category-btn ' + (selectedCategory === "all" ? "active" : "") + '" data-category="all" aria-pressed="' + (selectedCategory === "all") + '">Tümü</button>',
+        ...categories.map((category) => {
+            const active = selectedCategory === category.id;
+            const icon = category.icon ? '<i class="bi ' + escapeHtml(category.icon) + ' me-1" aria-hidden="true"></i>' : "";
+            return '<button type="button" class="category-btn ' + (active ? "active" : "") + '" data-category="' + escapeHtml(category.id) + '" aria-pressed="' + active + '">' + icon + escapeHtml(category.name) + '</button>';
+        })
+    ].join("");
+
+    updateCategoryScrollHint();
+}
+
 function renderProducts() {
     const filteredProducts = products.filter((product) => {
         const matchesCategory =
-            selectedCategory === "all" || product.category === selectedCategory;
+            selectedCategory === "all" || product.categoryId === selectedCategory;
 
         const searchableText =
             `${product.name} ${product.description} ${product.categoryName}`.toLocaleLowerCase("tr-TR");
 
-        const matchesSearch = searchableText.includes(searchTerm);
-
-        return matchesCategory && matchesSearch;
+        return matchesCategory && searchableText.includes(searchTerm);
     });
 
-    productList.innerHTML = filteredProducts.map((product, index) => `
-        <div class="col-6 scroll-reveal" style="--reveal-delay: ${Math.min(index % 4, 3) * 45}ms">
-            <article class="product-card">
-                <img
-                    src="${product.image}"
-                    alt="${product.name}"
-                    class="product-image"
-                    loading="lazy"
-                >
-                <div class="product-body">
-                    <span class="product-category">${product.categoryName}</span>
-                    <h4 class="product-name">${product.name}</h4>
-                    <p class="product-description">${product.description}</p>
-                    <span class="product-price">${formatPrice(product.price)}</span>
-                </div>
-            </article>
-        </div>
-    `).join("");
+    productList.innerHTML = filteredProducts.map((product, index) => {
+        const image = safeProductImage(product.image);
+        const imageMarkup = image
+            ? '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(product.name) + '" class="product-image" loading="lazy">'
+            : '<div class="product-image product-image-placeholder d-flex align-items-center justify-content-center" aria-hidden="true"><i class="bi bi-cup-hot"></i></div>';
+
+        return `
+            <div class="col-6 scroll-reveal" style="--reveal-delay: ${Math.min(index % 4, 3) * 45}ms">
+                <article class="product-card">
+                    ${imageMarkup}
+                    <div class="product-body">
+                        <span class="product-category">${escapeHtml(product.categoryName)}</span>
+                        <h4 class="product-name">${escapeHtml(product.name)}</h4>
+                        <p class="product-description">${escapeHtml(product.description || "")}</p>
+                        <span class="product-price">${formatPrice(Number(product.price))}</span>
+                    </div>
+                </article>
+            </div>
+        `;
+    }).join("");
 
     menuCount.textContent = `${filteredProducts.length} ürün`;
     emptyState.classList.toggle("d-none", filteredProducts.length !== 0);
     productList.classList.toggle("d-none", filteredProducts.length === 0);
     clearSearch.classList.toggle("d-none", searchTerm.length === 0);
+
+    const emptyTitle = emptyState.querySelector("h4");
+    const emptyDescription = emptyState.querySelector("p");
+    if (emptyTitle && emptyDescription) {
+        if (products.length === 0) {
+            emptyTitle.textContent = "Henüz menüye ürün eklenmemiş";
+            emptyDescription.textContent = "İşletme menüsünü güncellediğinde ürünler burada görünecek.";
+        } else {
+            emptyTitle.textContent = "Aradığını bulamadık";
+            emptyDescription.textContent = "Farklı bir ürün veya kategori deneyebilirsin.";
+        }
+    }
 
     const activeCategoryButton = categoryList.querySelector(".category-btn.active");
     productsHeading.textContent = searchTerm
@@ -375,17 +300,9 @@ function renderProducts() {
 
 categoryList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-category]");
-
     if (!button) return;
-
     selectedCategory = button.dataset.category;
-
-    categoryList.querySelectorAll(".category-btn").forEach((categoryButton) => {
-        const isActive = categoryButton === button;
-        categoryButton.classList.toggle("active", isActive);
-        categoryButton.setAttribute("aria-pressed", String(isActive));
-    });
-
+    renderCategories();
     renderProducts();
 });
 
@@ -432,6 +349,31 @@ window.addEventListener("resize", updateCategoryScrollHint);
 
 applySavedAppearance();
 applySavedBusinessSettings();
+renderCategories();
 renderProducts();
-updateCategoryScrollHint();
 initializePageAnimations();
+
+async function loadMenuCatalog() {
+    try {
+        const response = await fetch("/api/menu", { headers: { "Accept": "application/json" } });
+        if (!response.ok) throw new Error("Menü verileri şu anda yüklenemiyor.");
+
+        const result = await response.json();
+        categories = Array.isArray(result.categories) ? result.categories : [];
+        products = Array.isArray(result.products) ? result.products : [];
+
+        renderCategories();
+        renderProducts();
+        updateCategoryScrollHint();
+    } catch (error) {
+        console.error("Menü kataloğu yüklenemedi.", error);
+        const emptyTitle = emptyState.querySelector("h4");
+        const emptyDescription = emptyState.querySelector("p");
+        if (emptyTitle) emptyTitle.textContent = "Menü şu anda yüklenemiyor";
+        if (emptyDescription) emptyDescription.textContent = "Lütfen birkaç dakika sonra tekrar deneyin.";
+        emptyState.classList.remove("d-none");
+        productList.classList.add("d-none");
+    }
+}
+
+loadMenuCatalog();
