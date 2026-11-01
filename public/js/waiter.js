@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadMenu() {
     $("#productsResultCount").textContent = "Menü yükleniyor...";
-    const response = await fetch("/api/menu", { headers: { "Accept": "application/json" }, cache: "no-store" });
+    const response = await fetch("/api/waiter/catalog", { headers: { "Accept": "application/json" }, cache: "no-store" });
     let result;
     try {
       result = await response.json();

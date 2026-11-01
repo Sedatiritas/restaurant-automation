@@ -264,7 +264,60 @@ export const getPublicMenu: RequestHandler = async (_req, res, next) => {
   }
 };
 
-export const createCategory: RequestHandler = async (req, res, next) => {
+
+export const getWaiterCatalog: RequestHandler = async (_req, res, next) => {
+  try {
+    // Waiters can see every configured category, including categories awaiting products.
+    const categories = await prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        icon: true,
+        sortOrder: true,
+        products: {
+          where: { status: { in: ["ACTIVE", "OUT_OF_STOCK"] } },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            price: true,
+            imageUrl: true,
+            categoryId: true,
+            status: true
+          },
+          orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
+        }
+      },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
+    });
+
+    const menuCategories = categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      icon: category.icon
+    }));
+
+    const products = categories.flatMap((category) =>
+      category.products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        description: product.description ?? "",
+        price: product.price.toString(),
+        image: product.imageUrl ?? "",
+        categoryId: product.categoryId,
+        categoryName: category.name,
+        isOutOfStock: product.status === "OUT_OF_STOCK"
+      }))
+    );
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ categories: menuCategories, products });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createCategory: RequestHandlerexport const createCategory: RequestHandler = async (req, res, next) => {
   const parsed = createCategorySchema.safeParse(req.body);
 
   if (!parsed.success) {

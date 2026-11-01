@@ -7,6 +7,7 @@ import {
   deleteProduct,
   getCatalog,
   getPublicMenu,
+  getWaiterCatalog,
   updateCategory,
   updateProduct
 } from "../controllers/catalog.controller.js";
@@ -15,6 +16,7 @@ const router = Router();
 
 // The customer-facing menu is read-only and does not require an account.
 router.get("/api/menu", getPublicMenu);
+router.get("/api/waiter/catalog", requireRole("WAITER"), getWaiterCatalog);
 
 // All catalog management endpoints are administrator-only.
 router.use("/api/catalog", requireRole("ADMIN"));
