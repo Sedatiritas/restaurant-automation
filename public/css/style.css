@@ -515,3 +515,11 @@ body.motion-ready .hero-content > *:nth-child(2) {
         will-change: auto;
     }
 }
+
+
+/* Placeholder shown when a menu product has no uploaded photo. */
+.product-image-placeholder {
+    background: #eee8df;
+    color: #9a8672;
+    font-size: 2rem;
+}
