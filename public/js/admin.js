@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try { const saved = localStorage.getItem("roastAdmin_" + key); return saved ? JSON.parse(saved) : structuredClone(defaults[key]); }
     catch (e) { return JSON.parse(JSON.stringify(defaults[key])); }
   }
-  const state = { products:load("products"), categories:load("categories"), tables:load("tables"), staff:load("staff"), settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
+  const state = { products:load("products"), categories:load("categories"), tables:load("tables"), staff:[], settings:load("settings"), appearance:load("appearance"), view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()) };
   function save(key) { try { localStorage.setItem("roastAdmin_" + key, JSON.stringify(state[key])); return true; } catch (e) { notify("Tarayıcı depolama alanı doldu. Daha küçük görseller seçin."); return false; } }
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
@@ -247,11 +247,40 @@ document.addEventListener("DOMContentLoaded", function () {
         </form>
       </div>`;
   }
+  function staffRoleLabel(role) {
+    return ({ADMIN:"Yönetici",WAITER:"Garson",CASHIER:"Kasiyer"})[role] || role;
+  }
   function staffView() {
-    return pageHeading("EKİP YÖNETİMİ","Personel ve Yetkiler","Personel hesaplarını, görev rollerini ve hesap durumlarını yönetin.",'<button class="btn btn-primary-soft" data-action="add-staff"><i class="bi bi-person-plus me-2"></i>Personel ekle</button>') +
-      '<section class="panel-card"><div class="panel-heading"><div><h3>Personel listesi</h3><p>Bu ekran demo personel kayıtlarını tarayıcıda saklar.</p></div><span class="status-pill status-live">' + state.staff.length + ' hesap</span></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>PERSONEL</th><th>E-POSTA</th><th>ROL</th><th>DURUM</th><th>İŞLEMLER</th></tr></thead><tbody>' +
-      (state.staff.length?state.staff.map(function(s){const initials=s.name.split(" ").map(function(x){return x[0]||"";}).slice(0,2).join("").toUpperCase();return '<tr><td><div class="d-flex align-items-center gap-2"><span class="staff-avatar">'+escapeHtml(initials)+'</span><strong class="text-dark">'+escapeHtml(s.name)+'</strong></div></td><td>'+escapeHtml(s.email)+'</td><td>'+escapeHtml(s.role)+'</td><td>'+statusLabel(s.status==="active"?"active":"inactive")+'</td><td><div class="table-actions"><button class="table-action" data-action="edit-staff" data-id="'+s.id+'" aria-label="Personeli düzenle"><i class="bi bi-pencil"></i></button><button class="table-action" data-action="toggle-staff" data-id="'+s.id+'" aria-label="Personel durumunu değiştir"><i class="bi bi-person-check"></i></button><button class="table-action danger" data-action="delete-staff" data-id="'+s.id+'" aria-label="Personeli sil"><i class="bi bi-trash3"></i></button></div></td></tr>';}).join(""):'<tr><td colspan="5"><div class="empty-state"><i class="bi bi-people"></i><strong>Henüz personel yok</strong><p>İlk personel hesabınızı ekleyin.</p></div></td></tr>') +
-      '</tbody></table></div></section><section class="panel-card mt-3"><div class="panel-heading"><div><h3>Rol açıklamaları</h3><p>Roller arayüzde gösterim amaçlıdır; gerçek erişim kontrolü sunucu tarafında kurulmalıdır.</p></div></div><div class="px-3 pb-3"><div class="setting-row"><span><strong>Yönetici</strong><small>Ürün, kategori, personel ve işletme ayarlarını yönetir.</small></span><i class="bi bi-shield-lock fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Garson</strong><small>İleride masa ve sipariş ekranlarına erişir.</small></span><i class="bi bi-person fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Kasiyer</strong><small>İleride adisyon ve ödeme ekranlarına erişir.</small></span><i class="bi bi-cash-coin fs-5 text-secondary"></i></div></div></section>';
+    const currentUserId = document.querySelector(".admin-shell")?.dataset.currentUserId || "";
+    const rows = state.staff.map(function (person) {
+      const isSelf = person.id === currentUserId;
+      const initials = person.username.slice(0, 2).toLocaleUpperCase("tr");
+      return '<tr><td><div class="d-flex align-items-center gap-2"><span class="staff-avatar">' + escapeHtml(initials) + '</span><strong class="text-dark">' + escapeHtml(person.username) + (isSelf ? ' <small class="text-muted">(Siz)</small>' : '') + '</strong></div></td><td>' + escapeHtml(staffRoleLabel(person.role)) + '</td><td>' + statusLabel(person.isActive ? "active" : "inactive") + '</td><td><div class="table-actions"><button class="table-action" type="button" data-action="edit-staff" data-id="' + escapeHtml(person.id) + '" aria-label="Personeli düzenle" title="Düzenle"><i class="bi bi-pencil"></i></button><button class="table-action" type="button" data-action="toggle-staff" data-id="' + escapeHtml(person.id) + '" aria-label="Personel durumunu değiştir" title="' + (person.isActive ? "Hesabı pasifleştir" : "Hesabı etkinleştir") + '"' + (isSelf ? ' disabled title="Kendi hesabınızı buradan pasifleştiremezsiniz"' : '') + '><i class="bi bi-' + (person.isActive ? "person-dash" : "person-check") + '"></i></button><button class="table-action danger" type="button" data-action="delete-staff" data-id="' + escapeHtml(person.id) + '" aria-label="Personeli sil" title="Sil"' + (isSelf ? ' disabled title="Kendi hesabınızı buradan silemezsiniz"' : '') + '><i class="bi bi-trash3"></i></button></div></td></tr>';
+    }).join("");
+
+    return pageHeading("EKİP YÖNETİMİ","Personel ve Yetkiler","Personel hesaplarını, kullanıcı adlarını, rollerini ve erişim durumlarını yönetin.",'<button class="btn btn-primary-soft" type="button" data-action="add-staff"><i class="bi bi-person-plus me-2"></i>Personel ekle</button>') +
+      '<section class="panel-card"><div class="panel-heading"><div><h3>Personel hesapları</h3><p>Buradaki değişiklikler doğrudan PostgreSQL veritabanına kaydedilir.</p></div><span class="status-pill status-live">' + state.staff.length + ' hesap</span></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>KULLANICI ADI</th><th>ROL</th><th>DURUM</th><th>İŞLEMLER</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="4"><div class="empty-state"><i class="bi bi-people"></i><strong>Henüz personel hesabı yok</strong><p>İlk personel hesabınızı oluşturun.</p></div></td></tr>') +
+      '</tbody></table></div></section>' +
+      '<section class="panel-card mt-3"><div class="panel-heading"><div><h3>Rol açıklamaları</h3><p>Her hesap yalnızca kendisine tanımlanan yetki alanına erişir.</p></div></div><div class="px-3 pb-3"><div class="setting-row"><span><strong>Yönetici</strong><small>Yönetim paneli, personel ve işletme ayarları.</small></span><i class="bi bi-shield-lock fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Garson</strong><small>Masa ve sipariş ekranı.</small></span><i class="bi bi-person fs-5 text-secondary"></i></div><div class="setting-row"><span><strong>Kasiyer</strong><small>Kasa ve ödeme ekranı.</small></span><i class="bi bi-cash-coin fs-5 text-secondary"></i></div></div></section>';
+  }
+  async function loadStaff() {
+    const response = await fetch("/api/staff", { headers: { "Accept": "application/json" } });
+    let result;
+    try { result = await response.json(); } catch (error) { throw new Error("Oturum doğrulanamadı. Lütfen tekrar giriş yapın."); }
+    if (!response.ok) throw new Error(result.error || "Personel listesi yüklenemedi.");
+    state.staff = Array.isArray(result.users) ? result.users : [];
+    if (state.view === "staff") root.innerHTML = staffView();
+  }
+  async function staffRequest(url, options) {
+    const response = await fetch(url, Object.assign({
+      headers: { "Content-Type": "application/json", "Accept": "application/json" }
+    }, options || {}));
+    if (response.status === 204) return null;
+    let result;
+    try { result = await response.json(); } catch (error) { throw new Error("Sunucudan geçerli bir yanıt alınamadı."); }
+    if (!response.ok) throw new Error(result.error || "Personel işlemi tamamlanamadı.");
+    return result;
   }
   function settingsView() {
     const s=state.settings;
@@ -263,7 +292,16 @@ document.addEventListener("DOMContentLoaded", function () {
   const viewTitles = {overview:"Genel Bakış",products:"Ürünler",categories:"Kategoriler",tables:"Masa Yönetimi",appearance:"Menü Görünümü",staff:"Personel ve Yetkiler",settings:"İşletme Ayarları",revenue:"Ciro Raporu"};
   function render(view, updateHash) {
     state.view = viewRenderers[view] ? view : "overview";
-    root.innerHTML = viewRenderers[state.view]();
+    if (state.view === "staff") {
+      root.innerHTML = pageHeading("EKİP YÖNETİMİ","Personel ve Yetkiler","Personel hesapları yükleniyor...") + '<section class="panel-card p-4 text-muted small"><span class="spinner-border spinner-border-sm me-2" role="status"></span>Personel kayıtları getiriliyor...</section>';
+      loadStaff().catch(function(error) {
+        if (state.view === "staff") {
+          root.innerHTML = pageHeading("EKİP YÖNETİMİ","Personel ve Yetkiler","Personel hesapları yüklenemedi.") + '<section class="panel-card p-4"><p class="mb-3">' + escapeHtml(error.message) + '</p><button class="btn btn-primary-soft" type="button" data-action="refresh-staff">Tekrar dene</button></section>';
+        }
+      });
+    } else {
+      root.innerHTML = viewRenderers[state.view]();
+    }
     title.textContent = viewTitles[state.view];
     crumb.textContent = viewTitles[state.view].toLocaleUpperCase("tr");
     document.querySelectorAll(".admin-nav-link").forEach(function(link){link.classList.toggle("active",link.dataset.view===state.view);});
@@ -302,12 +340,18 @@ document.addEventListener("DOMContentLoaded", function () {
     openModal(category?"Kategoriyi düzenle":"Yeni kategori",'<form id="categoryForm"><input type="hidden" name="id" value="'+(c.id||"")+'"><div class="mb-3"><label class="form-label" for="categoryName">Kategori adı *</label><input class="form-control" id="categoryName" name="name" required maxlength="70" value="'+escapeHtml(c.name)+'"></div><div class="mb-3">'+categoryIconPicker(c.icon)+'</div><div class="mb-2"><label class="form-label" for="categoryDescription">Kısa açıklama</label><textarea class="form-control" id="categoryDescription" name="description" rows="2">'+escapeHtml(c.description)+'</textarea></div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="categoryForm">Kaydet</button>');
   }
   function staffForm(person) {
-    const s=person||{name:"",email:"",role:"Garson",status:"active"};
-    openModal(person?"Personeli düzenle":"Personel ekle",'<form id="staffForm"><input type="hidden" name="id" value="'+(s.id||"")+'"><div class="mb-3"><label class="form-label" for="staffName">Ad soyad *</label><input class="form-control" id="staffName" name="name" required maxlength="100" value="'+escapeHtml(s.name)+'"></div><div class="mb-3"><label class="form-label" for="staffEmail">E-posta *</label><input class="form-control" id="staffEmail" name="email" type="email" required value="'+escapeHtml(s.email)+'"></div><div class="mb-3"><label class="form-label" for="staffRole">Rol</label><select class="form-select" id="staffRole" name="role"><option '+(s.role==="Garson"?"selected":"")+' value="Garson">Garson</option><option '+(s.role==="Kasiyer"?"selected":"")+' value="Kasiyer">Kasiyer</option><option '+(s.role==="Yönetici"?"selected":"")+' value="Yönetici">Yönetici</option></select></div><div class="alert alert-warning py-2 mb-0" style="font-size:10px">Bu demo formu şifre veya gerçek kullanıcı hesabı oluşturmaz. Güvenli giriş sistemi backend aşamasında yapılmalıdır.</div></form>','<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="staffForm">Kaydet</button>');
+    const currentUserId = document.querySelector(".admin-shell")?.dataset.currentUserId || "";
+    const isSelf = Boolean(person && person.id === currentUserId);
+    const s = person || { username: "", role: "WAITER", isActive: true };
+    const roleOptions = '<option value="WAITER" ' + (s.role === "WAITER" ? "selected" : "") + '>Garson</option><option value="CASHIER" ' + (s.role === "CASHIER" ? "selected" : "") + '>Kasiyer</option><option value="ADMIN" ' + (s.role === "ADMIN" ? "selected" : "") + '>Yönetici</option>';
+    const roleField = isSelf
+      ? '<div class="mb-3"><label class="form-label">Rol</label><input class="form-control" value="Yönetici (kendi rolünüz değiştirilemez)" disabled></div>'
+      : '<div class="mb-3"><label class="form-label" for="staffRole">Rol</label><select class="form-select" id="staffRole" name="role" required>' + roleOptions + '</select></div>';
+    openModal(person ? "Personel hesabını düzenle" : "Yeni personel hesabı", '<form id="staffForm"><input type="hidden" name="id" value="' + (s.id || "") + '"><div class="mb-3"><label class="form-label" for="staffUsername">Kullanıcı adı *</label><input class="form-control" id="staffUsername" name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9._-]+" autocomplete="off" value="' + escapeHtml(s.username) + '" placeholder="ornek.garson"></div>' + roleField + '<div class="mb-2"><label class="form-label" for="staffPassword">' + (person ? "Yeni parola (isteğe bağlı)" : "Parola *") + '</label><input class="form-control" id="staffPassword" name="password" type="password" ' + (person ? "" : "required") + ' minlength="12" maxlength="128" autocomplete="new-password" placeholder="' + (person ? "Değiştirmek istemiyorsanız boş bırakın" : "En az 12 karakter") + '"></div><div class="form-text">Parola en az 12 karakter olmalıdır. Hesap bilgileri veritabanında güvenli biçimde saklanır.</div></form>', '<button class="btn btn-outline-soft" type="button" data-bs-dismiss="modal">Vazgeç</button><button class="btn btn-primary-soft" type="submit" form="staffForm">Kaydet</button>');
   }
   function formObject(form) { return Object.fromEntries(new FormData(form).entries()); }
   function setView(view) { render(view); }
-  document.addEventListener("click",function(event){
+  document.addEventListener("click",async function(event){
     const iconChoice=event.target.closest("[data-icon-choice]");
     if(iconChoice){
       const hidden=document.getElementById("categoryIcon");
@@ -321,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if(viewLink){event.preventDefault();setView(viewLink.dataset.view);return;}
     const actionButton=event.target.closest("[data-action]");
     if(!actionButton)return;
-    const action=actionButton.dataset.action, id=Number(actionButton.dataset.id);
+    const action=actionButton.dataset.action, id=Number(actionButton.dataset.id), rawId=actionButton.dataset.id;
     if(action==="navigate"){setView(actionButton.dataset.view);return;}
     if(action==="remove-product-image"){const input=document.querySelector('#productForm [name="currentImage"]');if(input)input.value="";const preview=document.getElementById("productImagePreview");if(preview)preview.innerHTML="<span>Henüz görsel seçilmedi</span>";const file=document.getElementById("productImageFile");if(file)file.value="";return;}
     if(action==="remove-logo"||action==="remove-cover"){const key=action==="remove-logo"?"currentLogo":"currentCover";const input=document.querySelector('#appearanceForm [name="'+key+'"]');if(input)input.value="";const preview=document.getElementById(action==="remove-logo"?"logoPreview":"coverPreview");if(preview)preview.innerHTML="<span>Görsel seçilmedi</span>";const file=document.getElementById(action==="remove-logo"?"logoFile":"coverFile");if(file)file.value="";return;}
@@ -345,10 +389,30 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if(action==="add-staff"){staffForm();return;}
-    if(action==="edit-staff"){staffForm(state.staff.find(function(s){return s.id===id;}));return;}
-    if(action==="toggle-staff"){const s=state.staff.find(function(x){return x.id===id;});if(s){s.status=s.status==="active"?"inactive":"active";save("staff");render("staff",false);notify("Personel durumu güncellendi.");}return;}
-    if(action==="delete-staff"){const s=state.staff.find(function(x){return x.id===id;});if(s&&window.confirm(s.name+" personel kaydını silmek istiyor musunuz?")){state.staff=state.staff.filter(function(x){return x.id!==id;});save("staff");render("staff",false);notify("Personel kaydı silindi.");}return;}
-    if(action==="logout"){if(window.confirm("Demo yönetici oturumundan çıkmak istiyor musunuz?")){render("overview",false);notify("Demo oturumu kapatıldı.");}return;}
+    if(action==="edit-staff"){staffForm(state.staff.find(function(person){return person.id===rawId;}));return;}
+    if(action==="refresh-staff"){loadStaff().catch(function(error){notify(error.message);});return;}
+    if(action==="toggle-staff"){
+      const person=state.staff.find(function(item){return item.id===rawId;});
+      if(!person)return;
+      try{
+        await staffRequest("/api/staff/"+encodeURIComponent(rawId),{method:"PATCH",body:JSON.stringify({isActive:!person.isActive})});
+        await loadStaff();
+        notify(person.isActive?"Personel hesabı pasifleştirildi.":"Personel hesabı etkinleştirildi.");
+      }catch(error){notify(error.message);}
+      return;
+    }
+    if(action==="delete-staff"){
+      const person=state.staff.find(function(item){return item.id===rawId;});
+      if(person&&window.confirm(person.username+" hesabını silmek istiyor musunuz? Bu işlem geri alınamaz.")){
+        try{
+          await staffRequest("/api/staff/"+encodeURIComponent(rawId),{method:"DELETE"});
+          await loadStaff();
+          notify("Personel hesabı silindi.");
+        }catch(error){notify(error.message);}
+      }
+      return;
+    }
+    if(action==="logout"){return;}
   });
   document.addEventListener("submit",async function(event){
     const form=event.target;
@@ -386,10 +450,24 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if(form.id==="staffForm"){
-      event.preventDefault();const data=formObject(form);const id=Number(data.id);const person={id:id||Date.now(),name:data.name.trim(),email:data.email.trim(),role:data.role,status:(id&&state.staff.find(function(s){return s.id===id;})||{}).status||"active"};
-      if(state.staff.some(function(s){return s.email.toLowerCase()===person.email.toLowerCase()&&s.id!==id;})){notify("Bu e-posta adresi personel listesinde kayıtlı.");return;}
-      if(id){state.staff=state.staff.map(function(s){return s.id===id?person:s;});}else{state.staff.push(person);}
-      save("staff");if(modal)modal.hide();render("staff",false);notify(id?"Personel güncellendi.":"Personel kaydı eklendi.");return;
+      event.preventDefault();
+      const data=formObject(form);
+      const id=data.id;
+      const payload={username:String(data.username||"").trim(),password:String(data.password||"")};
+      if(data.role)payload.role=data.role;
+      if(!payload.password)delete payload.password;
+      if(!payload.username){notify("Kullanıcı adı girin.");return;}
+      if(!id&&!payload.password){notify("Yeni hesap için parola zorunludur.");return;}
+      try{
+        await staffRequest(id?"/api/staff/"+encodeURIComponent(id):"/api/staff",{
+          method:id?"PATCH":"POST",
+          body:JSON.stringify(payload)
+        });
+        if(modal)modal.hide();
+        await loadStaff();
+        notify(id?"Personel hesabı güncellendi.":"Yeni personel hesabı oluşturuldu.");
+      }catch(error){notify(error.message);}
+      return;
     }
     if(form.id==="appearanceForm"){
       event.preventDefault();const data=formObject(form);let logo=data.currentLogo||"",cover=data.currentCover||"";
