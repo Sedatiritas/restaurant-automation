@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     selectedTableId: null,
     selectedCategory: "all",
     tableQuery: "",
+    tableFilter: "all",
     productQuery: "",
     screen: "tables",
     tableError: "",
@@ -91,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (screen === "tables") {
       byId("viewEyebrow").textContent = "SALON YÖNETİMİ";
       byId("viewTitle").textContent = "Masalarım";
-      byId("viewDescription").textContent = "Çalışacağınız masayı seçin; menü kategorileri ve ürünleri görüntüleyin.";
+      byId("viewDescription").textContent = "Masa durumlarını, açık hesapları ve son siparişleri görüntüle.";
       return;
     }
 
@@ -111,8 +112,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function renderTableSummary() {
-    byId("activeTableCount").textContent = state.tables.length + " masa";
+    const activeCount = state.tables.filter(function (table) {
+      return table.billStatus === "OPEN";
+    }).length;
+
+    byId("activeTableCount").textContent = activeCount + " masa";
     byId("allTableCount").textContent = String(state.tables.length);
+    byId("occupiedTableCount").textContent = String(activeCount);
   }
 
   function renderTables() {
@@ -132,13 +138,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const query = state.tableQuery.trim().toLocaleLowerCase("tr-TR");
     const tables = state.tables.filter(function (table) {
-      return !query || String(table.name || "").toLocaleLowerCase("tr-TR").includes(query);
+      const matchesQuery = !query || String(table.name || "").toLocaleLowerCase("tr-TR").includes(query);
+      const matchesStatus = state.tableFilter === "all" || table.billStatus === "OPEN";
+      return matchesQuery && matchesStatus;
     });
 
     if (!tables.length) {
-      grid.innerHTML = state.tables.length
-        ? '<div class="empty-history"><strong>Masa bulunamadı</strong><span>Arama kelimesini değiştirin.</span></div>'
-        : '<div class="empty-history"><strong>Henüz masa eklenmemiş</strong><span>Yönetici, Masa Yönetimi bölümünden masa eklediğinde burada görünecek.</span></div>';
+      if (state.tableFilter === "active" && state.tables.length) {
+        grid.innerHTML = '<div class="empty-history"><strong>Açık adisyonlu masa bulunmuyor</strong><span>Şu anda açık hesabı olan bir masa yok.</span></div>';
+      } else {
+        grid.innerHTML = state.tables.length
+          ? '<div class="empty-history"><strong>Masa bulunamadı</strong><span>Arama kelimesini değiştirin.</span></div>'
+          : '<div class="empty-history"><strong>Henüz masa eklenmemiş</strong><span>Yönetici, Masa Yönetimi bölümünden masa eklediğinde burada görünecek.</span></div>';
+      }
       return;
     }
 
@@ -464,7 +476,20 @@ document.addEventListener("DOMContentLoaded", function () {
     renderTableDetails();
   });
 
-  byId("tableSearch").addEventListener("input", function (event) {
+  document.querySelector(".filter-pills").addEventListener("click", function (event) {
+    const button = event.target.closest("[data-table-filter]");
+    if (!button) return;
+
+    state.tableFilter = button.dataset.tableFilter === "active" ? "active" : "all";
+    document.querySelectorAll("[data-table-filter]").forEach(function (filterButton) {
+      const isActive = filterButton === button;
+      filterButton.classList.toggle("active", isActive);
+      filterButton.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+    renderTables();
+  });
+
+    byId("tableSearch").addEventListener("input", function (event) {
     state.tableQuery = event.target.value;
     renderTables();
   });
