@@ -5,7 +5,7 @@ export type AppRole = "ADMIN" | "WAITER" | "CASHIER";
 
 export interface AuthSession {
   userId: string;
-  fullName: string;
+  username: string;
   role: AppRole;
   expiresAt: number;
 }
@@ -69,7 +69,7 @@ export function readSessionToken(token: string): AuthSession | null {
 
     if (
       typeof session.userId !== "string" ||
-      typeof session.fullName !== "string" ||
+      typeof session.username !== "string" ||
       !validRoles.includes(session.role) ||
       typeof session.expiresAt !== "number" ||
       session.expiresAt <= Math.floor(Date.now() / 1000)
