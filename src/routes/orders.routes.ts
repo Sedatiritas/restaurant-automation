@@ -7,7 +7,8 @@ import {
   getCashierBill,
   getCashierTables,
   getWaiterTables,
-  streamCashierEvents
+  streamCashierEvents,
+  streamWaiterEvents
 } from "../controllers/orders.controller.js";
 
 const router = Router();
@@ -15,6 +16,7 @@ const router = Router();
 // Waiter: submit a new order round for a dining table.
 router.get("/api/waiter/tables", requireRole("WAITER"), getWaiterTables);
 router.post("/api/waiter/tables/:tableId/orders", requireRole("WAITER"), createWaiterOrder);
+router.get("/api/waiter/events", requireRole("WAITER"), streamWaiterEvents);
 
 // Cashier: keep an authenticated live connection open for new orders and bill changes.
 router.get("/api/cashier/events", requireRole("CASHIER"), streamCashierEvents);
