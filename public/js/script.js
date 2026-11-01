@@ -68,7 +68,7 @@ function applyMenuAppearance(appearance) {
     if (brandName && appearance.brandName) brandName.textContent = appearance.brandName;
 
     const subtitle = document.querySelector(".brand-subtitle");
-    if (subtitle && appearance.tagline) subtitle.textContent = appearance.tagline;
+    if (subtitle) subtitle.textContent = appearance.tagline || "";
 
     const status = document.querySelector(".open-status");
     if (status) {
@@ -88,20 +88,26 @@ function applyMenuAppearance(appearance) {
     }
 
     const heroLabel = document.querySelector(".hero-label");
-    if (heroLabel && appearance.eyebrow) {
+    if (heroLabel) {
         heroLabel.textContent = "";
-        const icon = document.createElement("i");
-        icon.className = "bi bi-stars me-1";
-        heroLabel.append(icon, document.createTextNode(appearance.eyebrow));
+        if (appearance.eyebrow) {
+            const icon = document.createElement("i");
+            icon.className = "bi bi-stars me-1";
+            heroLabel.append(icon, document.createTextNode(appearance.eyebrow));
+            heroLabel.style.display = "";
+        } else {
+            heroLabel.style.display = "none";
+        }
     }
 
     const heroHeading = document.querySelector(".hero-content h1");
-    if (heroHeading && appearance.headline) {
+    if (heroHeading) {
         heroHeading.textContent = "";
-        appearance.headline.split("\n").forEach((line, index) => {
+        (appearance.headline || "").split("\n").forEach((line, index) => {
             if (index) heroHeading.append(document.createElement("br"));
             heroHeading.append(document.createTextNode(line));
         });
+        heroHeading.style.display = appearance.headline ? "" : "none";
     }
 
     const reviewLink = document.getElementById("googleReviewLink");
