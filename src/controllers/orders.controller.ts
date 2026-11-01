@@ -68,6 +68,8 @@ async function fetchTableSnapshots() {
               sentAt: true,
               items: {
                 select: {
+                  id: true,
+                  productName: true,
                   quantity: true,
                   unitPrice: true,
                   allocations: { select: { amount: true } }
@@ -101,6 +103,17 @@ async function fetchTableSnapshots() {
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       sentOrderCount: orders.length,
       lastActivityAt: lastOrder?.sentAt ?? null,
+      sentOrders: orders.map((order) => ({
+        id: order.id,
+        roundNumber: order.roundNumber,
+        sentAt: order.sentAt,
+        items: order.items.map((item) => ({
+          id: item.id,
+          name: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice.toString()
+        }))
+      })),
       hasOpenBill: Boolean(bill),
       openTotal: summary.remaining,
       openOrderCount: orders.length
