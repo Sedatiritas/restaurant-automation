@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { RequestHandler } from "express";
 import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
+import { publishCashierUpdate, subscribeCashierUpdates } from "../lib/realtime.js";
 
 const tableIdSchema = z.string().uuid();
 const orderSchema = z.object({
@@ -121,6 +122,35 @@ async function fetchTableSnapshots() {
   });
 }
 
+export const streamCashierEvents: RequestHandler = (_req, res) => {
+  res.status(200);
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  // Ask EventSource to reconnect shortly after a dropped connection.
+  res.write("retry: 3000\n\n");
+
+  const unsubscribe = subscribeCashierUpdates((event) => {
+    if (res.destroyed || res.writableEnded) return;
+    res.write("event: cashier_update\n");
+    res.write("data: " + JSON.stringify(event) + "\n\n");
+  });
+
+  const heartbeat = setInterval(() => {
+    if (!res.destroyed && !res.writableEnded) {
+      res.write(": keep-alive\n\n");
+    }
+  }, 20000);
+
+  res.on("close", () => {
+    clearInterval(heartbeat);
+    unsubscribe();
+  });
+};
+
 export const getWaiterTables: RequestHandler = async (_req, res, next) => {
   try {
     const tables = await fetchTableSnapshots();
@@ -197,6 +227,15 @@ export const createWaiterOrder: RequestHandler = async (req, res, next) => {
         include: { items: true }
       });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    publishCashierUpdate({
+      type: "order_created",
+      tableId: table.id,
+      tableName: table.name,
+      orderId: order.id,
+      roundNumber: order.roundNumber,
+      occurredAt: new Date().toISOString()
+    });
 
     res.status(201).json({
       success: true,
@@ -363,6 +402,12 @@ export const collectCashierPayment: RequestHandler = async (req, res, next) => {
       });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
+    publishCashierUpdate({
+      type: "payment_recorded",
+      tableId: tableId.data,
+      occurredAt: new Date().toISOString()
+    });
+
     res.status(201).json({
       success: true,
       payment: {
@@ -444,6 +489,12 @@ export const closeCashierBill: RequestHandler = async (req, res, next) => {
         select: { id: true, closedAt: true }
       });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    publishCashierUpdate({
+      type: "bill_closed",
+      tableId: tableId.data,
+      occurredAt: new Date().toISOString()
+    });
 
     res.json({ success: true, bill: closedBill });
   } catch (error) {
