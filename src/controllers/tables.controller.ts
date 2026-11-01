@@ -55,8 +55,15 @@ export const getTables: RequestHandler = async (_req, res, next) => {
       select: tableSelect,
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
     });
+    // Sipariş/adisyon tabloları eklenene kadar tüm masalar boştur.
+    // Adisyon altyapısı geldiğinde bu alan açık adisyon sorgusundan beslenecek.
+    const tablesWithBillStatus = tables.map((table) => ({
+      ...table,
+      billStatus: "EMPTY"
+    }));
+
     res.setHeader("Cache-Control", "no-store");
-    res.json({ tables });
+    res.json({ tables: tablesWithBillStatus });
   } catch (error) {
     sendTableServerError(res, error);
   }
