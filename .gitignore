@@ -5,3 +5,5 @@
 dist/
 coverage/
 /src/generated/prisma/
+/public/uploads/products/*
+!/public/uploads/products/.gitkeep
