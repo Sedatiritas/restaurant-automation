@@ -6,7 +6,7 @@
   cssFile: "admin.css"
 }) %>
 
-<div class="admin-shell">
+<div class="admin-shell" data-current-user-id="<%= authUser.userId %>">
     <aside class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="adminSidebar" aria-label="Ana menü">
       <div class="sidebar-inner">
         <a class="admin-brand" href="#overview" data-view="overview">
