@@ -1,57 +1,74 @@
-function applySavedBusinessSettings() {
-    try {
-        const settings = JSON.parse(localStorage.getItem("roastAdmin_settings") || "null");
-        if (!settings) return;
+function applyBusinessSettings(settings) {
+    if (!settings) return;
 
-        const address = (settings.address || "").trim();
-        const addressLine = document.querySelector("#footerAddress");
-        const addressText = document.querySelector("#footerAddressText");
-        if (addressLine && addressText && address) {
+    const address = (settings.address || "").trim();
+    const addressLine = document.querySelector("#footerAddress");
+    const addressText = document.querySelector("#footerAddressText");
+    if (addressLine && addressText) {
+        if (address) {
             addressText.textContent = address;
             addressLine.classList.remove("d-none");
-        } else if (addressLine) {
+        } else {
             addressLine.classList.add("d-none");
         }
+    }
 
-        const description = document.querySelector("#footerDescription");
-        if (description && settings.description) description.textContent = settings.description;
+    const description = document.querySelector("#footerDescription");
+    if (description && settings.description) description.textContent = settings.description;
 
-        const phone = (settings.phone || "").trim();
-        const phoneLink = document.querySelector("#footerPhone");
-        if (phoneLink) {
-            if (phone) {
-                phoneLink.href = "tel:" + phone.replace(/[^+\\d]/g, "");
-                phoneLink.querySelector("span").textContent = phone;
-                phoneLink.classList.remove("d-none");
-            } else {
-                phoneLink.classList.add("d-none");
-            }
+    const phone = (settings.phone || "").trim();
+    const phoneLink = document.querySelector("#footerPhone");
+    if (phoneLink) {
+        if (phone) {
+            phoneLink.href = "tel:" + phone.replace(/[^+\\d]/g, "");
+            phoneLink.querySelector("span").textContent = phone;
+            phoneLink.classList.remove("d-none");
+        } else {
+            phoneLink.classList.add("d-none");
         }
+    }
 
-        const email = (settings.email || "").trim();
-        const emailLink = document.querySelector("#footerEmail");
-        if (emailLink) {
-            if (email) {
-                emailLink.href = "mailto:" + email;
-                emailLink.querySelector("span").textContent = email;
-                emailLink.classList.remove("d-none");
-            } else {
-                emailLink.classList.add("d-none");
-            }
+    const email = (settings.email || "").trim();
+    const emailLink = document.querySelector("#footerEmail");
+    if (emailLink) {
+        if (email) {
+            emailLink.href = "mailto:" + email;
+            emailLink.querySelector("span").textContent = email;
+            emailLink.classList.remove("d-none");
+        } else {
+            emailLink.classList.add("d-none");
         }
+    }
 
-        const instagram = document.querySelector("#footerInstagram");
-        if (instagram) {
-            if (settings.instagram) instagram.href = settings.instagram;
-            else instagram.classList.add("d-none");
+    const instagram = document.querySelector("#footerInstagram");
+    if (instagram) {
+        if (settings.instagram) {
+            instagram.href = settings.instagram;
+            instagram.classList.remove("d-none");
+        } else {
+            instagram.classList.add("d-none");
         }
-        const whatsapp = document.querySelector("#footerWhatsapp");
-        if (whatsapp) {
-            if (settings.whatsapp) whatsapp.href = settings.whatsapp;
-            else whatsapp.classList.add("d-none");
+    }
+
+    const whatsapp = document.querySelector("#footerWhatsapp");
+    if (whatsapp) {
+        if (settings.whatsapp) {
+            whatsapp.href = settings.whatsapp;
+            whatsapp.classList.remove("d-none");
+        } else {
+            whatsapp.classList.add("d-none");
         }
+    }
+}
+
+async function loadBusinessSettings() {
+    try {
+        const response = await fetch("/api/business-settings", { headers: { "Accept": "application/json" } });
+        if (!response.ok) throw new Error("İşletme bilgileri şu anda yüklenemiyor.");
+        const result = await response.json();
+        applyBusinessSettings(result.settings);
     } catch (error) {
-        console.warn("İşletme ayarları okunamadı.", error);
+        console.error("İşletme ayarları yüklenemedi.", error);
     }
 }
 
@@ -369,7 +386,7 @@ categoryList.addEventListener("scroll", updateCategoryScrollHint, { passive: tru
 window.addEventListener("resize", updateCategoryScrollHint);
 
 loadMenuAppearance();
-applySavedBusinessSettings();
+loadBusinessSettings();
 renderCategories();
 renderProducts();
 initializePageAnimations();
