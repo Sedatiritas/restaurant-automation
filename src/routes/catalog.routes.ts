@@ -21,9 +21,11 @@ router.use("/api/catalog", requireRole("ADMIN"));
 router.get("/api/catalog", getCatalog);
 router.post("/api/catalog/categories", createCategory);
 router.patch("/api/catalog/categories/:id", updateCategory);
+router.post("/api/catalog/categories/:id", updateCategory);
 router.delete("/api/catalog/categories/:id", deleteCategory);
 router.post("/api/catalog/products", createProduct);
 router.patch("/api/catalog/products/:id", updateProduct);
+router.post("/api/catalog/products/:id", updateProduct);
 router.delete("/api/catalog/products/:id", deleteProduct);
 
 export default router;
