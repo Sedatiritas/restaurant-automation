@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", function () {
     loading: false
   };
 
+  let realtimeSource = null;
+  let realtimeConnected = false;
+  let realtimeRefreshRunning = false;
+  let queuedRealtimeEvents = [];
+
   const notice = $("#apiNotice");
   const connectionStatus = $("#connectionStatus");
   const toastEl = $("#cashierToast");
@@ -398,7 +403,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       renderMetrics();
       renderTables();
-      setConnection("connected", "Sunucuya bağlı");
+      setConnection("connected", realtimeConnected ? "Canlı bağlantı" : "Sunucuya bağlı");
       notice.hidden = true;
 
       if (state.selectedTableId != null) {
@@ -522,6 +527,79 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  async function handleCashierUpdate(eventData) {
+    const preferredTableId = state.selectedTableId;
+    await loadTables(preferredTableId);
+
+    if (eventData && eventData.type === "order_created") {
+      const table = state.tables.find(function (item) {
+        return String(item.id) === String(eventData.tableId);
+      });
+      const tableName = eventData.tableName || (table && table.name) || "Masa";
+      const roundLabel = eventData.roundNumber ? " · Sipariş turu #" + eventData.roundNumber : "";
+      notify(tableName + " için yeni sipariş kasaya düştü" + roundLabel + ".");
+    } else if (eventData && eventData.type === "payment_recorded") {
+      // Keep the selected bill and table list synchronized across cashier tabs.
+    } else if (eventData && eventData.type === "bill_closed") {
+      // A closed bill disappears from the open-bill filter immediately.
+    }
+  }
+
+  async function processRealtimeEvents() {
+    if (realtimeRefreshRunning) return;
+    realtimeRefreshRunning = true;
+
+    try {
+      while (queuedRealtimeEvents.length) {
+        const eventData = queuedRealtimeEvents.shift();
+        await handleCashierUpdate(eventData);
+      }
+    } finally {
+      realtimeRefreshRunning = false;
+    }
+  }
+
+  function connectRealtime() {
+    if (!("EventSource" in window)) {
+      setConnection("error", "Canlı bağlantı desteklenmiyor");
+      // Compatibility fallback for browsers without EventSource.
+      window.setInterval(function () {
+        loadTables(state.selectedTableId);
+      }, 5000);
+      return;
+    }
+
+    if (realtimeSource) realtimeSource.close();
+    realtimeSource = new EventSource("/api/cashier/events");
+
+    realtimeSource.onopen = function () {
+      realtimeConnected = true;
+      setConnection("connected", "Canlı bağlantı");
+      // Re-sync after reconnect so no update is missed while offline.
+      loadTables(state.selectedTableId);
+    };
+
+    realtimeSource.addEventListener("cashier_update", function (event) {
+      try {
+        const eventData = JSON.parse(event.data);
+        queuedRealtimeEvents.push(eventData);
+        processRealtimeEvents();
+      } catch (_error) {
+        // Ignore malformed notifications; the connection remains open.
+      }
+    });
+
+    realtimeSource.onerror = function () {
+      realtimeConnected = false;
+      setConnection("connecting", "Canlı bağlantı yeniden kuruluyor");
+      // EventSource reconnects automatically using the server's retry interval.
+    };
+
+    window.addEventListener("beforeunload", function () {
+      if (realtimeSource) realtimeSource.close();
+    }, { once: true });
+  }
+
   $("#billTableList").addEventListener("click", function (event) {
     const button = event.target.closest("[data-table-id]");
     if (button && !button.disabled) loadBill(button.dataset.tableId);
@@ -562,4 +640,5 @@ document.addEventListener("DOMContentLoaded", function () {
   $("#closeBillButton").addEventListener("click", closeBill);
 
   loadTables();
+  connectRealtime();
 });
