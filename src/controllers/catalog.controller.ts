@@ -17,6 +17,12 @@ const createCategorySchema = z.object({
   description: categoryDescriptionSchema
 });
 
+const reorderCategoriesSchema = z.object({
+  categoryIds: z.array(categoryIdSchema).min(1).max(100)
+}).refine((data) => new Set(data.categoryIds).size === data.categoryIds.length, {
+  message: "Kategori listesinde tekrar eden kayıt bulunamaz."
+});
+
 const updateCategorySchema = z.object({
   name: categoryNameSchema.optional(),
   icon: categoryIconSchema.optional(),
@@ -317,6 +323,53 @@ export const getWaiterCatalog: RequestHandler = async (_req, res, next) => {
   }
 };
 
+export const reorderCategories: RequestHandler = async (req, res, next) => {
+  const parsed = reorderCategoriesSchema.safeParse(req.body);
+  if (!parsed.success) {
+    sendError(res, 400, parsed.error.issues[0]?.message ?? "Kategori sıralaması geçersiz.");
+    return;
+  }
+
+  try {
+    const categories = await prisma.$transaction(async (tx) => {
+      const existing = await tx.category.findMany({ select: { id: true } });
+      const submittedIds = parsed.data.categoryIds;
+
+      if (
+        existing.length !== submittedIds.length ||
+        existing.some((category) => !submittedIds.includes(category.id))
+      ) {
+        throw new Error("CATEGORY_SET_CHANGED");
+      }
+
+      for (const [index, categoryId] of submittedIds.entries()) {
+        await tx.category.update({
+          where: { id: categoryId },
+          data: { sortOrder: index + 1 }
+        });
+      }
+
+      return tx.category.findMany({
+        select: categorySelect,
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ categories });
+  } catch (error) {
+    if (error instanceof Error && error.message === "CATEGORY_SET_CHANGED") {
+      sendError(res, 409, "Kategori listesi değişti. Listeyi yenileyip tekrar deneyin.");
+      return;
+    }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+      sendError(res, 409, "Kategori sıralaması aynı anda güncellendi. Tekrar deneyin.");
+      return;
+    }
+    next(error);
+  }
+};
+
 export const createCategory: RequestHandler = async (req, res, next) => {
   const parsed = createCategorySchema.safeParse(req.body);
 
@@ -332,12 +385,17 @@ export const createCategory: RequestHandler = async (req, res, next) => {
   }
 
   try {
+    const lastCategory = await prisma.category.findFirst({
+      orderBy: { sortOrder: "desc" },
+      select: { sortOrder: true }
+    });
     const category = await prisma.category.create({
       data: {
         name: parsed.data.name,
         slug,
         icon: parsed.data.icon,
-        description: parsed.data.description ?? null
+        description: parsed.data.description ?? null,
+        sortOrder: (lastCategory?.sortOrder ?? -1) + 1
       },
       select: categorySelect
     });
