@@ -9,6 +9,7 @@ import {
   getPublicMenu,
   getWaiterCatalog,
   updateCategory,
+  reorderCategories,
   updateProduct
 } from "../controllers/catalog.controller.js";
 
@@ -22,6 +23,7 @@ router.get("/api/waiter/catalog", requireRole("WAITER"), getWaiterCatalog);
 router.use("/api/catalog", requireRole("ADMIN"));
 router.get("/api/catalog", getCatalog);
 router.post("/api/catalog/categories", createCategory);
+router.put("/api/catalog/categories/reorder", reorderCategories);
 router.patch("/api/catalog/categories/:id", updateCategory);
 router.post("/api/catalog/categories/:id", updateCategory);
 router.delete("/api/catalog/categories/:id", deleteCategory);
