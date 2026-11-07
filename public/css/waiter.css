@@ -488,3 +488,78 @@ a{color:inherit}
     font-size:8px;
   }
 }
+
+
+/* Staff header: compact account chip and polished logout action */
+.topbar-user-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  padding:0 10px;
+  border:1px solid var(--border);
+  border-radius:30px;
+  background:#faf8f4;
+  color:#6f685f;
+  font-size:10px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.topbar-user-chip>i{
+  color:#9b7657;
+  font-size:14px;
+}
+.logout-form{
+  display:flex;
+  flex:0 0 auto;
+  margin:0;
+}
+.logout-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:36px;
+  padding:0 13px;
+  border:1px solid #eadbc7;
+  border-radius:10px;
+  background:#fffaf4;
+  color:#8d4e2e;
+  font-size:10px;
+  font-weight:800;
+  white-space:nowrap;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+}
+.logout-button>i{
+  font-size:14px;
+}
+.logout-button:hover{
+  border-color:#d9b99d;
+  background:#f7eee5;
+  color:#744126;
+  transform:translateY(-1px);
+}
+.logout-button:active{
+  transform:translateY(0);
+}
+.logout-button:focus-visible{
+  outline:3px solid #b96e4340;
+  outline-offset:2px;
+}
+@media(max-width:480px){
+  .topbar-user-chip{
+    width:32px;
+    min-height:32px;
+    justify-content:center;
+    padding:0;
+  }
+  .topbar-user-name,
+  .logout-button-label{
+    display:none;
+  }
+  .logout-button{
+    width:36px;
+    min-height:36px;
+    padding:0;
+  }
+}
