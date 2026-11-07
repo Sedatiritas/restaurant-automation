@@ -111,6 +111,30 @@
     </main>
   </div>
 
+  <div class="modal fade" id="incomingOrderModal" tabindex="-1" aria-labelledby="incomingOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-header border-0 pb-0">
+          <span class="badge text-bg-success rounded-pill px-3 py-2">Yeni sipariş</span>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+        </div>
+        <div class="modal-body px-4 py-4 text-center">
+          <div class="display-4 text-success mb-3"><i class="bi bi-bell-fill" aria-hidden="true"></i></div>
+          <h2 class="h4 fw-bold mb-2" id="incomingOrderModalLabel">Kasaya yeni sipariş geldi</h2>
+          <p class="text-secondary mb-4">Garson yeni siparişi mutfağa gönderdi. Sipariş detayları aşağıdaki masada açıldı.</p>
+          <div class="bg-body-tertiary border rounded-3 p-3">
+            <div class="small text-secondary fw-semibold text-uppercase mb-1">Masa</div>
+            <div class="fs-4 fw-bold" id="incomingOrderTable">—</div>
+            <div class="small text-secondary mt-2" id="incomingOrderRound">Yeni sipariş</div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
+          <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">Siparişi görüntüle</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="cashierToast" class="toast border-0" role="status" aria-live="polite" aria-atomic="true">
       <div class="d-flex"><div class="toast-body" id="cashierToastMessage"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button></div>
