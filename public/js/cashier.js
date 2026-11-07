@@ -29,6 +29,13 @@ document.addEventListener("DOMContentLoaded", function () {
     : null;
   const incomingOrderQueue = [];
   let incomingOrderModalVisible = false;
+  const collectConfirmModalEl = $("#collectConfirmModal");
+  const collectConfirmModal = window.bootstrap && collectConfirmModalEl
+    ? window.bootstrap.Modal.getOrCreateInstance(collectConfirmModalEl, { backdrop: "static", keyboard: false })
+    : null;
+  const confirmCollectButton = $("#confirmCollectButton");
+  const cancelCollectConfirmButton = $("#cancelCollectConfirmButton");
+  let pendingPayment = null;
 
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
@@ -467,11 +474,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  async function collectSelected() {
+  function collectSelected() {
     if (!state.bill || state.selectedTableId == null) {
       notify("Önce açık adisyonu olan bir masa seç.");
       return;
     }
+    if (pendingPayment) return;
+
     const units = selectedUnitsFromUI();
     if (!units.length) {
       notify("Önce tahsil edilecek, ödenmemiş ürünleri seç.");
@@ -487,23 +496,52 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const method = selectedPaymentMethod();
-    const tableName = $("#selectedTableName").textContent.trim();
-    if (!window.confirm(
-      tableName + " için " + money(total) + " tutarındaki " + units.length +
-      " ürün adedini " + paymentMethodLabel(method) + " olarak tahsil etmek istiyor musun?"
-    )) return;
+    const payment = {
+      tableId: state.selectedTableId,
+      tableName: $("#selectedTableName").textContent.trim(),
+      units: units,
+      total: total,
+      method: method
+    };
 
-    const button = $("#collectSelectedButton");
-    const originalMarkup = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>Tahsilat kaydediliyor...</span>';
+    if (!collectConfirmModal) {
+      const message = payment.tableName + " için " + money(payment.total) + " tutarındaki " +
+        payment.units.length + " ürün adedini " + paymentMethodLabel(payment.method) +
+        " olarak tahsil etmek istiyor musun?";
+      if (window.confirm(message)) {
+        pendingPayment = payment;
+        confirmSelectedPayment();
+      }
+      return;
+    }
+
+    pendingPayment = payment;
+    $("#collectConfirmTable").textContent = payment.tableName;
+    $("#collectConfirmCount").textContent = String(payment.units.length) + " adet ürün";
+    $("#collectConfirmMethod").textContent = paymentMethodLabel(payment.method);
+    $("#collectConfirmAmount").textContent = money(payment.total);
+    confirmCollectButton.disabled = false;
+    confirmCollectButton.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Ödemeyi Onayla';
+    cancelCollectConfirmButton.disabled = false;
+    collectConfirmModal.show();
+  }
+
+  async function confirmSelectedPayment() {
+    if (!pendingPayment || confirmCollectButton.disabled) return;
+
+    const payment = pendingPayment;
+    const originalConfirmMarkup = confirmCollectButton.innerHTML;
+    confirmCollectButton.disabled = true;
+    cancelCollectConfirmButton.disabled = true;
+    collectConfirmModalEl.querySelector(".btn-close").disabled = true;
+    confirmCollectButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Tahsilat kaydediliyor...';
 
     try {
-      await api("/api/cashier/tables/" + encodeURIComponent(state.selectedTableId) + "/collect", {
+      await api("/api/cashier/tables/" + encodeURIComponent(payment.tableId) + "/collect", {
         method: "POST",
         body: JSON.stringify({
-          paymentMethod: method,
-          items: units.map(function (unit) {
+          paymentMethod: payment.method,
+          items: payment.units.map(function (unit) {
             return {
               orderId: unit.orderId,
               itemId: unit.itemId,
@@ -512,15 +550,27 @@ document.addEventListener("DOMContentLoaded", function () {
           })
         })
       });
-      await loadTables(state.selectedTableId);
-      notify(money(total) + " tutarındaki tahsilat kaydedildi.");
+      if (collectConfirmModal) collectConfirmModal.hide();
+      pendingPayment = null;
+      await loadTables(payment.tableId);
+      notify(money(payment.total) + " tutarındaki tahsilat kaydedildi.");
     } catch (error) {
       notify(error.message || "Tahsilat sırasında hata oluştu.");
-    } finally {
-      button.innerHTML = originalMarkup;
-      if (state.bill) updateSelectedTotals();
-      else button.disabled = true;
+      confirmCollectButton.disabled = false;
+      cancelCollectConfirmButton.disabled = false;
+      collectConfirmModalEl.querySelector(".btn-close").disabled = false;
+      confirmCollectButton.innerHTML = originalConfirmMarkup;
     }
+  }
+
+  if (collectConfirmModalEl) {
+    collectConfirmModalEl.addEventListener("hidden.bs.modal", function () {
+      if (!confirmCollectButton.disabled) pendingPayment = null;
+      confirmCollectButton.disabled = false;
+      cancelCollectConfirmButton.disabled = false;
+      collectConfirmModalEl.querySelector(".btn-close").disabled = false;
+      confirmCollectButton.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Ödemeyi Onayla';
+    });
   }
 
   async function closeBill() {
@@ -678,6 +728,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadTables(state.selectedTableId);
   });
   $("#collectSelectedButton").addEventListener("click", collectSelected);
+  if (confirmCollectButton) confirmCollectButton.addEventListener("click", confirmSelectedPayment);
   $("#closeBillButton").addEventListener("click", closeBill);
 
   loadTables();
