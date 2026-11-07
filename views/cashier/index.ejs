@@ -153,6 +153,32 @@
     </div>
   </div>
 
+  <div class="modal fade" id="closeBillConfirmModal" tabindex="-1" aria-labelledby="closeBillConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-header border-0 pb-0">
+          <span class="badge text-bg-warning rounded-pill px-3 py-2">Adisyon kapatma</span>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+        </div>
+        <div class="modal-body px-4 py-4 text-center">
+          <div class="display-5 text-warning mb-3"><i class="bi bi-receipt-cutoff" aria-hidden="true"></i></div>
+          <h2 class="h4 fw-bold mb-2" id="closeBillConfirmModalLabel">Adisyonu kapatmak istiyor musun?</h2>
+          <p class="text-secondary mb-4">Tüm ürünler tahsil edildi. Bu işlemden sonra masa boş duruma geçecek.</p>
+          <div class="bg-body-tertiary border rounded-3 p-3">
+            <div class="small text-secondary fw-semibold text-uppercase mb-1">Kapatılacak masa</div>
+            <div class="fs-4 fw-bold" id="closeBillConfirmTable">—</div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 justify-content-end gap-2 px-4 pb-4">
+          <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal" id="cancelCloseBillButton">Vazgeç</button>
+          <button type="button" class="btn btn-dark px-4" id="confirmCloseBillButton">
+            <i class="bi bi-check2-circle me-1"></i> Adisyonu Kapat
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="cashierToast" class="toast border-0" role="status" aria-live="polite" aria-atomic="true">
       <div class="d-flex"><div class="toast-body" id="cashierToastMessage"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button></div>
