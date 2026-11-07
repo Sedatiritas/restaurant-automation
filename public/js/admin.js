@@ -202,8 +202,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const count = state.products.filter(function (product) {
         return product.categoryId === category.id;
       }).length;
-      return '<article class="category-card" data-category-sort-item data-category-id="' + escapeHtml(category.id) + '">' +
-        '<button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" draggable="' + (state.categorySaving ? "false" : "true") + '" data-category-drag-handle aria-label="' + escapeHtml(category.name) + ' kategorisini sürükleyerek sırala" title="Sürükleyerek sırala"' + (state.categorySaving ? " disabled" : "") + '><i class="bi bi-grip-vertical"></i></button>' +
+      return '<article class="category-card" draggable="true" data-category-sort-item data-category-id="' + escapeHtml(category.id) + '">' +
+        '<span class="btn btn-sm btn-outline-secondary flex-shrink-0" data-category-drag-handle aria-label="' + escapeHtml(category.name) + ' kategorisini sürükleyerek sırala" title="Sürükleyerek sırala"><i class="bi bi-grip-vertical"></i></span>' +
         '<span class="category-symbol"><i class="bi ' + escapeHtml(category.icon || "bi-collection") + '"></i></span>' +
         '<div class="category-info"><strong>' + escapeHtml(category.name) + '</strong><small>' + count + ' ürün · ' + escapeHtml(category.description || "Açıklama yok") + '</small><span class="badge text-bg-light border mt-2">Sıra ' + (index + 1) + '</span></div>' +
         '<div class="category-actions">' +
@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '</div>' +
         '<div class="d-flex justify-content-end gap-2">' +
           '<button type="button" class="btn btn-outline-secondary btn-sm px-3" data-action="cancel-category-order"' + (!hasCategoryDraft || state.categorySaving ? " disabled" : "") + '>Vazgeç</button>' +
-          '<button type="button" class="btn btn-primary-soft btn-sm px-3" data-action="save-category-order"' + (!hasCategoryDraft || state.categorySaving ? " disabled" : "") + '>' +
+          '<button type="button" class="btn btn-primary-soft btn-sm px-3" data-action="save-category-order"' + (state.categorySaving ? " disabled" : "") + '>' +
             (state.categorySaving
               ? '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Kaydediliyor...'
               : '<i class="bi bi-check2 me-1"></i>Değişiklikleri Kaydet') +
@@ -502,14 +502,39 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function saveCategoryOrder() {
-    if (state.categorySaving || !Array.isArray(state.categoryDraftIds)) return;
+    if (state.categorySaving) return;
 
-    const categoryIds = state.categoryDraftIds.slice();
-    if (categoryIds.length !== state.categories.length) {
-      notify("Kategori listesi değişti. Sayfayı yenileyip tekrar deneyin.");
+    // Read the order that is currently visible. This also recovers a drag
+    // that changed the DOM even if the browser skipped the drop event.
+    const list = root.querySelector("[data-category-sort-list]");
+    const categoryIds = list
+      ? Array.from(list.querySelectorAll("[data-category-sort-item]")).map(function (card) {
+          return String(card.dataset.categoryId || "");
+        }).filter(Boolean)
+      : (Array.isArray(state.categoryDraftIds) ? state.categoryDraftIds.map(String) : []);
+
+    const persistedIds = state.categories.map(function (category) { return String(category.id); });
+    const currentIds = new Set(persistedIds);
+    if (
+      categoryIds.length !== persistedIds.length ||
+      new Set(categoryIds).size !== currentIds.size ||
+      categoryIds.some(function (id) { return !currentIds.has(id); })
+    ) {
+      notify("Kategori sırası okunamadı. Listeyi yenileyip tekrar deneyin.");
       return;
     }
 
+    const hasChanges = categoryIds.some(function (id, index) {
+      return id !== persistedIds[index];
+    });
+    if (!hasChanges) {
+      state.categoryDraftIds = null;
+      if (state.view === "categories") root.innerHTML = categoriesView();
+      notify("Sıralamada kaydedilecek bir değişiklik yok.");
+      return;
+    }
+
+    state.categoryDraftIds = categoryIds.slice();
     state.categorySaving = true;
     if (state.view === "categories") root.innerHTML = categoriesView();
 
@@ -522,6 +547,7 @@ document.addEventListener("DOMContentLoaded", function () {
       state.categoryDraftIds = null;
       notify("Kategori sıralaması kaydedildi.");
     } catch (error) {
+      state.categoryDraftIds = categoryIds.slice();
       notify(error.message || "Kategori sıralaması kaydedilemedi. Değişiklikler taslak olarak korundu.");
     } finally {
       state.categorySaving = false;
@@ -739,14 +765,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
   function setView(view) { render(view); }
+  function readCategoryOrderFromDom() {
+    const list = root.querySelector("[data-category-sort-list]");
+    if (!list) return [];
+    return Array.from(list.querySelectorAll("[data-category-sort-item]")).map(function (card) {
+      return String(card.dataset.categoryId || "");
+    }).filter(Boolean);
+  }
+
+  function finishCategoryDrag() {
+    if (!state.draggedCategoryId) return;
+    const categoryIds = readCategoryOrderFromDom();
+    state.draggedCategoryId = null;
+    root.querySelectorAll("[data-category-sort-item]").forEach(function (card) {
+      card.classList.remove("opacity-50");
+    });
+    setCategoryDraftOrder(categoryIds);
+  }
+
   root.addEventListener("dragstart", function (event) {
-    const handle = event.target.closest("[data-category-drag-handle]");
-    if (!handle || state.categorySaving) {
-      if (handle) event.preventDefault();
+    const card = event.target.closest("[data-category-sort-item]");
+    if (!card || state.categorySaving || event.target.closest(".category-actions")) {
+      if (card) event.preventDefault();
       return;
     }
-    const card = handle.closest("[data-category-sort-item]");
-    if (!card) return;
 
     state.draggedCategoryId = card.dataset.categoryId || null;
     card.classList.add("opacity-50");
@@ -757,17 +799,24 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   root.addEventListener("dragover", function (event) {
-    if (!state.draggedCategoryId) return;
-    const target = event.target.closest("[data-category-sort-item]");
+    if (!state.draggedCategoryId || state.categorySaving) return;
     const list = root.querySelector("[data-category-sort-list]");
-    if (!target || !list || target.parentElement !== list) return;
+    if (!list || !list.contains(event.target)) return;
+
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
 
     const dragged = Array.from(list.querySelectorAll("[data-category-sort-item]")).find(function (card) {
       return card.dataset.categoryId === state.draggedCategoryId;
     });
-    if (!dragged || dragged === target) return;
+    if (!dragged) return;
 
-    event.preventDefault();
+    const target = event.target.closest("[data-category-sort-item]");
+    if (!target || target.parentElement !== list || target === dragged) {
+      if (!target && event.target === list) list.appendChild(dragged);
+      return;
+    }
+
     const rect = target.getBoundingClientRect();
     const insertAfter = event.clientY > rect.top + rect.height / 2;
     list.insertBefore(dragged, insertAfter ? target.nextElementSibling : target);
@@ -776,28 +825,15 @@ document.addEventListener("DOMContentLoaded", function () {
   root.addEventListener("drop", function (event) {
     if (!state.draggedCategoryId) return;
     const list = root.querySelector("[data-category-sort-list]");
-    if (!list) {
-      state.draggedCategoryId = null;
-      return;
-    }
-
+    if (!list || !list.contains(event.target)) return;
     event.preventDefault();
-    const categoryIds = Array.from(list.querySelectorAll("[data-category-sort-item]")).map(function (card) {
-      return card.dataset.categoryId;
-    }).filter(Boolean);
-    state.draggedCategoryId = null;
-    root.querySelectorAll("[data-category-sort-item]").forEach(function (card) {
-      card.classList.remove("opacity-50");
-    });
-    setCategoryDraftOrder(categoryIds);
+    finishCategoryDrag();
   });
 
   root.addEventListener("dragend", function (event) {
-    const handle = event.target.closest("[data-category-drag-handle]");
-    if (!handle) return;
-    const card = handle.closest("[data-category-sort-item]");
+    const card = event.target.closest("[data-category-sort-item]");
     if (card) card.classList.remove("opacity-50");
-    state.draggedCategoryId = null;
+    finishCategoryDrag();
   });
 
   document.addEventListener("click",async function(event){
