@@ -23,12 +23,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const toast = window.bootstrap && toastEl
     ? window.bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 2800 })
     : null;
-  const incomingOrderModalEl = $("#incomingOrderModal");
-  const incomingOrderModal = window.bootstrap && incomingOrderModalEl
-    ? window.bootstrap.Modal.getOrCreateInstance(incomingOrderModalEl, { backdrop: "static" })
-    : null;
-  const incomingOrderQueue = [];
-  let incomingOrderModalVisible = false;
   const collectConfirmModalEl = $("#collectConfirmModal");
   const collectConfirmModal = window.bootstrap && collectConfirmModalEl
     ? window.bootstrap.Modal.getOrCreateInstance(collectConfirmModalEl, { backdrop: "static", keyboard: false })
@@ -59,36 +53,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     toastMessage.textContent = message;
     toast.show();
-  }
-
-  function showNextIncomingOrder() {
-    if (!incomingOrderModal || incomingOrderModalVisible || !incomingOrderQueue.length) return;
-
-    const order = incomingOrderQueue.shift();
-    $("#incomingOrderTable").textContent = order.tableName || "Masa";
-    $("#incomingOrderRound").textContent = order.roundNumber
-      ? "Sipariş turu #" + order.roundNumber
-      : "Yeni sipariş";
-    incomingOrderModalVisible = true;
-    incomingOrderModal.show();
-  }
-
-  function queueIncomingOrder(order) {
-    if (!incomingOrderModal) {
-      const roundLabel = order.roundNumber ? " · Sipariş turu #" + order.roundNumber : "";
-      notify((order.tableName || "Masa") + " için yeni sipariş kasaya düştü" + roundLabel + ".");
-      return;
-    }
-
-    incomingOrderQueue.push(order);
-    showNextIncomingOrder();
-  }
-
-  if (incomingOrderModalEl) {
-    incomingOrderModalEl.addEventListener("hidden.bs.modal", function () {
-      incomingOrderModalVisible = false;
-      showNextIncomingOrder();
-    });
   }
 
   function setConnection(status, label) {
@@ -608,26 +572,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function handleCashierUpdate(eventData) {
-    // A newly arrived order should open that table immediately in the cashier detail panel.
+    // Keep cashier data live without showing a popup for incoming waiter orders.
     const preferredTableId = eventData && eventData.type === "order_created"
       ? eventData.tableId
       : state.selectedTableId;
     await loadTables(preferredTableId);
-
-    if (eventData && eventData.type === "order_created") {
-      const table = state.tables.find(function (item) {
-        return String(item.id) === String(eventData.tableId);
-      });
-      const tableName = eventData.tableName || (table && table.name) || "Masa";
-      queueIncomingOrder({
-        tableName: tableName,
-        roundNumber: eventData.roundNumber || null
-      });
-    } else if (eventData && eventData.type === "payment_recorded") {
-      // Keep the selected bill and table list synchronized across cashier tabs.
-    } else if (eventData && eventData.type === "bill_closed") {
-      // A closed bill disappears from the open-bill filter immediately.
-    }
   }
 
   async function processRealtimeEvents() {
