@@ -505,13 +505,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     if (!collectConfirmModal) {
-      const message = payment.tableName + " için " + money(payment.total) + " tutarındaki " +
-        payment.units.length + " ürün adedini " + paymentMethodLabel(payment.method) +
-        " olarak tahsil etmek istiyor musun?";
-      if (window.confirm(message)) {
-        pendingPayment = payment;
-        confirmSelectedPayment();
-      }
+      notify("Tahsilat onay penceresi yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
       return;
     }
 
