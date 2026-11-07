@@ -212,21 +212,28 @@ document.addEventListener("DOMContentLoaded", function () {
         '</div></article>';
     }).join("");
 
-    const orderSaveBar = Array.isArray(state.categoryDraftIds)
-      ? '<div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mt-3 p-3 bg-white border rounded-3">' +
-          '<div class="small text-secondary"><i class="bi bi-info-circle me-2"></i>Kategori sıralamasında kaydedilmemiş değişiklikler var.</div>' +
-          '<div class="d-flex justify-content-end gap-2">' +
-            '<button type="button" class="btn btn-outline-secondary btn-sm px-3" data-action="cancel-category-order"' + (state.categorySaving ? " disabled" : "") + '>Vazgeç</button>' +
-            '<button type="button" class="btn btn-primary-soft btn-sm px-3" data-action="save-category-order"' + (state.categorySaving ? " disabled" : "") + '>' +
-              (state.categorySaving ? '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Kaydediliyor...' : '<i class="bi bi-check2 me-1"></i>Değişiklikleri Kaydet') +
-            '</button>' +
-          '</div></div>'
-      : "";
+    const hasCategoryDraft = Array.isArray(state.categoryDraftIds);
+    const orderSaveBar =
+      '<div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mt-3 p-3 bg-white border rounded-3">' +
+        '<div class="small ' + (hasCategoryDraft ? "text-primary" : "text-secondary") + '">' +
+          (hasCategoryDraft
+            ? '<i class="bi bi-info-circle me-2"></i>Kaydedilmemiş kategori sıralaması değişiklikleri var.'
+            : '<i class="bi bi-grip-vertical me-2"></i>Sıralamayı değiştirmek için kategorileri sürükleyin.') +
+        '</div>' +
+        '<div class="d-flex justify-content-end gap-2">' +
+          '<button type="button" class="btn btn-outline-secondary btn-sm px-3" data-action="cancel-category-order"' + (!hasCategoryDraft || state.categorySaving ? " disabled" : "") + '>Vazgeç</button>' +
+          '<button type="button" class="btn btn-primary-soft btn-sm px-3" data-action="save-category-order"' + (!hasCategoryDraft || state.categorySaving ? " disabled" : "") + '>' +
+            (state.categorySaving
+              ? '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Kaydediliyor...'
+              : '<i class="bi bi-check2 me-1"></i>Değişiklikleri Kaydet') +
+          '</button>' +
+        '</div></div>';
 
     return pageHeading("MENÜ İÇERİĞİ", "Kategoriler", "Kategori sırasını sürükle-bırak ile düzenleyin. Yeni sıralama, Değişiklikleri Kaydet düğmesine bastığınızda müşteri menüsüne ve garson ekranına uygulanır.", '<button class="btn btn-primary-soft" data-action="add-category"><i class="bi bi-plus-lg me-2"></i>Kategori ekle</button>') +
       (orderedCategories.length
-        ? '<div class="list-group gap-2" data-category-sort-list>' + categoryCards + '</div>' + orderSaveBar
-        : '<div class="panel-card p-4 text-center"><strong>Henüz kategori yok</strong><p class="text-muted mb-0 mt-1">Ürün eklemeden önce ilk menü kategorinizi oluşturun.</p></div>');
+        ? '<div class="list-group gap-2" data-category-sort-list>' + categoryCards + '</div>'
+        : '<div class="panel-card p-4 text-center"><strong>Henüz kategori yok</strong><p class="text-muted mb-0 mt-1">Ürün eklemeden önce ilk menü kategorinizi oluşturun.</p></div>') +
+      orderSaveBar;
   }
   function tablesView() {
     if (state.tablesError) {
