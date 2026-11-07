@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let selectedProductImageFile = null;
   let selectedProductImageData = "";
 
-  const state = { products:[], categories:[], tables:[], tablesLoaded:false, tablesError:"", staff:[], settings:structuredClone(defaults.settings), settingsLoaded:false, settingsError:"", appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()), revenueData:null, revenueLoading:false, revenueError:"", revenueRequestId:0 };
+  const state = { products:[], categories:[], tables:[], tablesLoaded:false, tablesError:"", staff:[], settings:structuredClone(defaults.settings), settingsLoaded:false, settingsError:"", appearance:structuredClone(defaults.appearance), appearanceLoaded:false, view:"overview", productSearch:"", productCategory:"all", productStatus:"all", revenueMonth:currentMonthValue(new Date()), revenueData:null, revenueLoading:false, revenueError:"", revenueRequestId:0, categorySaving:false, draggedCategoryId:null };
   function notify(message) {
     if (!toast || !toastMessage) { window.alert(message); return; }
     toastMessage.textContent = message;
@@ -190,11 +190,29 @@ document.addEventListener("DOMContentLoaded", function () {
       '<section class="panel-card"><div class="toolbar"><div class="toolbar-start"><label class="search-control"><i class="bi bi-search"></i><input id="productSearch" class="form-control" type="search" placeholder="Ürün ara..." value="' + escapeHtml(state.productSearch) + '" aria-label="Ürün ara"></label><select id="productCategoryFilter" class="form-select" aria-label="Kategori filtresi"><option value="all">Tüm kategoriler</option>' + state.categories.map(function(c){return '<option value="' + escapeHtml(c.id) + '" ' + (state.productCategory===c.id?"selected":"") + '>' + escapeHtml(c.name) + '</option>';}).join("") + '</select><select id="productStatusFilter" class="form-select" aria-label="Durum filtresi"><option value="all">Tüm durumlar</option><option value="active" ' + (state.productStatus==="active"?"selected":"") + '>Yayında</option><option value="out" ' + (state.productStatus==="out"?"selected":"") + '>Tükendi</option><option value="hidden" ' + (state.productStatus==="hidden"?"selected":"") + '>Taslak / gizli</option></select></div><div class="toolbar-end"><span class="text-muted small">' + filtered.length + ' ürün</span></div></div><div class="table-responsive"><table class="table data-table align-middle"><thead><tr><th>ÜRÜN</th><th>KATEGORİ</th><th>FİYAT</th><th>DURUM</th><th>DÜZENLE</th><th>İŞLEMLER</th></tr></thead><tbody>' + productRows(filtered) + '</tbody></table></div></section>';
   }
   function categoriesView() {
-    return pageHeading("MENÜ İÇERİĞİ","Kategoriler","Müşteri menüsündeki ürün gruplarını oluşturun ve düzenleyin.",'<button class="btn btn-primary-soft" data-action="add-category"><i class="bi bi-plus-lg me-2"></i>Kategori ekle</button>') +
-      '<div class="category-grid">' + (state.categories.length ? state.categories.map(function(c){
-        const count=state.products.filter(function(p){return p.categoryId===c.id;}).length;
-        return '<article class="category-card"><span class="category-symbol"><i class="bi ' + escapeHtml(c.icon||"bi-collection") + '"></i></span><div class="category-info"><strong>' + escapeHtml(c.name) + '</strong><small>' + count + ' ürün · ' + escapeHtml(c.description||"Açıklama yok") + '</small></div><div class="category-actions"><button class="table-action" data-action="edit-category" data-id="' + c.id + '" aria-label="Kategoriyi düzenle"><i class="bi bi-pencil"></i></button><button class="table-action danger" data-action="delete-category" data-id="' + c.id + '" aria-label="Kategoriyi sil"><i class="bi bi-trash3"></i></button></div></article>';
-      }).join("") : '<div class="panel-card p-4 text-center"><strong>Henüz kategori yok</strong><p class="text-muted mb-0 mt-1">Ürün eklemeden önce ilk menü kategorinizi oluşturun.</p></div>') + '</div>';
+    const categoryCards = state.categories.map(function (category, index) {
+      const count = state.products.filter(function (product) {
+        return product.categoryId === category.id;
+      }).length;
+      const first = index === 0;
+      const last = index === state.categories.length - 1;
+      return '<article class="category-card" data-category-sort-item data-category-id="' + escapeHtml(category.id) + '">' +
+        '<button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" draggable="true" data-category-drag-handle aria-label="' + escapeHtml(category.name) + ' kategorisini sürükleyerek sırala" title="Sürükleyerek sırala"><i class="bi bi-grip-vertical"></i></button>' +
+        '<span class="category-symbol"><i class="bi ' + escapeHtml(category.icon || "bi-collection") + '"></i></span>' +
+        '<div class="category-info"><strong>' + escapeHtml(category.name) + '</strong><small>' + count + ' ürün · ' + escapeHtml(category.description || "Açıklama yok") + '</small><span class="badge text-bg-light border mt-2">Sıra ' + (index + 1) + '</span></div>' +
+        '<div class="category-actions">' +
+          '<button type="button" class="btn btn-sm btn-outline-secondary" data-action="move-category" data-direction="up" data-id="' + escapeHtml(category.id) + '" aria-label="' + escapeHtml(category.name) + ' kategorisini yukarı taşı"' + (first || state.categorySaving ? " disabled" : "") + '><i class="bi bi-chevron-up"></i></button>' +
+          '<button type="button" class="btn btn-sm btn-outline-secondary" data-action="move-category" data-direction="down" data-id="' + escapeHtml(category.id) + '" aria-label="' + escapeHtml(category.name) + ' kategorisini aşağı taşı"' + (last || state.categorySaving ? " disabled" : "") + '><i class="bi bi-chevron-down"></i></button>' +
+          '<button type="button" class="table-action" data-action="edit-category" data-id="' + escapeHtml(category.id) + '" aria-label="Kategoriyi düzenle"><i class="bi bi-pencil"></i></button>' +
+          '<button type="button" class="table-action danger" data-action="delete-category" data-id="' + escapeHtml(category.id) + '" aria-label="Kategoriyi sil"><i class="bi bi-trash3"></i></button>' +
+        '</div></article>';
+    }).join("");
+
+    return pageHeading("MENÜ İÇERİĞİ", "Kategoriler", "Sürükleyerek veya yukarı-aşağı oklarıyla sıralayın. Değişiklikler müşteri menüsüne ve garson ekranına da uygulanır.", '<button class="btn btn-primary-soft" data-action="add-category"><i class="bi bi-plus-lg me-2"></i>Kategori ekle</button>') +
+      (state.categorySaving ? '<div class="alert alert-info d-flex align-items-center gap-2 py-2 small" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span>Kategori sıralaması kaydediliyor...</div>' : '') +
+      (state.categories.length
+        ? '<div class="list-group gap-2" data-category-sort-list>' + categoryCards + '</div>'
+        : '<div class="panel-card p-4 text-center"><strong>Henüz kategori yok</strong><p class="text-muted mb-0 mt-1">Ürün eklemeden önce ilk menü kategorinizi oluşturun.</p></div>');
   }
   function tablesView() {
     if (state.tablesError) {
@@ -433,6 +451,55 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     return result;
   }
+  async function persistCategoryOrder(categoryIds) {
+    if (state.categorySaving || categoryIds.length !== state.categories.length) return;
+
+    const previousCategories = state.categories.slice();
+    const categoryMap = new Map(previousCategories.map(function (category) {
+      return [String(category.id), category];
+    }));
+    const reorderedCategories = categoryIds.map(function (id) {
+      return categoryMap.get(String(id));
+    });
+
+    if (reorderedCategories.some(function (category) { return !category; })) return;
+    if (categoryIds.every(function (id, index) {
+      return String(previousCategories[index].id) === String(id);
+    })) return;
+
+    state.categorySaving = true;
+    state.categories = reorderedCategories;
+    if (state.view === "categories") root.innerHTML = categoriesView();
+
+    try {
+      const result = await staffRequest("/api/catalog/categories/reorder", {
+        method: "PUT",
+        body: JSON.stringify({ categoryIds: categoryIds })
+      });
+      state.categories = Array.isArray(result.categories) ? result.categories : reorderedCategories;
+      notify("Kategori sıralaması kaydedildi.");
+    } catch (error) {
+      state.categories = previousCategories;
+      notify(error.message || "Kategori sıralaması kaydedilemedi.");
+    } finally {
+      state.categorySaving = false;
+      if (state.view === "categories") root.innerHTML = categoriesView();
+    }
+  }
+
+  async function moveCategory(categoryId, direction) {
+    if (state.categorySaving) return;
+    const categoryIds = state.categories.map(function (category) { return String(category.id); });
+    const currentIndex = categoryIds.indexOf(String(categoryId));
+    const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= categoryIds.length) return;
+
+    const movedId = categoryIds[currentIndex];
+    categoryIds[currentIndex] = categoryIds[nextIndex];
+    categoryIds[nextIndex] = movedId;
+    await persistCategoryOrder(categoryIds);
+  }
+
   async function loadTables() {
     const result = await staffRequest("/api/admin/tables");
     state.tables = Array.isArray(result.tables) ? result.tables : [];
@@ -636,6 +703,67 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
   function setView(view) { render(view); }
+  root.addEventListener("dragstart", function (event) {
+    const handle = event.target.closest("[data-category-drag-handle]");
+    if (!handle || state.categorySaving) {
+      if (handle) event.preventDefault();
+      return;
+    }
+    const card = handle.closest("[data-category-sort-item]");
+    if (!card) return;
+
+    state.draggedCategoryId = card.dataset.categoryId || null;
+    card.classList.add("opacity-50");
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", state.draggedCategoryId || "");
+    }
+  });
+
+  root.addEventListener("dragover", function (event) {
+    if (!state.draggedCategoryId) return;
+    const target = event.target.closest("[data-category-sort-item]");
+    const list = root.querySelector("[data-category-sort-list]");
+    if (!target || !list || target.parentElement !== list) return;
+
+    const dragged = Array.from(list.querySelectorAll("[data-category-sort-item]")).find(function (card) {
+      return card.dataset.categoryId === state.draggedCategoryId;
+    });
+    if (!dragged || dragged === target) return;
+
+    event.preventDefault();
+    const rect = target.getBoundingClientRect();
+    const insertAfter = event.clientY > rect.top + rect.height / 2;
+    list.insertBefore(dragged, insertAfter ? target.nextElementSibling : target);
+  });
+
+  root.addEventListener("drop", function (event) {
+    if (!state.draggedCategoryId) return;
+    const list = root.querySelector("[data-category-sort-list]");
+    if (!list) {
+      state.draggedCategoryId = null;
+      return;
+    }
+
+    event.preventDefault();
+    const categoryIds = Array.from(list.querySelectorAll("[data-category-sort-item]")).map(function (card) {
+      return card.dataset.categoryId;
+    }).filter(Boolean);
+    state.draggedCategoryId = null;
+    root.querySelectorAll("[data-category-sort-item]").forEach(function (card) {
+      card.classList.remove("opacity-50");
+    });
+    persistCategoryOrder(categoryIds);
+  });
+
+  root.addEventListener("dragend", function (event) {
+    const handle = event.target.closest("[data-category-drag-handle]");
+    if (!handle) return;
+    const card = handle.closest("[data-category-sort-item]");
+    if (card) card.classList.remove("opacity-50");
+    state.draggedCategoryId = null;
+  });
+
   document.addEventListener("click",async function(event){
     const iconChoice=event.target.closest("[data-icon-choice]");
     if(iconChoice){
@@ -703,6 +831,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       return;
     }
+    if(action==="move-category"){await moveCategory(rawId,actionButton.dataset.direction);return;}
     if(action==="add-category"){categoryForm();return;}
     if(action==="edit-category"){categoryForm(state.categories.find(function(category){return category.id===rawId;}));return;}
     if(action==="delete-category"){
