@@ -30,6 +30,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const confirmCollectButton = $("#confirmCollectButton");
   const cancelCollectConfirmButton = $("#cancelCollectConfirmButton");
   let pendingPayment = null;
+  const closeBillConfirmModalEl = $("#closeBillConfirmModal");
+  const closeBillConfirmModal = window.bootstrap && closeBillConfirmModalEl
+    ? window.bootstrap.Modal.getOrCreateInstance(closeBillConfirmModalEl, { backdrop: "static", keyboard: false })
+    : null;
+  const confirmCloseBillButton = $("#confirmCloseBillButton");
+  const cancelCloseBillButton = $("#cancelCloseBillButton");
+  let pendingCloseBill = null;
+  let closingBill = false;
 
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
@@ -531,44 +539,82 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  async function closeBill() {
+  function closeBill() {
     if (!state.bill || state.selectedTableId == null) {
       notify("Önce açık adisyonu olan bir masa seç.");
       return;
     }
+    if (pendingCloseBill || closingBill) return;
+
     const summary = paymentOverview(billRounds());
     if (summary.remaining > 0.001) {
       notify("Adisyon kapatılamaz. Önce kalan " + money(summary.remaining) + " tutarındaki ürünleri tahsil et.");
       return;
     }
 
-    const tableName = $("#selectedTableName").textContent.trim();
-    if (!window.confirm("Tüm ürünler tahsil edildi. " + tableName + " adisyonunu kapatmak istiyor musun?")) return;
+    if (!closeBillConfirmModal) {
+      notify("Adisyon kapatma penceresi yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
+      return;
+    }
 
-    const button = $("#closeBillButton");
-    const originalMarkup = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>Adisyon kapatılıyor...</span>';
+    pendingCloseBill = {
+      tableId: state.selectedTableId,
+      tableName: $("#selectedTableName").textContent.trim()
+    };
+    $("#closeBillConfirmTable").textContent = pendingCloseBill.tableName;
+    confirmCloseBillButton.disabled = false;
+    cancelCloseBillButton.disabled = false;
+    confirmCloseBillButton.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Adisyonu Kapat';
+    closeBillConfirmModal.show();
+  }
+
+  async function confirmCloseBill() {
+    if (!pendingCloseBill || closingBill) return;
+
+    const closing = pendingCloseBill;
+    const closeButton = $("#closeBillButton");
+    const originalCloseMarkup = confirmCloseBillButton.innerHTML;
+
+    closingBill = true;
+    confirmCloseBillButton.disabled = true;
+    cancelCloseBillButton.disabled = true;
+    closeBillConfirmModalEl.querySelector(".btn-close").disabled = true;
+    confirmCloseBillButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Adisyon kapatılıyor...';
+    closeButton.disabled = true;
 
     try {
-      await api("/api/cashier/tables/" + encodeURIComponent(state.selectedTableId) + "/close", {
+      await api("/api/cashier/tables/" + encodeURIComponent(closing.tableId) + "/close", {
         method: "POST",
         body: JSON.stringify({})
       });
+      pendingCloseBill = null;
+      closeBillConfirmModal.hide();
       state.selectedTableId = null;
       state.bill = null;
       await loadTables(null);
       notify("Adisyon kapatıldı.");
     } catch (error) {
-      notify(error.message || "Adisyon kapatılırken bir hata oluştu.");
-    } finally {
-      button.innerHTML = originalMarkup;
+      notify(error.message || "Adisyon kapatılırken hata oluştu.");
+      confirmCloseBillButton.disabled = false;
+      cancelCloseBillButton.disabled = false;
+      closeBillConfirmModalEl.querySelector(".btn-close").disabled = false;
+      confirmCloseBillButton.innerHTML = originalCloseMarkup;
       if (state.bill) {
-        button.disabled = paymentOverview(billRounds()).remaining > 0.001;
-      } else {
-        button.disabled = true;
+        closeButton.disabled = paymentOverview(billRounds()).remaining > 0.001;
       }
+    } finally {
+      closingBill = false;
     }
+  }
+
+  if (closeBillConfirmModalEl) {
+    closeBillConfirmModalEl.addEventListener("hidden.bs.modal", function () {
+      if (!closingBill) pendingCloseBill = null;
+      confirmCloseBillButton.disabled = false;
+      cancelCloseBillButton.disabled = false;
+      closeBillConfirmModalEl.querySelector(".btn-close").disabled = false;
+      confirmCloseBillButton.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Adisyonu Kapat';
+    });
   }
 
   async function handleCashierUpdate(eventData) {
@@ -673,6 +719,7 @@ document.addEventListener("DOMContentLoaded", function () {
   $("#collectSelectedButton").addEventListener("click", collectSelected);
   if (confirmCollectButton) confirmCollectButton.addEventListener("click", confirmSelectedPayment);
   $("#closeBillButton").addEventListener("click", closeBill);
+  if (confirmCloseBillButton) confirmCloseBillButton.addEventListener("click", confirmCloseBill);
 
   loadTables();
   connectRealtime();
